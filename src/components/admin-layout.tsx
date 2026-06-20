@@ -38,7 +38,7 @@ export function AdminLayout({
       <aside className="bg-[#071525] p-4 text-white">
         <Link href="/fifa-last-32" className="mb-6 flex items-center gap-2 font-black">
           <span className="grid size-9 place-items-center rounded bg-[#d71920]">
-            招
+            ⚽
           </span>
           Admin 后台管理
         </Link>

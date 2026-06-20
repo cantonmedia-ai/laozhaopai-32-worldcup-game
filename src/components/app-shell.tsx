@@ -27,7 +27,7 @@ export function TopNav({ active }: { active?: string }) {
       <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2 sm:px-4 sm:py-3">
         <Link href="/fifa-last-32" className="flex min-w-0 flex-1 items-center gap-2 font-black">
           <span className="grid size-8 shrink-0 place-items-center rounded bg-[#d71920] text-xs text-white sm:size-9 sm:text-sm">
-            招
+            ⚽
           </span>
           <span className="min-w-0 truncate text-sm sm:hidden">Last 32</span>
           <span className="hidden min-w-0 truncate text-base sm:inline">Last 32 Challenge</span>
