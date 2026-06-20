@@ -11,7 +11,7 @@ import {
 import clsx from "clsx";
 
 const nav = [
-  { href: "/", label: "首页", icon: Home },
+  { href: "/fifa-last-32", label: "Last 32", icon: Home },
   { href: "/game", label: "战况", icon: Trophy },
   { href: "/predict", label: "预测", icon: ShieldCheck },
   { href: "/leaderboard", label: "排行", icon: ChartNoAxesColumnIncreasing },
@@ -24,11 +24,11 @@ export function TopNav({ active }: { active?: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-black">
+        <Link href="/fifa-last-32" className="flex items-center gap-2 font-black">
           <span className="grid size-9 place-items-center rounded bg-[#d71920] text-sm text-white">
             招
           </span>
-          <span>老招牌 32竞猜</span>
+          <span>Last 32 Challenge</span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
           {nav.map((item) => {
