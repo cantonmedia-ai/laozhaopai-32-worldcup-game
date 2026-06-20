@@ -137,7 +137,7 @@ export default function SquadPage() {
   const activeTeamCount = teamList.filter(
     (team) => team[0].team_status === "active" || team[0].team_status === "full",
   ).length;
-  const inviteLink = `${typeof window === "undefined" ? "https://games.brainwaveai.my/worldcup" : window.location.origin}?ref=${me.referral_code}`;
+  const inviteLink = `${typeof window === "undefined" ? "https://games.brainwaveai.my" : window.location.origin}?ref=${me.referral_code}`;
 
   const flow = useMemo(
     () => [
@@ -306,7 +306,7 @@ export default function SquadPage() {
                 <div className="grid divide-y divide-slate-100">
                   {sorted.map((member) => {
                     const ownsThisTeam = member.profile_id === team.owner_profile_id;
-                    const memberInviteLink = `${typeof window === "undefined" ? "https://games.brainwaveai.my/worldcup" : window.location.origin}?ref=${member.referral_code}`;
+                    const memberInviteLink = `${typeof window === "undefined" ? "https://games.brainwaveai.my" : window.location.origin}?ref=${member.referral_code}`;
 
                     return (
                       <div

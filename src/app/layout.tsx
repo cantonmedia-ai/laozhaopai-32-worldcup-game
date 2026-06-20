@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://games.brainwaveai.my"),
   title: "老招牌 32强冠军竞猜赛",
   description: "Lao Zhao Pai 32-Team Champion Prediction Game",
 };
