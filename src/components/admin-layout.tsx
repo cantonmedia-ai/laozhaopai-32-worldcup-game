@@ -14,7 +14,7 @@ import {
 import clsx from "clsx";
 
 const adminNav = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/games", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/games", label: "Games", icon: Trophy },
   { href: "/admin/teams", label: "Teams", icon: ShieldCheck },
   { href: "/admin/rounds", label: "Rounds", icon: ListChecks },
