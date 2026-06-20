@@ -38,7 +38,7 @@ export function AdminLayout({
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950 md:grid md:grid-cols-[260px_1fr]">
       <aside className="bg-[#071525] p-4 text-white">
-        <Link href="/" className="mb-6 flex items-center gap-2 font-black">
+        <Link href="/fifa-last-32" className="mb-6 flex items-center gap-2 font-black">
           <span className="grid size-9 place-items-center rounded bg-[#d71920]">
             招
           </span>
