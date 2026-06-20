@@ -8,14 +8,12 @@ import {
   Medal,
   Network,
   ShieldCheck,
-  Trophy,
   Users,
 } from "lucide-react";
 import clsx from "clsx";
 
 const adminNav = [
   { href: "/admin/games", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/games", label: "Games", icon: Trophy },
   { href: "/admin/teams", label: "Teams", icon: ShieldCheck },
   { href: "/admin/rounds", label: "Rounds", icon: ListChecks },
   { href: "/admin/matches", label: "Matches", icon: ClipboardList },
