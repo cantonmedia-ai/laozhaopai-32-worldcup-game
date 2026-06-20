@@ -24,11 +24,11 @@ export function TopNav({ active }: { active?: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <Link href="/fifa-last-32" className="flex items-center gap-2 font-black">
+        <Link href="/fifa-last-32" className="flex min-w-0 items-center gap-2 font-black">
           <span className="grid size-9 place-items-center rounded bg-[#d71920] text-sm text-white">
             招
           </span>
-          <span>Last 32 Challenge</span>
+          <span className="truncate text-sm sm:text-base">Last 32 Challenge</span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
           {nav.map((item) => {
@@ -64,7 +64,7 @@ export function TopNav({ active }: { active?: string }) {
 export function MobileNav({ active }: { active?: string }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white text-slate-700 shadow-2xl md:hidden">
-      {nav.slice(1, 7).map((item) => {
+      {nav.slice(0, 6).map((item) => {
         const Icon = item.icon;
         return (
           <Link

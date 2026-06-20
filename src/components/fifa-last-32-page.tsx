@@ -18,35 +18,35 @@ export function FifaLast32Page() {
           alt=""
           width={1200}
           height={260}
-          className="pointer-events-none absolute inset-x-0 top-0 h-32 w-full object-cover opacity-65"
+          className="pointer-events-none absolute inset-x-0 top-0 h-20 w-full object-cover opacity-55 md:h-32 md:opacity-65"
           priority
         />
-        <div className="mx-auto grid max-w-7xl items-center gap-6 px-4 py-7 md:min-h-[86vh] md:grid-cols-[1.1fr_0.9fr] md:gap-8 md:py-12">
+        <div className="mx-auto grid max-w-7xl items-center gap-4 px-4 py-5 md:min-h-[86vh] md:grid-cols-[1.1fr_0.9fr] md:gap-8 md:py-12">
           <div className="relative z-10">
-            <p className="mb-3 inline-flex rounded bg-[#f4c542] px-3 py-1 text-xs font-black text-[#071525] md:mb-4 md:text-sm">
+            <p className="mb-2 inline-flex rounded bg-[#f4c542] px-3 py-1 text-xs font-black text-[#071525] md:mb-4 md:text-sm">
               FIFA World Cup 2026
             </p>
-            <h1 className="max-w-3xl text-[2.35rem] font-black leading-[1.06] md:text-7xl md:leading-tight">
+            <h1 className="max-w-3xl text-[2rem] font-black leading-[1.04] md:text-7xl md:leading-tight">
               Last 32 Challenge
             </h1>
-            <p className="mt-4 max-w-2xl text-base font-semibold leading-relaxed text-white/85 md:mt-5 md:text-xl">
+            <p className="mt-3 max-w-2xl text-[0.95rem] font-semibold leading-relaxed text-white/85 md:mt-5 md:text-xl">
               老招牌 32强冠军竞猜赛：预测王之战，谁是冠军预言家？从32强一路猜到决赛，每一轮揭晓都会更新排行榜。
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row md:mt-8">
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row md:mt-8 md:gap-3">
               <Link
                 href="/login?next=/predict"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-5 font-black text-white shadow-lg shadow-red-950/30 hover:bg-red-700 sm:w-auto md:h-13 md:px-6"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-5 font-black text-white shadow-lg shadow-red-950/30 hover:bg-red-700 sm:w-auto md:h-13 md:px-6"
               >
                 立即参加 <ArrowRight size={18} />
               </Link>
               <Link
                 href="/rules"
-                className="inline-flex h-12 w-full items-center justify-center rounded border border-white/30 px-5 font-black text-white hover:bg-white/10 sm:w-auto md:h-13 md:px-6"
+                className="inline-flex h-11 w-full items-center justify-center rounded border border-white/30 px-5 font-black text-white hover:bg-white/10 sm:w-auto md:h-13 md:px-6"
               >
                 查看规则
               </Link>
             </div>
-            <div className="mt-6 grid max-w-3xl grid-cols-2 gap-2 md:mt-8 md:grid-cols-4 md:gap-3">
+            <div className="mt-5 hidden max-w-3xl grid-cols-2 gap-2 md:mt-8 md:grid md:grid-cols-4 md:gap-3">
               {["32强开始", "16强对决", "8强争夺", "决赛之夜"].map(
                 (stage) => (
                   <div
@@ -58,14 +58,14 @@ export function FifaLast32Page() {
                 ),
               )}
             </div>
-            <div className="mt-5 flex max-w-3xl gap-2 overflow-x-auto pb-2 scrollbar-clean md:mt-6 md:gap-3">
-              {teams.slice(0, 10).map((team) => (
+            <div className="mt-4 flex max-w-3xl gap-2 overflow-x-auto pb-2 scrollbar-clean md:mt-6 md:gap-3">
+              {teams.slice(0, 8).map((team) => (
                 <div
                   key={team.id}
-                  className="w-20 shrink-0 rounded bg-white/10 p-2 backdrop-blur md:w-24"
+                  className="w-16 shrink-0 rounded bg-white/10 p-1.5 backdrop-blur md:w-24 md:p-2"
                 >
-                  <TeamFlag team={team} className="h-12 w-full md:h-14" />
-                  <p className="mt-2 truncate text-center text-xs font-black text-white">
+                  <TeamFlag team={team} className="h-10 w-full md:h-14" />
+                  <p className="mt-1 truncate text-center text-[10px] font-black text-white md:mt-2 md:text-xs">
                     {team.shortName}
                   </p>
                 </div>
@@ -73,19 +73,20 @@ export function FifaLast32Page() {
             </div>
           </div>
           <div className="relative z-10">
-            <div className="card bg-white/95 p-4 text-slate-950 md:p-5">
-              <div className="mb-4 flex items-center gap-3">
+            <div className="card bg-white/95 p-3.5 text-slate-950 md:p-5">
+              <div className="mb-3 flex items-center gap-3 md:mb-4">
                 <Image
                   src="/assets/elements/png/gold_trophy_badge.png"
                   alt="Trophy"
-                  width={82}
-                  height={82}
+                  width={64}
+                  height={64}
+                  className="md:size-[82px]"
                 />
                 <div>
-                  <p className="text-sm font-black text-[#0f8a4b]">
+                  <p className="text-xs font-black text-[#0f8a4b] md:text-sm">
                     当前阶段
                   </p>
-                  <h2 className="text-2xl font-black md:text-3xl">
+                  <h2 className="text-xl font-black md:text-3xl">
                     {round.labelCn}
                   </h2>
                 </div>
@@ -95,8 +96,8 @@ export function FifaLast32Page() {
           </div>
         </div>
       </section>
-      <section className="mx-auto grid max-w-7xl gap-5 px-4 py-6 md:grid-cols-[0.85fr_1.15fr] md:gap-6 md:py-10">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-5 md:grid-cols-[0.85fr_1.15fr] md:gap-6 md:py-10">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-4">
           <StatCard label="当前阶段" value={round.labelCn} tone="green" />
           <StatCard label="正确得分" value={`${round.scoringPoints}分`} tone="gold" />
           <StatCard label="参赛玩家" value="1,280+" detail="Demo seed" />
