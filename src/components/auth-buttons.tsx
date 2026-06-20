@@ -106,7 +106,7 @@ export function AuthButtons({ next = "/game" }: { next?: string }) {
       ) : null}
       {!isSupabaseConfigured() ? (
         <p className="rounded bg-amber-50 p-3 text-center text-xs font-bold text-amber-900">
-          Login setup needed: add the Supabase URL and anon key in Vercel to enable Google / Apple.
+          Login setup needed in Vercel before Google / Apple can start.
         </p>
       ) : null}
     </div>
