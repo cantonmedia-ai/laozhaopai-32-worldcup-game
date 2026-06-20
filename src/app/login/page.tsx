@@ -1,0 +1,32 @@
+import Link from "next/link";
+import { AuthButtons } from "@/components/auth-buttons";
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; next?: string }>;
+}) {
+  const params = await searchParams;
+
+  return (
+    <main className="stadium-hero grid min-h-screen place-items-center px-4 text-white">
+      <div className="w-full max-w-md rounded-lg border border-white/15 bg-[#071525]/85 p-6 shadow-2xl backdrop-blur">
+        <Link href="/" className="font-black text-[#f4c542]">
+          老招牌 32竞猜
+        </Link>
+        <h1 className="mt-5 text-3xl font-black">登录参加竞猜</h1>
+        <p className="mt-2 text-white/70">
+          使用 Google 或 Apple 登录。第一次登录后需要设置公开昵称。
+        </p>
+        {params.error ? (
+          <p className="mt-4 rounded bg-red-50 p-3 text-sm font-bold text-red-700">
+            {params.error}
+          </p>
+        ) : null}
+        <div className="mt-6">
+          <AuthButtons next={params.next ?? "/game"} />
+        </div>
+      </div>
+    </main>
+  );
+}

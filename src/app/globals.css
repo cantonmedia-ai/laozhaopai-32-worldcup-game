@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #071525;
+  --foreground: #f8fafc;
 }
 
 @theme inline {
@@ -12,15 +12,45 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-color: #f4c542;
+}
+
+.stadium-hero {
+  background-image:
+    linear-gradient(90deg, rgba(7, 21, 37, 0.96), rgba(7, 21, 37, 0.6), rgba(9, 47, 39, 0.92)),
+    url("/assets/backgrounds/bg_hero_stadium.png");
+  background-position: center;
+  background-size: cover;
+}
+
+.card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+}
+
+.gold-text {
+  color: #f4c542;
+}
+
+.scrollbar-clean::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.scrollbar-clean::-webkit-scrollbar-thumb {
+  background: rgba(244, 197, 66, 0.65);
+  border-radius: 999px;
 }

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs>
+  <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7D774"/><stop offset="0.55" stop-color="#D9A441"/><stop offset="1" stop-color="#93661C"/></linearGradient>
+  <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22A44F"/><stop offset="1" stop-color="#0C6B2A"/></linearGradient>
+  <linearGradient id="navyGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B3048"/><stop offset="1" stop-color="#061827"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.28"/></filter>
+</defs>
+<rect width="512" height="512" rx="96" fill="url(#greenGrad)"/>
+<path d="M138 386l24-78a136 136 0 1 1 48 47z" fill="none" stroke="#fff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M211 183c-10 10-15 35-2 66 22 52 75 85 103 80 28-4 43-25 39-39-3-9-45-28-54-25-7 2-15 20-22 21-14 1-49-31-52-47-1-6 16-15 17-23 2-9-22-44-29-33z" fill="#fff"/>
+</svg>

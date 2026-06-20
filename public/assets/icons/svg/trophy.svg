@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs>
+  <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7D774"/><stop offset="0.55" stop-color="#D9A441"/><stop offset="1" stop-color="#93661C"/></linearGradient>
+  <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22A44F"/><stop offset="1" stop-color="#0C6B2A"/></linearGradient>
+  <linearGradient id="navyGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B3048"/><stop offset="1" stop-color="#061827"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.28"/></filter>
+</defs>
+<rect width="512" height="512" rx="96" fill="url(#navyGrad)"/>
+<path d="M170 126h172v74c0 72-35 120-86 120s-86-48-86-120z" fill="url(#goldGrad)" filter="url(#shadow)"/>
+<path d="M170 150h-58c-4 84 36 119 83 124" fill="none" stroke="#F7D774" stroke-width="28" stroke-linecap="round"/>
+<path d="M342 150h58c4 84-36 119-83 124" fill="none" stroke="#F7D774" stroke-width="28" stroke-linecap="round"/>
+<path d="M235 319h42v52h-42z" fill="#D9A441"/><path d="M185 377h142v36H185z" fill="url(#goldGrad)"/><path d="M155 420h202v38H155z" fill="#93661C"/><circle cx="256" cy="199" r="44" fill="none" stroke="#FFF2A8" stroke-width="13"/><path d="M256 165l11 24 26 3-19 18 5 26-23-13-23 13 5-26-19-18 26-3z" fill="#FFF2A8"/>
+</svg>

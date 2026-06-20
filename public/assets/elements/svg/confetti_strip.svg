@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260">
+<defs>
+  <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7D774"/><stop offset="0.55" stop-color="#D9A441"/><stop offset="1" stop-color="#93661C"/></linearGradient>
+  <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22A44F"/><stop offset="1" stop-color="#0C6B2A"/></linearGradient>
+  <linearGradient id="navyGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B3048"/><stop offset="1" stop-color="#061827"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.28"/></filter>
+</defs>
+<rect width="1200" height="260" fill="none"/>
+<g opacity=".95">
+<rect x="60" y="35" width="12" height="42" rx="4" fill="#F7D774" transform="rotate(25 60 35)"/><rect x="210" y="85" width="10" height="36" rx="4" fill="#D7261E" transform="rotate(-18 210 85)"/><rect x="360" y="45" width="12" height="42" rx="4" fill="#22A44F" transform="rotate(42 360 45)"/><rect x="520" y="100" width="10" height="36" rx="4" fill="#F7D774" transform="rotate(-35 520 100)"/><rect x="690" y="45" width="12" height="42" rx="4" fill="#D7261E" transform="rotate(25 690 45)"/><rect x="860" y="95" width="10" height="36" rx="4" fill="#22A44F" transform="rotate(-18 860 95)"/><rect x="1010" y="35" width="12" height="42" rx="4" fill="#F7D774" transform="rotate(42 1010 35)"/><rect x="1130" y="100" width="10" height="36" rx="4" fill="#D7261E" transform="rotate(-35 1130 100)"/>
+</g>
+</svg>

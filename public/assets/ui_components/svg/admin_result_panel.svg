@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="512" viewBox="0 0 768 512">
+<defs>
+  <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7D774"/><stop offset="0.55" stop-color="#D9A441"/><stop offset="1" stop-color="#93661C"/></linearGradient>
+  <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22A44F"/><stop offset="1" stop-color="#0C6B2A"/></linearGradient>
+  <linearGradient id="navyGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B3048"/><stop offset="1" stop-color="#061827"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.28"/></filter>
+</defs>
+<rect x="24" y="24" width="720" height="460" rx="32" fill="#FFFFFF" filter="url(#shadow)"/><text x="60" y="86" fill="#061827" font-size="36" font-weight="900">Admin 赛果录入</text><text x="60" y="142" fill="#6B7280" font-size="24">比赛 01</text><text x="155" y="210" text-anchor="middle" fill="#061827" font-size="30" font-weight="800">卡塔尔</text><text x="370" y="210" text-anchor="middle" fill="#061827" font-size="26" font-weight="900">VS</text><text x="585" y="210" text-anchor="middle" fill="#061827" font-size="30" font-weight="800">荷兰</text><rect x="112" y="242" width="86" height="70" rx="14" fill="#F3F5F7"/><rect x="542" y="242" width="86" height="70" rx="14" fill="#F3F5F7"/><text x="155" y="288" text-anchor="middle" fill="#061827" font-size="32" font-weight="800">0</text><text x="585" y="288" text-anchor="middle" fill="#061827" font-size="32" font-weight="800">2</text><rect x="60" y="345" width="624" height="72" rx="18" fill="url(#greenGrad)"/><text x="372" y="392" text-anchor="middle" fill="#FFFFFF" font-size="28" font-weight="800">确认录入</text>
+</svg>
