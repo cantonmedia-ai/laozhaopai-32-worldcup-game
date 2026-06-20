@@ -11,6 +11,18 @@ const providerLabels: Record<AuthProvider, string> = {
   apple: "Apple",
 };
 
+function getRedirectOrigin() {
+  if (window.location.hostname === "games.brainwaveai.my") {
+    return window.location.origin;
+  }
+
+  if (window.location.hostname.endsWith(".vercel.app")) {
+    return "https://games.brainwaveai.my";
+  }
+
+  return window.location.origin;
+}
+
 export function AuthButtons({ next = "/game" }: { next?: string }) {
   const [loadingProvider, setLoadingProvider] = useState<AuthProvider | "">("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -26,7 +38,7 @@ export function AuthButtons({ next = "/game" }: { next?: string }) {
       }
 
       const supabase = createClient();
-      const redirectTo = new URL("/auth/callback", window.location.origin);
+      const redirectTo = new URL("/auth/callback", getRedirectOrigin());
       redirectTo.searchParams.set("next", next);
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -93,8 +105,8 @@ export function AuthButtons({ next = "/game" }: { next?: string }) {
         </p>
       ) : null}
       {!isSupabaseConfigured() ? (
-        <p className="text-center text-xs text-white/70">
-          Demo mode: add Supabase env vars to enable real Google / Apple login.
+        <p className="rounded bg-amber-50 p-3 text-center text-xs font-bold text-amber-900">
+          Login setup needed: add the Supabase URL and anon key in Vercel to enable Google / Apple.
         </p>
       ) : null}
     </div>

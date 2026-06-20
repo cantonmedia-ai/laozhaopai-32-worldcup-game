@@ -3,6 +3,7 @@ import {
   ChartNoAxesColumnIncreasing,
   Gift,
   Home,
+  Settings,
   ShieldCheck,
   Trophy,
   UserRound,
@@ -23,14 +24,15 @@ const nav = [
 export function TopNav({ active }: { active?: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <Link href="/fifa-last-32" className="flex min-w-0 items-center gap-2 font-black">
-          <span className="grid size-9 place-items-center rounded bg-[#d71920] text-sm text-white">
+      <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2 sm:px-4 sm:py-3">
+        <Link href="/fifa-last-32" className="flex min-w-0 flex-1 items-center gap-2 font-black">
+          <span className="grid size-8 shrink-0 place-items-center rounded bg-[#d71920] text-xs text-white sm:size-9 sm:text-sm">
             招
           </span>
-          <span className="truncate text-sm sm:text-base">Last 32 Challenge</span>
+          <span className="min-w-0 truncate text-sm sm:hidden">Last 32</span>
+          <span className="hidden min-w-0 truncate text-base sm:inline">Last 32 Challenge</span>
         </Link>
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden shrink-0 items-center gap-1 lg:flex">
           {nav.map((item) => {
             const Icon = item.icon;
             return (
@@ -52,9 +54,11 @@ export function TopNav({ active }: { active?: string }) {
         </nav>
         <Link
           href="/admin"
-          className="rounded bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/15"
+          aria-label="Admin"
+          className="grid size-9 shrink-0 place-items-center rounded bg-white/10 text-white hover:bg-white/15 sm:w-auto sm:px-3 sm:text-sm sm:font-semibold"
         >
-          Admin
+          <Settings size={17} className="sm:hidden" />
+          <span className="hidden sm:inline">Admin</span>
         </Link>
       </div>
     </header>
