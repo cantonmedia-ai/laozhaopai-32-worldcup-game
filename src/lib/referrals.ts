@@ -1,4 +1,4 @@
-import { referralStorageKey } from "@/components/referral-capture";
+import { cleanReferralCode, referralStorageKey } from "@/lib/referral-code";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export function getStoredReferralCode() {
@@ -13,7 +13,7 @@ export function clearStoredReferralCode() {
 }
 
 export async function applyStoredReferralCode() {
-  const referralCode = getStoredReferralCode();
+  const referralCode = cleanReferralCode(getStoredReferralCode());
   if (!referralCode || !isSupabaseConfigured()) return false;
 
   const supabase = createClient();

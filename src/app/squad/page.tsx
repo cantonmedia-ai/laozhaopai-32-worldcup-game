@@ -78,6 +78,15 @@ function statusLabel(status: SquadMember["team_status"], friendCount: number) {
   return `还差 ${Math.max(0, 2 - friendCount)} 位朋友成队`;
 }
 
+function inviteUrl(referralCode: string) {
+  const origin =
+    typeof window === "undefined"
+      ? "https://games.brainwaveai.my"
+      : window.location.origin;
+
+  return `${origin}/fifa-last-32?ref=${encodeURIComponent(referralCode)}`;
+}
+
 export default function SquadPage() {
   const [members, setMembers] = useState<SquadMember[]>(demoMembers);
   const [loading, setLoading] = useState(false);
@@ -137,7 +146,7 @@ export default function SquadPage() {
   const activeTeamCount = teamList.filter(
     (team) => team[0].team_status === "active" || team[0].team_status === "full",
   ).length;
-  const inviteLink = `${typeof window === "undefined" ? "https://games.brainwaveai.my" : window.location.origin}?ref=${me.referral_code}`;
+  const inviteLink = inviteUrl(me.referral_code);
 
   const flow = useMemo(
     () => [
@@ -306,7 +315,7 @@ export default function SquadPage() {
                 <div className="grid divide-y divide-slate-100">
                   {sorted.map((member) => {
                     const ownsThisTeam = member.profile_id === team.owner_profile_id;
-                    const memberInviteLink = `${typeof window === "undefined" ? "https://games.brainwaveai.my" : window.location.origin}?ref=${member.referral_code}`;
+                    const memberInviteLink = inviteUrl(member.referral_code);
 
                     return (
                       <div
