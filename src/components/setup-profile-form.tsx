@@ -9,6 +9,11 @@ function isEmailLike(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function isValidWhatsApp(value: string) {
+  const cleanValue = value.replace(/[\s-]/g, "");
+  return /^(\+?60\d{8,10}|0\d{8,10})$/.test(cleanValue);
+}
+
 function safeNextPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return "/game";
   return value;
@@ -18,11 +23,8 @@ export function SetupProfileForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = safeNextPath(searchParams.get("next"));
-  const [displayName, setDisplayName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [preferredOutlet, setPreferredOutlet] = useState("Canton Kitchen");
-  const [favoriteTeam, setFavoriteTeam] = useState("");
-  const [acceptMarketing, setAcceptMarketing] = useState(true);
+  const [nickname, setNickname] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const storedReferralCode = getStoredReferralCode();
@@ -30,14 +32,31 @@ export function SetupProfileForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const cleanName = displayName.trim();
+    const cleanName = nickname.trim();
+    const cleanWhatsapp = whatsappNumber.replace(/[\s-]/g, "");
+
+    if (!cleanName) {
+      setMessage("Please enter your nickname.");
+      return;
+    }
+
     if (cleanName.length < 2 || cleanName.length > 20) {
-      setMessage("昵称需要 2-20 个字符。");
+      setMessage("Nickname must be 2 to 20 characters.");
       return;
     }
 
     if (isEmailLike(cleanName)) {
-      setMessage("昵称不能使用邮箱格式。");
+      setMessage("Nickname cannot be an email address.");
+      return;
+    }
+
+    if (!cleanWhatsapp) {
+      setMessage("Please enter your WhatsApp number.");
+      return;
+    }
+
+    if (!isValidWhatsApp(cleanWhatsapp)) {
+      setMessage("Enter a valid WhatsApp number, for example 60123456789, +60123456789, or 0123456789.");
       return;
     }
 
@@ -46,7 +65,6 @@ export function SetupProfileForm() {
 
     try {
       if (!isSupabaseConfigured()) {
-        setMessage("Demo 已保存。连接 Supabase 后会更新 profile 并记录邀请关系。");
         router.push(nextPath);
         return;
       }
@@ -56,16 +74,13 @@ export function SetupProfileForm() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) throw new Error("请先登录。");
+      if (!user) throw new Error("Please sign in first.");
 
       const { error } = await supabase
         .from("profiles")
         .update({
           display_name: cleanName,
-          phone: phone.trim(),
-          preferred_outlet: preferredOutlet,
-          favorite_team: favoriteTeam.trim(),
-          accept_marketing: acceptMarketing,
+          phone: cleanWhatsapp,
           profile_completed: true,
           display_name_updated_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -77,7 +92,7 @@ export function SetupProfileForm() {
       await applyStoredReferralCode();
       router.push(nextPath);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "保存失败，请重试。");
+      setMessage(error instanceof Error ? error.message : "Unable to save profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -87,67 +102,41 @@ export function SetupProfileForm() {
     <form onSubmit={handleSubmit} className="card grid gap-4 p-5">
       {storedReferralCode ? (
         <div className="rounded bg-green-50 p-3 text-sm font-bold text-green-800">
-          已检测到邀请码：{storedReferralCode}。完成资料后会自动加入好友战区。
+          Invite code detected: {storedReferralCode}. Your squad link will be recorded after setup.
         </div>
       ) : null}
 
       <label className="grid gap-2 font-bold">
-        昵称
+        Nickname
         <input
-          value={displayName}
-          onChange={(event) => setDisplayName(event.target.value)}
+          value={nickname}
+          onChange={(event) => setNickname(event.target.value)}
           className="h-12 rounded border border-slate-200 px-3 font-semibold"
-          placeholder="2-20个字符，不可使用邮箱格式"
+          placeholder="Your leaderboard name"
           minLength={2}
           maxLength={20}
           required
         />
       </label>
+
       <label className="grid gap-2 font-bold">
-        电话
+        WhatsApp Number
         <input
-          value={phone}
-          onChange={(event) => setPhone(event.target.value)}
+          value={whatsappNumber}
+          onChange={(event) => setWhatsappNumber(event.target.value)}
           className="h-12 rounded border border-slate-200 px-3 font-semibold"
-          placeholder="用于奖品领取"
+          placeholder="60123456789"
+          required
         />
       </label>
-      <label className="grid gap-2 font-bold">
-        常去分店
-        <select
-          value={preferredOutlet}
-          onChange={(event) => setPreferredOutlet(event.target.value)}
-          className="h-12 rounded border border-slate-200 px-3 font-semibold"
-        >
-          <option>Canton Kitchen</option>
-          <option>Lao Zhao Pai</option>
-          <option>Brainwave Games</option>
-        </select>
-      </label>
-      <label className="grid gap-2 font-bold">
-        支持球队
-        <input
-          value={favoriteTeam}
-          onChange={(event) => setFavoriteTeam(event.target.value)}
-          className="h-12 rounded border border-slate-200 px-3 font-semibold"
-          placeholder="例如：阿根廷"
-        />
-      </label>
-      <label className="flex items-center gap-3 text-sm font-semibold">
-        <input
-          type="checkbox"
-          className="size-5"
-          checked={acceptMarketing}
-          onChange={(event) => setAcceptMarketing(event.target.checked)}
-        />
-        接收下一轮预测提醒与奖品通知
-      </label>
+
       <button
         disabled={saving}
         className="h-12 rounded bg-[#d71920] font-black text-white hover:bg-red-700 disabled:bg-slate-400"
       >
-        {saving ? "保存中..." : "完成，开始预测之旅！"}
+        {saving ? "Saving..." : "Start Playing"}
       </button>
+
       {message ? (
         <p className="rounded bg-slate-100 p-3 text-sm font-bold text-slate-700">
           {message}

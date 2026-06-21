@@ -75,7 +75,7 @@ export function FifaLast32Page() {
           </div>
           <div className="relative z-10">
             <div className="card bg-white/95 p-3.5 text-slate-950 md:p-5">
-              <div className="mb-3 flex items-center gap-3 md:mb-4">
+              <div className="mb-4 flex items-center gap-3">
                 <Image
                   src="/assets/elements/png/gold_trophy_badge.png"
                   alt="Trophy"
@@ -85,14 +85,20 @@ export function FifaLast32Page() {
                 />
                 <div>
                   <p className="text-xs font-black text-[#0f8a4b] md:text-sm">
-                    当前阶段
+                    FIFA World Cup 2026
                   </p>
-                  <h2 className="text-xl font-black md:text-3xl">
-                    {round.labelCn}
+                  <h2 className="text-2xl font-black md:text-3xl">
+                    Join the Game
                   </h2>
                 </div>
               </div>
-              <AuthButtons next="/predict" />
+              <p className="mb-5 text-sm font-semibold leading-relaxed text-slate-600">
+                Sign in to play, save your score, and receive prize updates if you win.
+              </p>
+              <AuthButtons next="/game" />
+              <p className="mt-4 rounded bg-slate-100 p-3 text-center text-xs font-bold text-slate-600">
+                Your WhatsApp number is only used for prize notification.
+              </p>
             </div>
           </div>
         </div>

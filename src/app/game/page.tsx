@@ -1,9 +1,30 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { getCurrentRound, getMe, profiles } from "@/lib/demo-data";
 import { rankingMovement } from "@/lib/scoring";
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
-export default function GamePage() {
+export default async function GamePage() {
+  if (hasSupabaseServerEnv()) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) redirect("/login?next=/game");
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("profile_completed, display_name, phone")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (!profile?.profile_completed || !profile.display_name || !profile.phone) {
+      redirect("/profile-setup?next=/game");
+    }
+  }
+
   const me = getMe();
   const round = getCurrentRound();
 

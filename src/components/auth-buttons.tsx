@@ -23,7 +23,13 @@ function getRedirectOrigin() {
   return window.location.origin;
 }
 
-export function AuthButtons({ next = "/game" }: { next?: string }) {
+export function AuthButtons({
+  next = "/game",
+  showSetupNote = false,
+}: {
+  next?: string;
+  showSetupNote?: boolean;
+}) {
   const [loadingProvider, setLoadingProvider] = useState<AuthProvider | "">("");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -33,7 +39,7 @@ export function AuthButtons({ next = "/game" }: { next?: string }) {
 
     try {
       if (!isSupabaseConfigured()) {
-        window.location.href = `/setup-profile?demo=1&next=${encodeURIComponent(next)}`;
+        window.location.href = `/profile-setup?demo=1&next=${encodeURIComponent(next)}`;
         return;
       }
 
@@ -67,8 +73,8 @@ export function AuthButtons({ next = "/game" }: { next?: string }) {
   }
 
   function buttonLabel(provider: AuthProvider) {
-    if (loadingProvider === provider) return "正在前往登录...";
-    return `${providerLabels[provider]} 登录`;
+    if (loadingProvider === provider) return "Opening sign in...";
+    return `Continue with ${providerLabels[provider]}`;
   }
 
   return (
@@ -104,9 +110,9 @@ export function AuthButtons({ next = "/game" }: { next?: string }) {
           {errorMessage}
         </p>
       ) : null}
-      {!isSupabaseConfigured() ? (
+      {showSetupNote && !isSupabaseConfigured() ? (
         <p className="rounded bg-amber-50 p-3 text-center text-xs font-bold text-amber-900">
-          Login setup needed in Vercel before Google / Apple can start.
+          Login will be available once account setup is connected.
         </p>
       ) : null}
     </div>

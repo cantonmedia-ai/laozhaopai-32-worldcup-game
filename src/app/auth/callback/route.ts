@@ -23,6 +23,10 @@ function getReferralCodeFromCookie(cookieHeader: string | null) {
   }
 }
 
+function createReferralCode() {
+  return `LZP${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -38,7 +42,7 @@ export async function GET(request: Request) {
 
   if (!hasSupabaseServerEnv() || !code) {
     return NextResponse.redirect(
-      `${origin}/setup-profile?demo=1&next=${encodeURIComponent(next)}`,
+      `${origin}/profile-setup?demo=1&next=${encodeURIComponent(next)}`,
     );
   }
 
@@ -63,11 +67,31 @@ export async function GET(request: Request) {
     );
   }
 
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from("profiles")
     .select("profile_completed, display_name")
     .eq("auth_user_id", user.id)
     .maybeSingle();
+
+  if (!profile) {
+    const provider = user.app_metadata?.provider
+      ? String(user.app_metadata.provider)
+      : "oauth";
+
+    const { data: createdProfile } = await supabase
+      .from("profiles")
+      .insert({
+        auth_user_id: user.id,
+        email: user.email,
+        login_provider: provider,
+        referral_code: createReferralCode(),
+        profile_completed: false,
+      })
+      .select("profile_completed, display_name")
+      .maybeSingle();
+
+    profile = createdProfile;
+  }
 
   const referralCode = getReferralCodeFromCookie(request.headers.get("cookie"));
 
@@ -79,7 +103,7 @@ export async function GET(request: Request) {
 
   if (!profile?.profile_completed || !profile.display_name) {
     return NextResponse.redirect(
-      `${origin}/setup-profile?next=${encodeURIComponent(next)}`,
+      `${origin}/profile-setup?next=${encodeURIComponent(next)}`,
     );
   }
 
