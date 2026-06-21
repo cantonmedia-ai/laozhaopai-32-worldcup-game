@@ -19,6 +19,10 @@ function safeNextPath(value: string | null) {
   return value;
 }
 
+function createReferralCode() {
+  return `LZP${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+}
+
 export function SetupProfileForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,18 +80,44 @@ export function SetupProfileForm() {
 
       if (!user) throw new Error("Please sign in first.");
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          display_name: cleanName,
-          phone: cleanWhatsapp,
-          profile_completed: true,
-          display_name_updated_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("auth_user_id", user.id);
+      const profilePayload = {
+        auth_user_id: user.id,
+        user_id: user.id,
+        email: user.email,
+        avatar_url: user.user_metadata?.avatar_url ?? null,
+        login_provider: user.app_metadata?.provider
+          ? String(user.app_metadata.provider)
+          : "oauth",
+        provider: user.app_metadata?.provider
+          ? String(user.app_metadata.provider)
+          : "oauth",
+        display_name: cleanName,
+        nickname: cleanName,
+        phone: cleanWhatsapp,
+        whatsapp_number: cleanWhatsapp,
+        profile_completed: true,
+        display_name_updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw new Error(error.message);
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from("profiles")
+        .update(profilePayload)
+        .eq("auth_user_id", user.id)
+        .select("id")
+        .maybeSingle();
+
+      if (updateError) throw new Error(updateError.message);
+
+      if (!updatedProfile) {
+        const { error: insertError } = await supabase.from("profiles").insert({
+          ...profilePayload,
+          referral_code: createReferralCode(),
+          created_at: new Date().toISOString(),
+        });
+
+        if (insertError) throw new Error(insertError.message);
+      }
 
       await applyStoredReferralCode();
       router.push(nextPath);

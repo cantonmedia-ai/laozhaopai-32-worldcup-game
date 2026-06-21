@@ -183,7 +183,7 @@ create or replace function public.generate_referral_code()
 returns text
 language sql
 as $$
-  select 'LZP' || upper(substr(encode(extensions.gen_random_bytes(5), 'hex'), 1, 8))
+  select 'LZP' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8))
 $$;
 
 create or replace function public.handle_new_user()
@@ -358,6 +358,14 @@ alter table public.admin_audit_logs enable row level security;
 
 create policy "profiles read own or admin" on public.profiles
 for select using (auth_user_id = auth.uid() or public.is_admin());
+
+create policy "profiles insert own" on public.profiles
+for insert with check (
+  auth_user_id = auth.uid()
+  and coalesce(user_id, auth_user_id) = auth.uid()
+  and role = 'player'
+  and is_blocked = false
+);
 
 create policy "profiles update own limited" on public.profiles
 for update using (auth_user_id = auth.uid() or public.is_admin())

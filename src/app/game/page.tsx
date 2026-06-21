@@ -16,11 +16,15 @@ export default async function GamePage() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("profile_completed, display_name, phone")
+      .select("profile_completed, display_name, nickname, phone, whatsapp_number")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
-    if (!profile?.profile_completed || !profile.display_name || !profile.phone) {
+    if (
+      !profile?.profile_completed ||
+      !(profile.display_name || profile.nickname) ||
+      !(profile.phone || profile.whatsapp_number)
+    ) {
       redirect("/profile-setup?next=/game");
     }
   }

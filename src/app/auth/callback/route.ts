@@ -27,6 +27,20 @@ function createReferralCode() {
   return `LZP${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
+function isProfileComplete(profile: {
+  profile_completed: boolean | null;
+  display_name: string | null;
+  nickname: string | null;
+  phone: string | null;
+  whatsapp_number: string | null;
+} | null) {
+  return Boolean(
+    profile?.profile_completed &&
+      (profile.display_name || profile.nickname) &&
+      (profile.phone || profile.whatsapp_number),
+  );
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -69,7 +83,7 @@ export async function GET(request: Request) {
 
   let { data: profile } = await supabase
     .from("profiles")
-    .select("profile_completed, display_name")
+    .select("profile_completed, display_name, nickname, phone, whatsapp_number")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
@@ -82,12 +96,14 @@ export async function GET(request: Request) {
       .from("profiles")
       .insert({
         auth_user_id: user.id,
+        user_id: user.id,
         email: user.email,
         login_provider: provider,
+        provider,
         referral_code: createReferralCode(),
         profile_completed: false,
       })
-      .select("profile_completed, display_name")
+      .select("profile_completed, display_name, nickname, phone, whatsapp_number")
       .maybeSingle();
 
     profile = createdProfile;
@@ -101,7 +117,7 @@ export async function GET(request: Request) {
     });
   }
 
-  if (!profile?.profile_completed || !profile.display_name) {
+  if (!isProfileComplete(profile)) {
     return NextResponse.redirect(
       `${origin}/profile-setup?next=${encodeURIComponent(next)}`,
     );
