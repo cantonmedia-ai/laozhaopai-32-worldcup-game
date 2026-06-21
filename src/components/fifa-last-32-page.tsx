@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Gift, Medal, Share2, Trophy } from "lucide-react";
 import { AuthButtons } from "@/components/auth-buttons";
 import { LeaderboardTable } from "@/components/leaderboard";
+import { LiveScoreboard } from "@/components/live-scoreboard";
 import { PageShell, StatCard } from "@/components/app-shell";
 import { TeamFlag } from "@/components/team-flag";
 import { getCurrentRound, profiles, teams } from "@/lib/demo-data";
@@ -105,6 +106,7 @@ export function FifaLast32Page() {
         </div>
         <LeaderboardTable players={profiles.slice(0, 4)} title="实时总榜" />
       </section>
+      <LiveScoreboard />
       <section className="bg-white px-4 py-6 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
           {[
