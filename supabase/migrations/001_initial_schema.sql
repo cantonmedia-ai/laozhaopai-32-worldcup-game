@@ -183,7 +183,7 @@ create or replace function public.generate_referral_code()
 returns text
 language sql
 as $$
-  select 'LZP' || upper(substr(encode(gen_random_bytes(5), 'hex'), 1, 8))
+  select 'LZP' || upper(substr(encode(extensions.gen_random_bytes(5), 'hex'), 1, 8))
 $$;
 
 create or replace function public.handle_new_user()

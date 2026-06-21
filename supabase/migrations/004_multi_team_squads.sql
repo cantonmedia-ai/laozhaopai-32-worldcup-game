@@ -198,6 +198,8 @@ begin
 end;
 $$;
 
+drop function if exists public.get_my_squad();
+
 create or replace function public.get_my_squad()
 returns table (
   relationship text,
