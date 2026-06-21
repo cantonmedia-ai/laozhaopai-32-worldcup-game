@@ -12,11 +12,12 @@ export default async function LoginPage({
     <main className="stadium-hero grid min-h-screen place-items-center px-4 text-white">
       <div className="w-full max-w-md rounded-lg border border-white/15 bg-[#071525]/85 p-6 shadow-2xl backdrop-blur">
         <Link href="/" className="font-black text-[#f4c542]">
-          老招牌 32竞猜
+          Last 32 Challenge
         </Link>
-        <h1 className="mt-5 text-3xl font-black">登录参加竞猜</h1>
+        <h1 className="mt-5 text-3xl font-black">Login to Play</h1>
         <p className="mt-2 text-white/70">
-          使用 Google 或 Apple 登录。第一次登录后需要设置公开昵称。
+          Use Google or Email to join. First-time players will set a nickname
+          before entering the game.
         </p>
         {params.error ? (
           <p className="mt-4 rounded bg-red-50 p-3 text-sm font-bold text-red-700">

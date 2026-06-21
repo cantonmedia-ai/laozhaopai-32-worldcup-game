@@ -3,12 +3,18 @@ create extension if not exists "pgcrypto";
 create table public.profiles (
   id uuid primary key default gen_random_uuid(),
   auth_user_id uuid unique not null references auth.users(id) on delete cascade,
+  user_id uuid unique references auth.users(id) on delete cascade,
   role text not null default 'player' check (role in ('player','admin')),
   display_name text unique,
+  nickname text,
   phone text,
+  phone_number text,
+  whatsapp_number text,
   email text,
   avatar_url text,
   login_provider text,
+  provider text,
+  auth_provider text,
   referral_code text unique not null,
   referred_by_profile_id uuid references public.profiles(id),
   favorite_team text,
@@ -195,15 +201,21 @@ as $$
 begin
   insert into public.profiles (
     auth_user_id,
+    user_id,
     email,
     avatar_url,
     login_provider,
+    provider,
+    auth_provider,
     referral_code
   )
   values (
     new.id,
+    new.id,
     new.email,
     new.raw_user_meta_data->>'avatar_url',
+    new.app_metadata->>'provider',
+    new.app_metadata->>'provider',
     new.app_metadata->>'provider',
     public.generate_referral_code()
   )

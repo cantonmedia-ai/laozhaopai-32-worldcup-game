@@ -91,9 +91,13 @@ export function SetupProfileForm() {
         provider: user.app_metadata?.provider
           ? String(user.app_metadata.provider)
           : "oauth",
+        auth_provider: user.app_metadata?.provider
+          ? String(user.app_metadata.provider)
+          : "email",
         display_name: cleanName,
         nickname: cleanName,
         phone: cleanWhatsapp,
+        phone_number: cleanWhatsapp,
         whatsapp_number: cleanWhatsapp,
         profile_completed: true,
         display_name_updated_at: new Date().toISOString(),
@@ -158,6 +162,9 @@ export function SetupProfileForm() {
           placeholder="60123456789"
           required
         />
+        <span className="text-xs font-bold text-slate-500">
+          WhatsApp number is only used for prize notification.
+        </span>
       </label>
 
       <button

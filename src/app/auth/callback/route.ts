@@ -32,12 +32,13 @@ function isProfileComplete(profile: {
   display_name: string | null;
   nickname: string | null;
   phone: string | null;
+  phone_number: string | null;
   whatsapp_number: string | null;
 } | null) {
   return Boolean(
     profile?.profile_completed &&
       (profile.display_name || profile.nickname) &&
-      (profile.phone || profile.whatsapp_number),
+      (profile.phone || profile.phone_number || profile.whatsapp_number),
   );
 }
 
@@ -83,7 +84,7 @@ export async function GET(request: Request) {
 
   let { data: profile } = await supabase
     .from("profiles")
-    .select("profile_completed, display_name, nickname, phone, whatsapp_number")
+    .select("profile_completed, display_name, nickname, phone, phone_number, whatsapp_number")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
@@ -100,10 +101,11 @@ export async function GET(request: Request) {
         email: user.email,
         login_provider: provider,
         provider,
+        auth_provider: provider,
         referral_code: createReferralCode(),
         profile_completed: false,
       })
-      .select("profile_completed, display_name, nickname, phone, whatsapp_number")
+      .select("profile_completed, display_name, nickname, phone, phone_number, whatsapp_number")
       .maybeSingle();
 
     profile = createdProfile;
