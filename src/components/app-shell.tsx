@@ -24,9 +24,9 @@ const nav = [
 export function TopNav({ active }: { active?: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2 sm:px-4 sm:py-3">
-        <Link href="/fifa-last-32" className="flex min-w-0 flex-1 items-center gap-2 font-black">
-          <span className="grid size-8 shrink-0 place-items-center rounded bg-[#d71920] text-xs text-white sm:size-9 sm:text-sm">
+      <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:h-16">
+        <Link href="/fifa-last-32" className="flex min-w-0 flex-1 items-center gap-3 font-black">
+          <span className="grid size-9 shrink-0 place-items-center rounded bg-[#d71920] text-sm text-white">
             ⚽
           </span>
           <span className="min-w-0 truncate text-sm sm:hidden">Last 32</span>
@@ -55,7 +55,7 @@ export function TopNav({ active }: { active?: string }) {
         <Link
           href="/admin"
           aria-label="Admin"
-          className="grid size-9 shrink-0 place-items-center rounded bg-white/10 text-white hover:bg-white/15 sm:w-auto sm:px-3 sm:text-sm sm:font-semibold"
+          className="grid size-11 shrink-0 place-items-center rounded bg-white/10 text-white hover:bg-white/15 sm:w-auto sm:px-3 sm:text-sm sm:font-semibold"
         >
           <Settings size={17} className="sm:hidden" />
           <span className="hidden sm:inline">Admin</span>
@@ -67,7 +67,7 @@ export function TopNav({ active }: { active?: string }) {
 
 export function MobileNav({ active }: { active?: string }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white text-slate-700 shadow-2xl md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] text-slate-700 shadow-2xl md:hidden">
       {nav.slice(0, 6).map((item) => {
         const Icon = item.icon;
         return (
@@ -96,7 +96,7 @@ export function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-100 pb-20 text-slate-950 md:pb-0">
+    <div className="min-h-screen w-full overflow-x-hidden bg-slate-100 pb-24 text-slate-950 md:pb-0">
       <TopNav active={active} />
       {children}
       <MobileNav active={active} />

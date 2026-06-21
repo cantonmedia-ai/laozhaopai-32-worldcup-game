@@ -83,7 +83,7 @@ export function AuthButtons({
         type="button"
         disabled={Boolean(loadingProvider)}
         onClick={() => signIn("google")}
-        className="flex h-12 items-center justify-center gap-2 rounded bg-white px-4 font-black text-slate-950 shadow hover:bg-slate-50 disabled:cursor-wait disabled:opacity-70"
+        className="flex h-13 w-full min-w-0 items-center justify-center gap-2 rounded bg-white px-4 text-center font-black text-slate-950 shadow hover:bg-slate-50 disabled:cursor-wait disabled:opacity-70"
       >
         {loadingProvider === "google" ? (
           <Loader2 className="animate-spin" size={18} />
@@ -96,7 +96,7 @@ export function AuthButtons({
         type="button"
         disabled={Boolean(loadingProvider)}
         onClick={() => signIn("apple")}
-        className="flex h-12 items-center justify-center gap-2 rounded bg-black px-4 font-black text-white shadow hover:bg-slate-900 disabled:cursor-wait disabled:opacity-70"
+        className="flex h-13 w-full min-w-0 items-center justify-center gap-2 rounded bg-black px-4 text-center font-black text-white shadow hover:bg-slate-900 disabled:cursor-wait disabled:opacity-70"
       >
         {loadingProvider === "apple" ? (
           <Loader2 className="animate-spin" size={18} />
