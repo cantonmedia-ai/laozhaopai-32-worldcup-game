@@ -93,7 +93,7 @@ type ScoreboardStandingRow = {
 
 const liveStatuses = new Set(["LIVE", "IN_PLAY", "PAUSED"]);
 const finishedStatuses = new Set(["FINISHED", "AWARDED"]);
-const upcomingStatuses = new Set(["SCHEDULED", "TIMED", "POSTPONED"]);
+const upcomingStatuses = new Set(["SCHEDULED", "TIMED", "POSTPONED", "PREDICTION_OPEN"]);
 
 function scoreValue(
   score: ProviderMatch["score"],
