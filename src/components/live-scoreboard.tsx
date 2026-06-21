@@ -198,7 +198,7 @@ function StandingsTable({ standings }: { standings: Standing[] }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      {standings.slice(0, 8).map((standing) => (
+      {standings.map((standing) => (
         <div
           key={`${standing.stage}-${standing.group}`}
           className="overflow-hidden rounded-lg bg-white text-slate-950 shadow-xl"
