@@ -9,6 +9,7 @@ import {
   Save,
   Send,
   Sparkles,
+  Search,
   Trophy,
   X,
 } from "lucide-react";
@@ -112,6 +113,7 @@ export function RoadToChampionGame({
   const [savingStage, setSavingStage] = useState("");
   const [messageByStage, setMessageByStage] = useState<Record<string, string>>({});
   const [confirmStage, setConfirmStage] = useState<RoadStage | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 60_000);
@@ -130,6 +132,14 @@ export function RoadToChampionGame({
   const locked = status !== "Open";
   const complete = selected.length === required;
   const stageMessage = messageByStage[activeStage.stage_key];
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredTeams = normalizedSearch
+    ? teams.filter((team) => {
+        const name = team.country_name?.toLowerCase() ?? "";
+        const code = team.country_code?.toLowerCase() ?? "";
+        return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+      })
+    : teams;
 
   function toggle(teamId: string) {
     if (locked) return;
@@ -173,9 +183,47 @@ export function RoadToChampionGame({
     }, 350);
   }
 
+  const selectedStrip = selectedTeams.length ? (
+    <div className="sticky top-[118px] z-10 -mx-4 border-y border-slate-200 bg-white/95 px-4 py-2 shadow-sm backdrop-blur lg:static lg:mx-0 lg:border lg:shadow-none">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0f8a4b]">
+          Selected Teams
+        </p>
+        <p className="text-xs font-black text-slate-500">
+          {selected.length} / {required}
+        </p>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-clean">
+        {selectedTeams.map((team) => (
+          <button
+            key={`strip-${team.id}`}
+            type="button"
+            onClick={() => toggle(team.id)}
+            className="flex h-9 shrink-0 items-center gap-2 rounded-full bg-[#071525] pl-1.5 pr-3 text-xs font-black text-white"
+          >
+            <span className="grid h-6 w-8 place-items-center overflow-hidden rounded-full bg-white/10">
+              {flagPath(team) ? (
+                <img
+                  src={flagPath(team)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                team.country_code
+              )}
+            </span>
+            {team.country_code}
+            <X size={13} className="text-white/65" />
+          </button>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
   const picker = (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {teams.map((team) => {
+    <div className="grid gap-2 pb-28 lg:grid-cols-2 lg:pb-0 xl:grid-cols-3">
+      {filteredTeams.map((team) => {
         const selectedTeam = selected.includes(team.id);
         const flag = flagPath(team);
 
@@ -186,55 +234,52 @@ export function RoadToChampionGame({
             disabled={locked || (!selectedTeam && selected.length >= required)}
             onClick={() => toggle(team.id)}
             className={clsx(
-              "group rounded-lg border bg-white p-3 text-left shadow-sm transition duration-200",
+              "group flex min-h-14 items-center gap-3 rounded-lg border bg-white px-3 py-2 text-left shadow-sm transition duration-200 active:scale-[0.99]",
               selectedTeam
-                ? "border-[#d6a728] ring-2 ring-[#d6a728]/40 shadow-[#d6a728]/25"
-                : "border-slate-200 hover:-translate-y-0.5 hover:border-slate-300",
+                ? "border-[#d6a728] bg-[#fff8df] ring-1 ring-[#d6a728]/35 shadow-[#d6a728]/20"
+                : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
               (locked || (!selectedTeam && selected.length >= required)) &&
-                "cursor-not-allowed opacity-60 hover:translate-y-0",
+                "cursor-not-allowed opacity-60",
             )}
           >
-            <div className="flex items-center gap-3">
-              <span className="grid h-12 w-16 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-xs font-black text-slate-500">
-                {flag ? (
-                  <img
-                    src={flag}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  team.country_code
-                )}
+            <span className="grid h-9 w-12 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500 sm:h-10 sm:w-14">
+              {flag ? (
+                <img
+                  src={flag}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                team.country_code
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-black leading-tight text-slate-950 sm:text-base">
+                {team.country_name}
               </span>
-              <span className="min-w-0">
-                <span className="block truncate font-black text-slate-950">
-                  {team.country_name}
-                </span>
-                <span className="text-sm font-semibold uppercase text-slate-500">
-                  {team.country_code}
-                </span>
+              <span className="mt-0.5 block text-xs font-bold uppercase leading-tight text-slate-500">
+                {team.country_code}
               </span>
-            </div>
+            </span>
             <span
               className={clsx(
-                "mt-3 inline-flex rounded px-3 py-1 text-xs font-black transition",
+                "grid size-7 shrink-0 place-items-center rounded-full border text-xs font-black transition",
                 selectedTeam
-                  ? "bg-[#f4c542] text-[#071525]"
-                  : "bg-slate-100 text-slate-500 group-hover:bg-slate-200",
+                  ? "border-[#d6a728] bg-[#f4c542] text-[#071525]"
+                  : "border-slate-300 text-slate-400 group-hover:border-slate-400",
               )}
             >
-              {selectedTeam ? (
-                <span className="inline-flex items-center gap-1">
-                  <Check size={13} /> Selected
-                </span>
-              ) : (
-                "Tap to select"
-              )}
+              {selectedTeam ? <Check size={15} /> : null}
             </span>
           </button>
         );
       })}
+      {filteredTeams.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-500 lg:col-span-2 xl:col-span-3">
+          No countries found. Try another name or code.
+        </div>
+      ) : null}
     </div>
   );
 
@@ -408,7 +453,7 @@ export function RoadToChampionGame({
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 rounded-lg bg-white p-4 shadow-sm">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
                 Available Teams
@@ -425,9 +470,29 @@ export function RoadToChampionGame({
               </p>
             </div>
             <div className="rounded bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">
-              {teams.length} countries
+              {filteredTeams.length} / {teams.length} countries
             </div>
           </div>
+
+          <label className="mb-3 flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-slate-500">
+            <Search size={17} />
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search country or code"
+              className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-950 outline-none placeholder:text-slate-400"
+            />
+            {searchTerm ? (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="grid size-7 place-items-center rounded-full bg-slate-200 text-slate-600"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            ) : null}
+          </label>
 
           {stageMessage ? (
             <p className="mb-4 rounded bg-yellow-50 p-3 text-sm font-bold text-yellow-900">
@@ -435,6 +500,7 @@ export function RoadToChampionGame({
             </p>
           ) : null}
 
+          {selectedStrip}
           {picker}
         </div>
 
