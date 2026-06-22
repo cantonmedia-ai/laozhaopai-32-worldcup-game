@@ -1,5 +1,3 @@
-import { matches, teams } from "@/lib/demo-data";
-
 export const dynamic = "force-dynamic";
 
 type ProviderMatch = {
@@ -233,67 +231,6 @@ function compareByDateDesc(a: ScoreboardMatch, b: ScoreboardMatch) {
   return String(b.utcDate).localeCompare(String(a.utcDate));
 }
 
-function localFallbackMatches(): ScoreboardMatch[] {
-  return matches.slice(0, 8).map((match) => {
-    const home = teams.find((team) => team.id === match.teamAId);
-    const away = teams.find((team) => team.id === match.teamBId);
-
-    return {
-      id: match.id,
-      utcDate: match.matchTime,
-      status: match.status.toUpperCase(),
-      minute: null,
-      stage: "Round of 32",
-      group: home?.groupName ? `Group ${home.groupName}` : "",
-      homeTeam: {
-        name: home?.name ?? "TBC",
-        shortName: home?.shortName ?? "TBC",
-      },
-      awayTeam: {
-        name: away?.name ?? "TBC",
-        shortName: away?.shortName ?? "TBC",
-      },
-      score: {
-        home: match.teamAScore ?? null,
-        away: match.teamBScore ?? null,
-        halfHome: null,
-        halfAway: null,
-      },
-    };
-  });
-}
-
-function localFallbackStandings(): ScoreboardStanding[] {
-  const groups = new Map<string, ScoreboardStandingRow[]>();
-
-  teams.forEach((team) => {
-    const group = `Group ${team.groupName}`;
-    const rows = groups.get(group) ?? [];
-    rows.push({
-      position: rows.length + 1,
-      team: {
-        name: team.name,
-        shortName: team.shortName,
-      },
-      played: 0,
-      won: 0,
-      draw: 0,
-      lost: 0,
-      goalDifference: 0,
-      points: 0,
-      goalsFor: 0,
-      goalsAgainst: 0,
-    });
-    groups.set(group, rows);
-  });
-
-  return [...groups.entries()].map(([group, rows]) => ({
-    group,
-    stage: "Group Stage",
-    rows,
-  }));
-}
-
 function partitionMatches(allMatches: ScoreboardMatch[]) {
   const liveMatches = allMatches
     .filter((match) => liveStatuses.has(match.status))
@@ -361,15 +298,13 @@ async function fetchProviderJson<T>(path: string, apiKey: string) {
 }
 
 function fallbackPayload(message: string) {
-  const allMatches = localFallbackMatches();
-
   return {
     source: "fallback",
     provider: "Football-Data.org",
     updatedAt: new Date().toISOString(),
     message,
-    ...partitionMatches(allMatches),
-    standings: localFallbackStandings(),
+    ...partitionMatches([]),
+    standings: [] as ScoreboardStanding[],
   };
 }
 

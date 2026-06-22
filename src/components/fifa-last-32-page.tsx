@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Gift, Medal, Share2, Trophy } from "lucide-react";
 import { AuthButtons } from "@/components/auth-buttons";
-import { LeaderboardTable } from "@/components/leaderboard";
+import { LeaderboardTable, type LeaderboardRow } from "@/components/leaderboard";
 import { LiveScoreboard } from "@/components/live-scoreboard";
 import { PageShell, StatCard } from "@/components/app-shell";
 import { ReferralInviteBanner } from "@/components/referral-invite-banner";
 import { TeamFlag } from "@/components/team-flag";
-import { getCurrentRound, profiles, teams } from "@/lib/demo-data";
+import { teams } from "@/lib/demo-data";
 import {
   knockoutWinnerCta,
   knockoutWinnerDescription,
@@ -16,9 +16,53 @@ import {
   knockoutWinnerRankingTitle,
   knockoutWinnerSubtitle,
 } from "@/lib/knockout-winner";
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
-export function FifaLast32Page() {
-  const round = getCurrentRound();
+type SupabaseLeaderboardRow = {
+  profile_id: string;
+  display_name: string;
+  avatar_url?: string;
+  total_score: number;
+  round_score: number;
+  correct_predictions: number;
+  total_predictions: number;
+  accuracy_rate: number;
+  rank_position: number;
+  previous_rank_position: number | null;
+  invite_count: number;
+};
+
+function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
+  return {
+    id: row.profile_id,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    totalScore: row.total_score,
+    roundScore: row.round_score,
+    rank: row.rank_position,
+    previousRank: row.previous_rank_position ?? undefined,
+    correctPredictions: row.correct_predictions,
+    totalPredictions: row.total_predictions,
+    accuracyRate: Number(row.accuracy_rate),
+    inviteCount: row.invite_count,
+  };
+}
+
+async function loadPublicLeaderboard() {
+  if (!hasSupabaseServerEnv()) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_leaderboard", {
+    p_game_id: null,
+    p_round_id: null,
+    p_scope: "overall",
+  });
+
+  return ((data ?? []) as SupabaseLeaderboardRow[]).map(supabaseRowToRow);
+}
+
+export async function FifaLast32Page() {
+  const leaderboardRows = await loadPublicLeaderboard();
 
   return (
     <PageShell active="/fifa-last-32" publicMode>
@@ -115,12 +159,16 @@ export function FifaLast32Page() {
       </section>
       <section className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 md:grid-cols-[0.85fr_1.15fr] md:gap-6 md:py-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-4">
-          <StatCard label="Current Round" value={round.labelCn} tone="green" />
-          <StatCard label="Correct Winner" value={`${round.scoringPoints} pts`} tone="gold" />
-          <StatCard label="Players" value="1,280+" detail="Demo seed" />
+          <StatCard label="Current Round" value="Last 32" tone="green" />
+          <StatCard label="Correct Winner" value="5 pts" tone="gold" />
+          <StatCard label="Players" value={leaderboardRows.length} detail="Signed up" />
           <StatCard label="Referral" value="Invite Rank" tone="navy" />
         </div>
-        <LeaderboardTable players={profiles.slice(0, 4)} title={knockoutWinnerRankingTitle} />
+        <LeaderboardTable
+          players={leaderboardRows.slice(0, 4)}
+          title={knockoutWinnerRankingTitle}
+          emptyText="No players signed up yet."
+        />
       </section>
       <LiveScoreboard />
       <section className="w-full bg-white px-4 py-6 md:py-10">

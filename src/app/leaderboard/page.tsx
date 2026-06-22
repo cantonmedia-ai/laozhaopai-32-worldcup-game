@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { LeaderboardTable, type LeaderboardRow } from "@/components/leaderboard";
-import { getCurrentRound, profiles, referrals } from "@/lib/demo-data";
 import { knockoutWinnerRankingTitle } from "@/lib/knockout-winner";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -20,7 +19,7 @@ type SupabaseLeaderboardRow = {
   total_predictions: number;
   accuracy_rate: number;
   rank_position: number;
-  previous_rank_position?: number;
+  previous_rank_position: number | null;
   invite_count: number;
 };
 
@@ -31,57 +30,6 @@ const tabs: Array<{ id: LeaderboardScope; label: string; title: string }> = [
   { id: "invite", label: "人气榜", title: "邀请人气榜" },
 ];
 
-function profileToRow(profile: (typeof profiles)[number]): LeaderboardRow {
-  return {
-    id: profile.id,
-    displayName: profile.displayName,
-    avatarUrl: profile.avatarUrl,
-    totalScore: profile.totalScore,
-    rank: profile.rank,
-    previousRank: profile.previousRank,
-    correctPredictions: profile.correctPredictions,
-    totalPredictions: profile.totalPredictions,
-  };
-}
-
-function demoRows(scope: LeaderboardScope): LeaderboardRow[] {
-  if (scope === "squad") {
-    const squadIds = new Set([
-      "me",
-      ...referrals.map((item) => item.referredProfileId),
-    ]);
-    return profiles.filter((profile) => squadIds.has(profile.id)).map(profileToRow);
-  }
-
-  if (scope === "invite") {
-    return profiles
-      .filter((profile) => profile.role === "player")
-      .map((profile) => ({
-        ...profileToRow(profile),
-        inviteCount: referrals.filter(
-          (referral) => referral.referrerProfileId === profile.id,
-        ).length,
-      }))
-      .sort(
-        (a, b) =>
-          (b.inviteCount ?? 0) - (a.inviteCount ?? 0) ||
-          b.totalScore - a.totalScore,
-      )
-      .map((row, index) => ({ ...row, rank: index + 1 }));
-  }
-
-  if (scope === "round") {
-    return profiles
-      .filter((profile) => profile.role === "player")
-      .map((profile) => ({
-        ...profileToRow(profile),
-        roundScore: Math.max(0, profile.totalScore - 35),
-      }));
-  }
-
-  return profiles.filter((profile) => profile.role === "player").map(profileToRow);
-}
-
 function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
   return {
     id: row.profile_id,
@@ -90,7 +38,7 @@ function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
     totalScore: row.total_score,
     roundScore: row.round_score,
     rank: row.rank_position,
-    previousRank: row.previous_rank_position,
+    previousRank: row.previous_rank_position ?? undefined,
     correctPredictions: row.correct_predictions,
     totalPredictions: row.total_predictions,
     accuracyRate: Number(row.accuracy_rate),
@@ -99,13 +47,12 @@ function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
 }
 
 export default function LeaderboardPage() {
-  const currentRound = getCurrentRound();
   const [activeTab, setActiveTab] = useState<LeaderboardScope>("overall");
   const [rowsByScope, setRowsByScope] = useState<Record<LeaderboardScope, LeaderboardRow[]>>({
-    overall: demoRows("overall"),
-    round: demoRows("round"),
-    squad: demoRows("squad"),
-    invite: demoRows("invite"),
+    overall: [],
+    round: [],
+    squad: [],
+    invite: [],
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -125,7 +72,7 @@ export default function LeaderboardPage() {
         for (const scope of scopes) {
           const { data, error } = await supabase.rpc("get_leaderboard", {
             p_game_id: null,
-            p_round_id: scope === "round" ? currentRound.id : null,
+            p_round_id: null,
             p_scope: scope,
           });
 
@@ -140,7 +87,7 @@ export default function LeaderboardPage() {
         setMessage(
           error instanceof Error
             ? error.message
-            : "Unable to load ranking. Showing demo data for now.",
+            : "Unable to load ranking. Please refresh and try again.",
         );
       } finally {
         setLoading(false);
@@ -149,7 +96,7 @@ export default function LeaderboardPage() {
 
     loadLeaderboards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentRound.id]);
+  }, []);
 
   const activeMeta = tabs.find((tab) => tab.id === activeTab)!;
   const rows = rowsByScope[activeTab];
@@ -172,7 +119,7 @@ export default function LeaderboardPage() {
         ) : null}
 
         <div className="mb-5 grid gap-4 md:grid-cols-4">
-          <StatCard label="Current Round" value={currentRound.labelCn} tone="green" />
+          <StatCard label="Ranking Source" value="Live Users" tone="green" />
           <StatCard label="Current Board" value={activeMeta.label} tone="gold" />
           <StatCard label="Top Score" value={topScore} />
           <StatCard label="Top Invite" value={topInvite} tone="navy" />
