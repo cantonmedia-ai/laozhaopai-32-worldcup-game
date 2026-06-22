@@ -5,6 +5,7 @@ import {
   Gift,
   LayoutDashboard,
   ListChecks,
+  Mail,
   Medal,
   Network,
   Route,
@@ -26,6 +27,7 @@ const adminNav = [
   { href: "/admin/leaderboards", label: "Leaderboards", icon: Medal },
   { href: "/admin/referrals", label: "Referrals", icon: Network },
   { href: "/admin/rewards", label: "Rewards", icon: Gift },
+  { href: "/admin/email-settings", label: "Email Settings", icon: Mail },
   { href: "/admin/audit", label: "Audit", icon: FileClock },
 ];
 

@@ -25,9 +25,20 @@ export default async function ProfilePage() {
         <div className="card mt-6 grid gap-4 p-5">
           <div>
             <p className="text-sm font-black text-slate-500">Email</p>
-            <p className="mt-1 break-all font-black text-slate-950">
-              {profile?.email ?? "-"}
-            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <p className="break-all font-black text-slate-950">
+                {profile?.email ?? "-"}
+              </p>
+              <span
+                className={`rounded px-2 py-1 text-[11px] font-black uppercase ${
+                  profile?.email_verified === false
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-green-100 text-green-700"
+                }`}
+              >
+                {profile?.email_verified === false ? "Verify needed" : "Verified"}
+              </span>
+            </div>
           </div>
           <div>
             <p className="text-sm font-black text-slate-500">WhatsApp Number</p>

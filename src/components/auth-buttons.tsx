@@ -80,6 +80,7 @@ async function ensurePlayerProfile(
     login_provider: provider,
     provider,
     auth_provider: provider,
+    ...(provider === "google" ? { email_verified: true } : {}),
     updated_at: new Date().toISOString(),
   };
 
@@ -208,8 +209,14 @@ export function AuthButtons({
 
       if (error) throw new Error(friendlyAuthError(error.message, "signup"));
 
+      await fetch("/api/email/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).catch(() => null);
+
       if (!data.session) {
-        setErrorMessage("Account created. Please check your email to finish login.");
+        setErrorMessage("Account created. Please check your email to verify your account.");
         return;
       }
 

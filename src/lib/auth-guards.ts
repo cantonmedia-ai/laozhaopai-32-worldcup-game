@@ -12,6 +12,7 @@ export type PlayerProfile = {
   phone_number: string | null;
   whatsapp_number: string | null;
   email: string | null;
+  email_verified: boolean | null;
   referral_code: string;
   referred_by_profile_id: string | null;
   profile_completed: boolean | null;
@@ -50,7 +51,7 @@ export async function getCurrentProfile() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, auth_user_id, user_id, role, display_name, nickname, phone, phone_number, whatsapp_number, email, referral_code, referred_by_profile_id, profile_completed",
+      "id, auth_user_id, user_id, role, display_name, nickname, phone, phone_number, whatsapp_number, email, email_verified, referral_code, referred_by_profile_id, profile_completed",
     )
     .eq("auth_user_id", user.id)
     .maybeSingle();
@@ -69,6 +70,10 @@ export async function requireCompletedProfile(next = "/game") {
 
   if (!profileIsComplete(profile)) {
     redirect(`/profile-setup?next=${encodeURIComponent(next)}`);
+  }
+
+  if (profile.email_verified === false) {
+    redirect(`/verify-email?next=${encodeURIComponent(next)}`);
   }
 
   return profile;
