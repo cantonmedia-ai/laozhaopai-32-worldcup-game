@@ -36,7 +36,7 @@ function demoMembers(): SquadMember[] {
     )
     .filter(Boolean);
   const members = [me, ...invited];
-  const teamSize = 5;
+  const teamSize = 6;
 
   return members.map((profile, index) => {
     const teamNo = Math.floor(index / teamSize) + 1;
@@ -49,7 +49,7 @@ function demoMembers(): SquadMember[] {
       team_no: teamNo,
       team_name: `Team ${teamNo}`,
       team_status:
-        teamMembers.length >= 5 ? "full" : friendCount >= 2 ? "active" : "forming",
+        friendCount >= 5 ? "full" : friendCount >= 2 ? "active" : "forming",
       team_member_count: teamMembers.length,
       team_friend_count: friendCount,
       owner_profile_id: me.id,
@@ -183,10 +183,10 @@ export default function SquadPage() {
     () => [
       "Every player has their own referral_code and can invite friends.",
       "When a friend joins from your code, they enter your current open team.",
-      "A team can hold maximum 5 players total: owner + friends.",
+      "Every team has one master player plus maximum 5 invited friends.",
       "A team is considered formed when it has at least 2 invited friends.",
-      "When one team reaches 5 players, the next friend automatically starts your next team.",
-      "That friend still keeps their own code and can build their own separate teams.",
+      "When your team reaches 5 friends, your next invited friend automatically starts your next team.",
+      "Your friend also has their own code. If they invite someone, that person enters your friend's own team.",
     ],
     [],
   );
@@ -232,7 +232,7 @@ export default function SquadPage() {
         <SectionHeader
           eyebrow="Squad"
           title="我的战队"
-          body="每位玩家都有自己的邀请码。朋友加入后会进入你的队伍；满 5 人后，下一位朋友自动进入你的新队伍。"
+          body="每位玩家都有自己的邀请码。朋友用你的码加入，会进入你的队伍。每队 1 位队主 + 最多 5 位朋友；朋友用自己的码邀请人，会建立他自己的队伍。"
         />
 
         {message ? (
@@ -254,9 +254,13 @@ export default function SquadPage() {
         </div>
 
         <div className="mt-6 card p-5">
-          <p className="text-sm font-black text-[#0f8a4b]">Invite Link</p>
+          <p className="text-sm font-black text-[#0f8a4b]">My Own Invite Link</p>
           <p className="mt-2 break-all rounded bg-slate-100 p-3 font-semibold text-slate-700">
             {inviteLink}
+          </p>
+          <p className="mt-2 text-sm font-bold text-slate-500">
+            Share this link to build your own team. Your friends should share
+            from their own Squad page to build their own team.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button
@@ -339,15 +343,13 @@ export default function SquadPage() {
                     </p>
                   </div>
                   <div className="rounded bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">
-                    {team.team_member_count}/5 players · {team.team_friend_count} friends
+                    Master + {team.team_friend_count}/5 friends
                   </div>
                 </div>
 
                 <div className="grid divide-y divide-slate-100">
                   {sorted.map((member) => {
                     const ownsThisTeam = member.profile_id === team.owner_profile_id;
-                    const memberInviteLink = inviteUrl(member.referral_code);
-
                     return (
                       <div
                         key={`${team.team_id}-${member.profile_id}`}
@@ -374,12 +376,9 @@ export default function SquadPage() {
                             points
                           </p>
                         </div>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(memberInviteLink)}
-                          className="h-10 rounded bg-slate-100 px-3 text-sm font-black text-slate-700 hover:bg-slate-200"
-                        >
-                          Copy member link
-                        </button>
+                        <p className="rounded bg-slate-100 px-3 py-2 text-sm font-black text-slate-600">
+                          Own code
+                        </p>
                       </div>
                     );
                   })}
