@@ -59,14 +59,12 @@ export default async function ProfilePage() {
           >
             <Share2 size={18} /> Referral
           </Link>
-          {profile && ["admin", "owner"].includes(profile.role) ? (
-            <Link
-              href="/admin"
-              className="flex h-12 items-center justify-center gap-2 rounded bg-[#f4c542] font-black text-[#071525]"
-            >
-              <Settings size={18} /> Admin
-            </Link>
-          ) : null}
+          <Link
+            href="/admin"
+            className="flex h-12 items-center justify-center gap-2 rounded bg-[#f4c542] font-black text-[#071525]"
+          >
+            <Settings size={18} /> Admin
+          </Link>
           <form action="/auth/logout" method="post">
             <button
               type="submit"

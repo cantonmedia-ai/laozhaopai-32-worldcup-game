@@ -1,7 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { ADMIN_ACCESS_COOKIE, ADMIN_ACCESS_VALUE } from "@/lib/admin-password";
 
 export async function requireAdminApi(request: NextRequest) {
+  if (request.cookies.get(ADMIN_ACCESS_COOKIE)?.value === ADMIN_ACCESS_VALUE) {
+    return {
+      ok: true as const,
+      user: {
+        id: "admin-password",
+        email: process.env.ADMIN_EMAIL || "deric@cantonkitchen.com.my",
+      },
+    };
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

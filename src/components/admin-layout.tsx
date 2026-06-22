@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import clsx from "clsx";
-import { requireAdmin } from "@/lib/auth-guards";
+import { requireAdminPasswordAccess } from "@/lib/admin-password";
 
 const adminNav = [
   { href: "/admin/games", label: "Dashboard", icon: LayoutDashboard },
@@ -38,7 +38,7 @@ export async function AdminLayout({
   active: string;
   children: React.ReactNode;
 }) {
-  await requireAdmin();
+  await requireAdminPasswordAccess(active);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950 md:grid md:grid-cols-[260px_1fr]">

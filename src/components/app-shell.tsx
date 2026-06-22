@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BookOpenText,
   ChartNoAxesColumnIncreasing,
+  Settings,
   ShieldCheck,
   Trophy,
   UserRound,
@@ -15,6 +16,7 @@ const playerNav = [
   { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
   { href: "/rules", label: "Rules", icon: BookOpenText },
   { href: "/profile", label: "Profile", icon: UserRound },
+  { href: "/admin", label: "Admin", icon: Settings },
 ];
 
 const publicNav = [

@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const adminAccessCookie = "brainwave_admin_access";
+const adminAccessValue = "brainwave_admin_ok";
+
 const protectedRoutes = [
   "/game",
   "/road-to-champion",
@@ -50,9 +53,34 @@ export async function proxy(request: NextRequest) {
   if (
     !isProtectedPath(pathname) &&
     !pathname.startsWith("/admin") &&
+    pathname !== "/admin-login" &&
     pathname !== "/login"
   ) {
     return NextResponse.next();
+  }
+
+  if (pathname === "/admin-login") {
+    if (request.cookies.get(adminAccessCookie)?.value === adminAccessValue) {
+      const nextPath = safeNextPath(request.nextUrl.searchParams.get("next"), "/admin");
+      const nextUrl = request.nextUrl.clone();
+      nextUrl.pathname = nextPath;
+      nextUrl.search = "";
+      return NextResponse.redirect(nextUrl);
+    }
+
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/admin")) {
+    if (request.cookies.get(adminAccessCookie)?.value === adminAccessValue) {
+      return NextResponse.next();
+    }
+
+    const adminLoginUrl = request.nextUrl.clone();
+    adminLoginUrl.pathname = "/admin-login";
+    adminLoginUrl.search = "";
+    adminLoginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(adminLoginUrl);
   }
 
   const response = NextResponse.next({ request });
@@ -135,16 +163,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(nextUrl);
   }
 
-  if (
-    pathname.startsWith("/admin") &&
-    !["admin", "owner"].includes(String(profile?.role ?? ""))
-  ) {
-    const gameUrl = request.nextUrl.clone();
-    gameUrl.pathname = "/game";
-    gameUrl.search = "";
-    return NextResponse.redirect(gameUrl);
-  }
-
   return response;
 }
 
@@ -165,6 +183,7 @@ export const config = {
     "/results/:path*",
     "/admin",
     "/admin/:path*",
+    "/admin-login",
     "/login",
   ],
 };
