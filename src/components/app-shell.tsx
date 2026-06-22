@@ -140,6 +140,17 @@ export function MobileNav({
           </Link>
         );
       })}
+      {!publicMode ? (
+        <form action="/auth/logout" method="post" className="flex flex-1">
+          <button
+            type="submit"
+            className="flex min-h-16 min-w-[72px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-slate-600"
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
+        </form>
+      ) : null}
     </nav>
   );
 }
