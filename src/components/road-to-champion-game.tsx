@@ -222,7 +222,7 @@ export function RoadToChampionGame({
   ) : null;
 
   const picker = (
-    <div className="grid gap-2 pb-28 lg:grid-cols-2 lg:pb-0 xl:grid-cols-3">
+    <div className="grid gap-2 pb-48 lg:grid-cols-2 lg:pb-0 xl:grid-cols-3">
       {filteredTeams.map((team) => {
         const selectedTeam = selected.includes(team.id);
         const flag = flagPath(team);
@@ -542,7 +542,7 @@ export function RoadToChampionGame({
         </div>
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white p-3 shadow-2xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-slate-200 bg-white p-3 shadow-2xl lg:hidden">
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-2">
           <button
             type="button"
