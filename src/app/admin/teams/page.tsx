@@ -1,23 +1,50 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { SectionHeader } from "@/components/app-shell";
-import { teams } from "@/lib/demo-data";
+import { Last32AdminSelector, type AdminTeamOption } from "@/components/last32-admin-selector";
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
+import { teams as demoTeams } from "@/lib/demo-data";
 
-export default function AdminTeamsPage() {
+export default async function AdminTeamsPage() {
+  let teams: AdminTeamOption[] = demoTeams.map((team) => ({
+    id: team.id,
+    country_name: team.name,
+    country_code: team.shortName,
+    flag_url: team.flagImage,
+    flag_asset_path: team.flagImage,
+    group_name: team.groupName,
+    is_active: true,
+  }));
+  let selectedTeamIds: string[] = [];
+
+  if (hasSupabaseServerEnv()) {
+    const supabase = await createClient();
+    const { data: teamData } = await supabase
+      .from("teams")
+      .select("id, country_name, country_code, flag_url, flag_asset_path, group_name, is_active")
+      .order("country_name", { ascending: true });
+
+    if (teamData?.length) {
+      teams = teamData as AdminTeamOption[];
+    }
+
+    const { data: selectedData } = await supabase
+      .from("tournament_teams")
+      .select("team_id, tournaments!inner(name)")
+      .eq("stage", "last_32")
+      .eq("tournaments.name", "FIFA World Cup 2026")
+      .order("seed_position", { ascending: true });
+
+    selectedTeamIds = (selectedData ?? []).map((row) => row.team_id as string);
+  }
+
   return (
     <AdminLayout active="/admin/teams">
-      <SectionHeader eyebrow="Teams" title="Manage teams" />
-      <div className="card overflow-hidden">
-        {teams.map((team) => (
-          <div key={team.id} className="grid grid-cols-[64px_1fr_auto] items-center gap-3 border-b border-slate-100 px-5 py-3 last:border-b-0">
-            <span className="text-3xl">{team.flag}</span>
-            <div>
-              <p className="font-black">{team.name}</p>
-              <p className="text-sm text-slate-500">{team.shortName} · Group {team.groupName}</p>
-            </div>
-            <span className="font-black text-slate-500">Seed {team.seedNo}</span>
-          </div>
-        ))}
-      </div>
+      <SectionHeader
+        eyebrow="Teams Database"
+        title="Manage Last 32 Seats"
+        body="Admin selects teams from the database. Team names are not typed manually."
+      />
+      <Last32AdminSelector teams={teams} selectedTeamIds={selectedTeamIds} />
     </AdminLayout>
   );
 }

@@ -1,0 +1,128 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+const protectedRoutes = [
+  "/game",
+  "/predict",
+  "/leaderboard",
+  "/referral",
+  "/squad",
+  "/profile",
+  "/results",
+];
+
+function isProtectedPath(pathname: string) {
+  return protectedRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
+function profileIsComplete(profile: {
+  profile_completed: boolean | null;
+  display_name: string | null;
+  nickname: string | null;
+  phone: string | null;
+  phone_number: string | null;
+  whatsapp_number: string | null;
+} | null) {
+  return Boolean(
+    profile?.profile_completed &&
+      (profile.display_name || profile.nickname) &&
+      (profile.phone || profile.phone_number || profile.whatsapp_number),
+  );
+}
+
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (
+    !isProtectedPath(pathname) &&
+    !pathname.startsWith("/admin") &&
+    pathname !== "/login"
+  ) {
+    return NextResponse.next();
+  }
+
+  const response = NextResponse.next({ request });
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) return response;
+
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          request.cookies.set(name, value);
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    if (pathname === "/login") return response;
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select(
+      "role, profile_completed, display_name, nickname, phone, phone_number, whatsapp_number",
+    )
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (pathname === "/login" && profileIsComplete(profile)) {
+    const gameUrl = request.nextUrl.clone();
+    gameUrl.pathname = "/game";
+    gameUrl.search = "";
+    return NextResponse.redirect(gameUrl);
+  }
+
+  if (pathname !== "/profile-setup" && !profileIsComplete(profile)) {
+    const setupUrl = request.nextUrl.clone();
+    setupUrl.pathname = "/profile-setup";
+    setupUrl.search = "";
+    setupUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(setupUrl);
+  }
+
+  if (
+    pathname.startsWith("/admin") &&
+    !["admin", "owner"].includes(String(profile?.role ?? ""))
+  ) {
+    const gameUrl = request.nextUrl.clone();
+    gameUrl.pathname = "/game";
+    gameUrl.search = "";
+    return NextResponse.redirect(gameUrl);
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    "/game/:path*",
+    "/predict/:path*",
+    "/leaderboard/:path*",
+    "/referral/:path*",
+    "/squad/:path*",
+    "/profile/:path*",
+    "/results/:path*",
+    "/admin",
+    "/admin/:path*",
+    "/login",
+  ],
+};

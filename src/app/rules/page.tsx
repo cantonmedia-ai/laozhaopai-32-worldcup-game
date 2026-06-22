@@ -25,7 +25,7 @@ const rules = [
 
 export default function RulesPage() {
   return (
-    <PageShell active="/rules">
+    <PageShell active="/rules" publicMode>
       <main className="mx-auto max-w-5xl px-4 py-10">
         <SectionHeader
           eyebrow="Rules"

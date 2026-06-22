@@ -5,6 +5,7 @@ import { AuthButtons } from "@/components/auth-buttons";
 import { LeaderboardTable } from "@/components/leaderboard";
 import { LiveScoreboard } from "@/components/live-scoreboard";
 import { PageShell, StatCard } from "@/components/app-shell";
+import { ReferralInviteBanner } from "@/components/referral-invite-banner";
 import { TeamFlag } from "@/components/team-flag";
 import { getCurrentRound, profiles, teams } from "@/lib/demo-data";
 
@@ -12,7 +13,7 @@ export function FifaLast32Page() {
   const round = getCurrentRound();
 
   return (
-    <PageShell active="/fifa-last-32">
+    <PageShell active="/fifa-last-32" publicMode>
       <section className="stadium-hero relative w-full overflow-hidden text-white">
         <Image
           src="/assets/elements/png/confetti_strip.png"
@@ -75,6 +76,7 @@ export function FifaLast32Page() {
           </div>
           <div className="relative z-10 min-w-0 w-full pb-6 md:pb-0">
             <div className="card mx-auto w-full max-w-md overflow-hidden bg-white/95 p-4 text-slate-950 md:max-w-none md:p-5">
+              <ReferralInviteBanner />
               <div className="mb-4 flex items-center gap-3">
                 <Image
                   src="/assets/elements/png/gold_trophy_badge.png"

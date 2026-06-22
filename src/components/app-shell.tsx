@@ -3,6 +3,7 @@ import {
   ChartNoAxesColumnIncreasing,
   Gift,
   Home,
+  LogOut,
   Settings,
   ShieldCheck,
   Trophy,
@@ -11,29 +12,48 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 
-const nav = [
+const playerNav = [
   { href: "/fifa-last-32", label: "Last 32", icon: Home },
-  { href: "/game", label: "战况", icon: Trophy },
-  { href: "/predict", label: "预测", icon: ShieldCheck },
-  { href: "/leaderboard", label: "排行", icon: ChartNoAxesColumnIncreasing },
-  { href: "/squad", label: "战队", icon: UsersRound },
-  { href: "/rewards", label: "奖品", icon: Gift },
-  { href: "/profile", label: "我的", icon: UserRound },
+  { href: "/game", label: "Dashboard", icon: Trophy },
+  { href: "/predict", label: "My Picks", icon: ShieldCheck },
+  { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
+  { href: "/referral", label: "Referral", icon: UsersRound },
+  { href: "/profile", label: "Profile", icon: UserRound },
 ];
 
-export function TopNav({ active }: { active?: string }) {
+const publicNav = [
+  { href: "/fifa-last-32", label: "Home", icon: Home },
+  { href: "/rules", label: "How to Play", icon: ShieldCheck },
+  { href: "/rewards", label: "Prizes", icon: Gift },
+];
+
+export function TopNav({
+  active,
+  publicMode = false,
+}: {
+  active?: string;
+  publicMode?: boolean;
+}) {
+  const items = publicMode ? publicNav : playerNav;
+
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:h-16">
-        <Link href="/fifa-last-32" className="flex min-w-0 flex-1 items-center gap-3 font-black">
+        <Link
+          href="/fifa-last-32"
+          className="flex min-w-0 flex-1 items-center gap-3 font-black"
+        >
           <span className="grid size-9 shrink-0 place-items-center rounded bg-[#d71920] text-sm text-white">
             ⚽
           </span>
           <span className="min-w-0 truncate text-sm sm:hidden">Last 32</span>
-          <span className="hidden min-w-0 truncate text-base sm:inline">Last 32 Challenge</span>
+          <span className="hidden min-w-0 truncate text-base sm:inline">
+            Last 32 Challenge
+          </span>
         </Link>
+
         <nav className="hidden shrink-0 items-center gap-1 lg:flex">
-          {nav.map((item) => {
+          {items.map((item) => {
             const Icon = item.icon;
             return (
               <Link
@@ -52,23 +72,57 @@ export function TopNav({ active }: { active?: string }) {
             );
           })}
         </nav>
-        <Link
-          href="/admin"
-          aria-label="Admin"
-          className="grid size-11 shrink-0 place-items-center rounded bg-white/10 text-white hover:bg-white/15 sm:w-auto sm:px-3 sm:text-sm sm:font-semibold"
-        >
-          <Settings size={17} className="sm:hidden" />
-          <span className="hidden sm:inline">Admin</span>
-        </Link>
+
+        {publicMode ? (
+          <Link
+            href="/login?next=/game"
+            className="grid h-11 shrink-0 place-items-center rounded bg-[#d71920] px-3 text-sm font-black text-white hover:bg-red-700"
+          >
+            Join
+          </Link>
+        ) : (
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/admin"
+              aria-label="Admin"
+              className="grid size-11 place-items-center rounded bg-white/10 text-white hover:bg-white/15 sm:w-auto sm:px-3 sm:text-sm sm:font-semibold"
+            >
+              <Settings size={17} className="sm:hidden" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+            <form action="/auth/logout" method="post">
+              <button
+                type="submit"
+                aria-label="Logout"
+                className="grid size-11 place-items-center rounded bg-white/10 text-white hover:bg-white/15"
+              >
+                <LogOut size={17} />
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </header>
   );
 }
 
-export function MobileNav({ active }: { active?: string }) {
+export function MobileNav({
+  active,
+  publicMode = false,
+}: {
+  active?: string;
+  publicMode?: boolean;
+}) {
+  const items = publicMode ? publicNav : playerNav;
+
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] text-slate-700 shadow-2xl md:hidden">
-      {nav.slice(0, 6).map((item) => {
+    <nav
+      className={clsx(
+        "fixed inset-x-0 bottom-0 z-40 grid border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] text-slate-700 shadow-2xl md:hidden",
+        publicMode ? "grid-cols-3" : "grid-cols-6",
+      )}
+    >
+      {items.map((item) => {
         const Icon = item.icon;
         return (
           <Link
@@ -90,16 +144,18 @@ export function MobileNav({ active }: { active?: string }) {
 
 export function PageShell({
   active,
+  publicMode = false,
   children,
 }: {
   active?: string;
+  publicMode?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-slate-100 pb-24 text-slate-950 md:pb-0">
-      <TopNav active={active} />
+      <TopNav active={active} publicMode={publicMode} />
       {children}
-      <MobileNav active={active} />
+      <MobileNav active={active} publicMode={publicMode} />
     </div>
   );
 }

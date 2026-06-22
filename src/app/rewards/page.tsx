@@ -34,7 +34,7 @@ const claimRules = [
 
 export default function RewardsPage() {
   return (
-    <PageShell active="/rewards">
+    <PageShell active="/rewards" publicMode>
       <main className="mx-auto max-w-6xl px-4 py-10">
         <SectionHeader
           eyebrow="Rewards"

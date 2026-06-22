@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import clsx from "clsx";
+import { requireAdmin } from "@/lib/auth-guards";
 
 const adminNav = [
   { href: "/admin/games", label: "Dashboard", icon: LayoutDashboard },
@@ -26,13 +27,15 @@ const adminNav = [
   { href: "/admin/audit", label: "Audit", icon: FileClock },
 ];
 
-export function AdminLayout({
+export async function AdminLayout({
   active,
   children,
 }: {
   active: string;
   children: React.ReactNode;
 }) {
+  await requireAdmin();
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950 md:grid md:grid-cols-[260px_1fr]">
       <aside className="bg-[#071525] p-4 text-white">
