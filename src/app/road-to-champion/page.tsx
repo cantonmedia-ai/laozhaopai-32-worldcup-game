@@ -6,8 +6,8 @@ import {
   type RoadTeam,
 } from "@/components/road-to-champion-game";
 import { requireCompletedProfile } from "@/lib/auth-guards";
-import { getCurrentRound, teams as demoTeams } from "@/lib/demo-data";
-import { sortRoadStages, type RoadStageKey } from "@/lib/road-to-champion";
+import { getCurrentRound } from "@/lib/demo-data";
+import { sortRoadStages } from "@/lib/road-to-champion";
 import { stageInlineName } from "@/lib/stage-labels";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
@@ -68,12 +68,63 @@ function demoStages(): RoadStage[] {
 }
 
 function demoRoadTeams(): RoadTeam[] {
-  return demoTeams.slice(0, 32).map((team) => ({
-    id: team.id,
-    country_name: team.name,
-    country_code: team.shortName,
-    flag_url: team.flagImage,
-    flag_asset_path: team.flagImage,
+  const countries = [
+    ["arg", "Argentina", "ARG", "ar"],
+    ["aus", "Australia", "AUS", "au"],
+    ["aut", "Austria", "AUT", "at"],
+    ["bel", "Belgium", "BEL", "be"],
+    ["bra", "Brazil", "BRA", "br"],
+    ["cpv", "Cabo Verde", "CPV", "cv"],
+    ["can", "Canada", "CAN", "ca"],
+    ["col", "Colombia", "COL", "co"],
+    ["crc", "Costa Rica", "CRC", "cr"],
+    ["cro", "Croatia", "CRO", "hr"],
+    ["cze", "Czechia", "CZE", "cz"],
+    ["den", "Denmark", "DEN", "dk"],
+    ["ecu", "Ecuador", "ECU", "ec"],
+    ["egy", "Egypt", "EGY", "eg"],
+    ["eng", "England", "ENG", "gb-eng"],
+    ["fra", "France", "FRA", "fr"],
+    ["ger", "Germany", "GER", "de"],
+    ["gha", "Ghana", "GHA", "gh"],
+    ["hai", "Haiti", "HAI", "ht"],
+    ["hon", "Honduras", "HON", "hn"],
+    ["irn", "Iran", "IRN", "ir"],
+    ["irq", "Iraq", "IRQ", "iq"],
+    ["ita", "Italy", "ITA", "it"],
+    ["jpn", "Japan", "JPN", "jp"],
+    ["jor", "Jordan", "JOR", "jo"],
+    ["kor", "Korea Republic", "KOR", "kr"],
+    ["mex", "Mexico", "MEX", "mx"],
+    ["mar", "Morocco", "MAR", "ma"],
+    ["ned", "Netherlands", "NED", "nl"],
+    ["nzl", "New Zealand", "NZL", "nz"],
+    ["nga", "Nigeria", "NGA", "ng"],
+    ["nor", "Norway", "NOR", "no"],
+    ["pan", "Panama", "PAN", "pa"],
+    ["par", "Paraguay", "PAR", "py"],
+    ["pol", "Poland", "POL", "pl"],
+    ["por", "Portugal", "POR", "pt"],
+    ["ksa", "Saudi Arabia", "KSA", "sa"],
+    ["sen", "Senegal", "SEN", "sn"],
+    ["srb", "Serbia", "SRB", "rs"],
+    ["rsa", "South Africa", "RSA", "za"],
+    ["esp", "Spain", "ESP", "es"],
+    ["sui", "Switzerland", "SUI", "ch"],
+    ["tun", "Tunisia", "TUN", "tn"],
+    ["uru", "Uruguay", "URU", "uy"],
+    ["usa", "USA", "USA", "us"],
+    ["uzb", "Uzbekistan", "UZB", "uz"],
+    ["ven", "Venezuela", "VEN", "ve"],
+    ["wal", "Wales", "WAL", "gb-wls"],
+  ];
+
+  return countries.map(([id, name, code, flagCode]) => ({
+    id: `mock-${id}`,
+    country_name: name,
+    country_code: code,
+    flag_url: `https://flagcdn.com/w160/${flagCode}.png`,
+    flag_asset_path: null,
   }));
 }
 
@@ -89,54 +140,6 @@ export default async function RoadToChampionPage() {
 
   if (hasSupabaseServerEnv() && profile) {
     const supabase = await createClient();
-
-    const { data: stageRows } = await supabase
-      .from("prediction_stages")
-      .select(
-        "stage_key, stage_name, required_selection_count, points_per_correct, perfect_bonus_points, due_at, status",
-      );
-
-    if (stageRows?.length) {
-      stages = sortRoadStages(stageRows as RoadStage[]);
-    }
-
-    const { data: teamRows } = await supabase
-      .from("tournament_teams")
-      .select(
-        "seed_position, teams!inner(id, country_name, country_code, flag_url, flag_asset_path), tournaments!inner(name)",
-      )
-      .eq("stage", "last_32")
-      .eq("tournaments.name", "FIFA World Cup 2026")
-      .order("seed_position", { ascending: true });
-
-    if (teamRows?.length) {
-      teams = teamRows.map((row) => {
-        const team = Array.isArray(row.teams) ? row.teams[0] : row.teams;
-        return {
-          id: team.id,
-          country_name: team.country_name,
-          country_code: team.country_code,
-          flag_url: team.flag_url,
-          flag_asset_path: team.flag_asset_path,
-        };
-      }) as RoadTeam[];
-    }
-
-    const { data: predictionRows } = await supabase
-      .from("user_stage_predictions")
-      .select(
-        "stage_key, selected_team_ids, status, points_earned, correct_count, bonus_earned",
-      )
-      .eq("user_id", profile.auth_user_id);
-
-    predictions = (predictionRows ?? []).map((row) => ({
-      stage_key: row.stage_key as RoadStageKey,
-      selected_team_ids: (row.selected_team_ids ?? []) as string[],
-      status: row.status,
-      points_earned: row.points_earned,
-      correct_count: row.correct_count,
-      bonus_earned: row.bonus_earned,
-    })) as RoadPrediction[];
 
     const { data: pointRows } = await supabase
       .from("point_transactions")
