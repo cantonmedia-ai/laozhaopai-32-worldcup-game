@@ -153,6 +153,18 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
 
   let team: TeamSummary = null;
   if (authUserId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("auth_user_id", authUserId)
+      .maybeSingle();
+
+    if (profile?.id) {
+      await supabase.rpc("get_or_create_open_squad_team", {
+        p_owner_profile_id: profile.id,
+      });
+    }
+
     const { data: squadRows } = await supabase.rpc("get_my_squad");
     const squadMembers = (squadRows ?? []) as SquadMember[];
     const primaryMember =

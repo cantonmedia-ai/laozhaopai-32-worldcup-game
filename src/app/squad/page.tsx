@@ -88,7 +88,8 @@ function inviteUrl(referralCode: string) {
 }
 
 export default function SquadPage() {
-  const [members, setMembers] = useState<SquadMember[]>(demoMembers);
+  const [members, setMembers] = useState<SquadMember[]>([]);
+  const [usingDemo, setUsingDemo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [editingTeamId, setEditingTeamId] = useState("");
@@ -96,7 +97,11 @@ export default function SquadPage() {
 
   useEffect(() => {
     async function loadSquad() {
-      if (!isSupabaseConfigured()) return;
+      if (!isSupabaseConfigured()) {
+        setMembers(demoMembers());
+        setUsingDemo(true);
+        return;
+      }
 
       setLoading(true);
       setMessage("");
@@ -108,14 +113,36 @@ export default function SquadPage() {
         } = await supabase.auth.getUser();
 
         if (!user) {
+          setMembers(demoMembers());
+          setUsingDemo(true);
           setMessage("请先登录后查看真实战队资料。当前显示 Demo 数据。");
           return;
         }
 
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (profileError) throw new Error(profileError.message);
+
+        if (profile?.id) {
+          const { error: ensureError } = await supabase.rpc(
+            "get_or_create_open_squad_team",
+            { p_owner_profile_id: profile.id },
+          );
+
+          if (ensureError) throw new Error(ensureError.message);
+        }
+
         const { data, error } = await supabase.rpc("get_my_squad");
         if (error) throw new Error(error.message);
-        if (data?.length) setMembers(data as SquadMember[]);
+        setMembers((data ?? []) as SquadMember[]);
+        setUsingDemo(false);
       } catch (error) {
+        setMembers(demoMembers());
+        setUsingDemo(true);
         setMessage(
           error instanceof Error
             ? error.message
@@ -129,14 +156,18 @@ export default function SquadPage() {
     loadSquad();
   }, []);
 
+  const displayMembers =
+    members.length > 0 || !usingDemo ? members : demoMembers();
   const me =
-    members.find((member) => member.relationship === "my_team_owner") ??
-    members.find((member) => member.profile_id === getMe().id) ??
+    displayMembers.find((member) => member.relationship === "my_team_owner") ??
+    displayMembers.find((member) => member.profile_id === getMe().id) ??
     demoMembers()[0];
-  const myOwnedMembers = members.filter(
+  const myOwnedMembers = displayMembers.filter(
     (member) => member.owner_profile_id === me.profile_id,
   );
-  const groupedTeams = groupByTeam(myOwnedMembers.length ? myOwnedMembers : members);
+  const groupedTeams = groupByTeam(
+    myOwnedMembers.length ? myOwnedMembers : displayMembers,
+  );
   const teamList = Object.values(groupedTeams).sort(
     (a, b) => a[0].team_no - b[0].team_no,
   );
