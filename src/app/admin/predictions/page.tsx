@@ -1,5 +1,6 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { SectionHeader } from "@/components/app-shell";
+import { ApiMatchSyncAdmin } from "@/components/api-match-sync-admin";
 import { getTeam, predictions } from "@/lib/demo-data";
 import { knockoutWinnerAdminTitle } from "@/lib/knockout-winner";
 
@@ -11,6 +12,7 @@ export default function AdminPredictionsPage() {
         title={knockoutWinnerAdminTitle}
         body="Set lock times in match management, enter actual winners in results, and calculate winner points without duplicate scoring."
       />
+      <ApiMatchSyncAdmin />
       <div className="card overflow-hidden">
         {predictions.map((prediction) => (
           <div

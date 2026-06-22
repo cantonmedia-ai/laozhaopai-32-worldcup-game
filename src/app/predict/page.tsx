@@ -4,8 +4,6 @@ import {
   type KnockoutMatch,
   type KnockoutPrediction,
 } from "@/components/knockout-db-game";
-import { PredictionBoard } from "@/components/prediction-board";
-import { getCurrentMatches } from "@/lib/demo-data";
 import { requireCompletedProfile } from "@/lib/auth-guards";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import {
@@ -17,7 +15,6 @@ import {
 
 export default async function PredictPage() {
   const profile = await requireCompletedProfile("/predict");
-  const matches = getCurrentMatches();
   let dbMatches: KnockoutMatch[] = [];
   let predictions: KnockoutPrediction[] = [];
   let totalPoints = 0;
@@ -30,6 +27,7 @@ export default async function PredictPage() {
       .select(
         "id, round_key, match_number, match_start_at, prediction_lock_at, actual_winner_team_id, status, knockout_rounds!inner(round_name), team_a:team_a_id(id, country_name, country_code, flag_url, flag_asset_path), team_b:team_b_id(id, country_name, country_code, flag_url, flag_asset_path)",
       )
+      .in("status", ["open", "locked", "scored", "completed"])
       .order("match_start_at", { ascending: true });
 
     dbMatches = (rows ?? []).map((row) => {
@@ -109,12 +107,32 @@ export default async function PredictPage() {
             ranking={ranking}
           />
         ) : (
-          <>
-            <div className="mb-5 rounded bg-yellow-50 p-4 text-sm font-bold text-yellow-900">
-              Next round matches will unlock after admin confirms the previous round winners.
+          <div className="grid gap-4 rounded-lg bg-white p-6 shadow-sm">
+            <p className="text-sm font-black uppercase tracking-[0.24em] text-[#0f8a4b]">
+              小组赛进行中 / Group Stage in Progress
+            </p>
+            <h2 className="text-3xl font-black text-slate-950">
+              32强名单确认中，预测即将开放。
+            </h2>
+            <p className="max-w-2xl font-semibold text-slate-600">
+              Game 2 will open only after Round of 32 fixtures are detected and
+              admin publishes them. Please play Game 1 first or form a team now.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <a
+                href="/road-to-champion"
+                className="flex h-12 items-center justify-center rounded bg-[#d71920] font-black text-white"
+              >
+                Start Game 1 / 开始预测
+              </a>
+              <a
+                href="/team-knockout"
+                className="flex h-12 items-center justify-center rounded bg-[#071525] font-black text-white"
+              >
+                Create / Join Team
+              </a>
             </div>
-            <PredictionBoard matches={matches} />
-          </>
+          </div>
         )}
       </main>
     </PageShell>

@@ -181,6 +181,10 @@ export function KnockoutDbGame({
     return (
       <div className="grid gap-5">
         <div className="card grid gap-4 p-5 md:grid-cols-2">
+          <div className="rounded bg-yellow-50 p-4 text-sm font-bold text-yellow-900 md:col-span-2">
+            Team formation is open now. Team match prediction will open after
+            Round of 32 fixtures are confirmed and published by admin.
+          </div>
           <div>
             <h2 className="text-xl font-black text-slate-950">Create a Team</h2>
             <p className="mt-1 text-sm font-semibold text-slate-600">
@@ -314,7 +318,9 @@ export function KnockoutDbGame({
 
       {!matches.length ? (
         <div className="card p-5 text-center font-bold text-slate-600">
-          Next round matches will unlock after admin confirms the previous round winners.
+          {mode === "team"
+            ? "Team formation is open now. Team match prediction will open after Round of 32 fixtures are confirmed and published by admin."
+            : "32强名单确认中，预测即将开放。Round of 32 prediction opens after admin publishes fixtures."}
         </div>
       ) : null}
 

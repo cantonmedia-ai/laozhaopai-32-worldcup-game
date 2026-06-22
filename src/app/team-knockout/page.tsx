@@ -31,6 +31,7 @@ export default async function TeamKnockoutPage() {
       .select(
         "id, round_key, match_number, match_start_at, prediction_lock_at, actual_winner_team_id, status, knockout_rounds!inner(round_name), team_a:team_a_id(id, country_name, country_code, flag_url, flag_asset_path), team_b:team_b_id(id, country_name, country_code, flag_url, flag_asset_path)",
       )
+      .in("status", ["open", "locked", "scored", "completed"])
       .order("match_start_at", { ascending: true });
 
     dbMatches = (rows ?? []).map((row) => {
