@@ -26,7 +26,7 @@ const playerNav = [
 
 const publicNav = [
   { href: "/fifa-last-32", label: "Home", icon: Home },
-  { href: "/login?next=/game&mode=login", label: "Login", icon: UserRound },
+  { href: "/login?next=/game&mode=login", label: "Sign In", icon: UserRound },
   { href: "/rules", label: "How to Play", icon: ShieldCheck },
   { href: "/rewards", label: "Prizes", icon: Gift },
 ];
@@ -82,7 +82,7 @@ export function TopNav({
             href="/login?next=/game&mode=login"
             className="grid h-11 shrink-0 place-items-center rounded bg-[#d71920] px-3 text-sm font-black text-white hover:bg-red-700"
           >
-            Login
+            Sign In
           </Link>
         ) : (
           <div className="flex shrink-0 items-center gap-2">

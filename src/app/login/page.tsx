@@ -15,10 +15,10 @@ export default async function LoginPage({
         <Link href="/" className="font-black text-[#f4c542]">
           Last 32 Challenge
         </Link>
-        <h1 className="mt-5 text-3xl font-black">Login to Play</h1>
+        <h1 className="mt-5 text-3xl font-black">Sign In to Play</h1>
         <p className="mt-2 text-white/70">
-          Already signed up? Login here. New players can switch to New Player
-          and create an account.
+          Already signed up? Sign in with Google or email. New players can
+          switch to Sign Up and join in one step.
         </p>
         {params.error ? (
           <p className="mt-4 rounded bg-red-50 p-3 text-sm font-bold text-red-700">

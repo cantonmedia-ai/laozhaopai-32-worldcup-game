@@ -46,6 +46,11 @@ function friendlyAuthError(message: string, mode: AuthMode) {
   return message || "Something went wrong. Please try again.";
 }
 
+function getGoogleButtonText(mode: AuthMode, loading: boolean) {
+  if (loading) return "Opening Google...";
+  return mode === "signup" ? "Sign up with Google" : "Sign in with Google";
+}
+
 async function ensurePlayerProfile(
   fallbackProvider: "google" | "email",
 ) {
@@ -289,7 +294,7 @@ export function AuthButtons({
               : "text-slate-600 hover:text-slate-950"
           } disabled:opacity-60`}
         >
-          New Player
+          Sign Up
         </button>
         <button
           type="button"
@@ -304,7 +309,7 @@ export function AuthButtons({
               : "text-slate-600 hover:text-slate-950"
           } disabled:opacity-60`}
         >
-          Login
+          Sign In
         </button>
       </div>
 
@@ -319,7 +324,7 @@ export function AuthButtons({
         ) : (
           <CircleUserRound size={18} />
         )}
-        {loading === "google" ? "Opening Google..." : "Continue with Google"}
+        {getGoogleButtonText(mode, loading === "google")}
       </button>
 
       <div className="flex items-center gap-3 text-xs font-black uppercase text-slate-400">
@@ -385,7 +390,7 @@ export function AuthButtons({
             }}
             className="text-center text-sm font-black text-[#0f8a4b] hover:text-[#0b6f3b] disabled:opacity-60"
           >
-            Already have an account? Login
+            Already have an account? Sign In
           </button>
         </form>
       ) : (
@@ -431,7 +436,7 @@ export function AuthButtons({
             }}
             className="text-center text-sm font-black text-[#0f8a4b] hover:text-[#0b6f3b] disabled:opacity-60"
           >
-            Need an account? Create Account
+            New player? Sign Up
           </button>
         </form>
       )}
