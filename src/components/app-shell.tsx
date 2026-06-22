@@ -1,11 +1,6 @@
 import Link from "next/link";
 import {
   ChartNoAxesColumnIncreasing,
-  Gift,
-  Home,
-  LogOut,
-  Route,
-  Settings,
   ShieldCheck,
   Trophy,
   UserRound,
@@ -14,21 +9,10 @@ import {
 import clsx from "clsx";
 
 const playerNav = [
-  { href: "/fifa-last-32", label: "Knockout", icon: Home },
-  { href: "/game", label: "Dashboard", icon: Trophy },
-  { href: "/road-to-champion", label: "Road", icon: Route },
-  { href: "/predict", label: "Winner", icon: ShieldCheck },
+  { href: "/game", label: "Play", icon: Trophy },
   { href: "/team-knockout", label: "Team", icon: UsersRound },
   { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
-  { href: "/referral", label: "Referral", icon: UsersRound },
   { href: "/profile", label: "Profile", icon: UserRound },
-];
-
-const publicNav = [
-  { href: "/fifa-last-32", label: "Home", icon: Home },
-  { href: "/login?next=/game&mode=login", label: "Sign In", icon: UserRound },
-  { href: "/rules", label: "How to Play", icon: ShieldCheck },
-  { href: "/rewards", label: "Prizes", icon: Gift },
 ];
 
 export function TopNav({
@@ -38,7 +22,7 @@ export function TopNav({
   active?: string;
   publicMode?: boolean;
 }) {
-  const items = publicMode ? publicNav : playerNav;
+  const items = publicMode ? [] : playerNav;
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
@@ -56,26 +40,28 @@ export function TopNav({
           </span>
         </Link>
 
-        <nav className="hidden shrink-0 items-center gap-1 lg:flex">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={clsx(
-                  "flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold transition",
-                  active === item.href
-                    ? "bg-[#f4c542] text-[#071525]"
-                    : "text-white/80 hover:bg-white/10 hover:text-white",
-                )}
-              >
-                <Icon size={16} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {!publicMode ? (
+          <nav className="hidden shrink-0 items-center gap-1 lg:flex">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={clsx(
+                    "flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold transition",
+                    active === item.href
+                      ? "bg-[#f4c542] text-[#071525]"
+                      : "text-white/80 hover:bg-white/10 hover:text-white",
+                  )}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        ) : null}
 
         {publicMode ? (
           <Link
@@ -85,25 +71,13 @@ export function TopNav({
             Sign In
           </Link>
         ) : (
-          <div className="flex shrink-0 items-center gap-2">
-            <Link
-              href="/admin"
-              aria-label="Admin"
-              className="grid size-11 place-items-center rounded bg-white/10 text-white hover:bg-white/15 sm:w-auto sm:px-3 sm:text-sm sm:font-semibold"
-            >
-              <Settings size={17} className="sm:hidden" />
-              <span className="hidden sm:inline">Admin</span>
-            </Link>
-            <form action="/auth/logout" method="post">
-              <button
-                type="submit"
-                aria-label="Logout"
-                className="grid size-11 place-items-center rounded bg-white/10 text-white hover:bg-white/15"
-              >
-                <LogOut size={17} />
-              </button>
-            </form>
-          </div>
+          <Link
+            href="/predict"
+            className="hidden h-11 shrink-0 items-center justify-center gap-2 rounded bg-[#d71920] px-4 text-sm font-black text-white hover:bg-red-700 sm:flex"
+          >
+            <ShieldCheck size={17} />
+            Play Now
+          </Link>
         )}
       </div>
     </header>
@@ -117,7 +91,9 @@ export function MobileNav({
   active?: string;
   publicMode?: boolean;
 }) {
-  const items = publicMode ? publicNav : playerNav;
+  const items = publicMode ? [] : playerNav;
+
+  if (publicMode) return null;
 
   return (
     <nav
@@ -141,17 +117,6 @@ export function MobileNav({
           </Link>
         );
       })}
-      {!publicMode ? (
-        <form action="/auth/logout" method="post" className="flex flex-1">
-          <button
-            type="submit"
-            className="flex min-h-16 min-w-[72px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold text-slate-600"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
-        </form>
-      ) : null}
     </nav>
   );
 }

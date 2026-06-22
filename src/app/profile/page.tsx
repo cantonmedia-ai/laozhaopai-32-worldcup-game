@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogOut, Settings, Share2 } from "lucide-react";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 
@@ -41,6 +42,28 @@ export default async function ProfilePage() {
           >
             Update Profile
           </Link>
+          <Link
+            href="/referral"
+            className="flex h-12 items-center justify-center gap-2 rounded bg-[#0f8a4b] font-black text-white"
+          >
+            <Share2 size={18} /> Referral
+          </Link>
+          {profile && ["admin", "owner"].includes(profile.role) ? (
+            <Link
+              href="/admin"
+              className="flex h-12 items-center justify-center gap-2 rounded bg-[#f4c542] font-black text-[#071525]"
+            >
+              <Settings size={18} /> Admin
+            </Link>
+          ) : null}
+          <form action="/auth/logout" method="post">
+            <button
+              type="submit"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded bg-slate-200 font-black text-slate-800 hover:bg-slate-300"
+            >
+              <LogOut size={18} /> Logout
+            </button>
+          </form>
         </div>
       </main>
     </PageShell>
