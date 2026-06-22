@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  BookOpenText,
   ChartNoAxesColumnIncreasing,
   ShieldCheck,
   Trophy,
@@ -12,7 +13,12 @@ const playerNav = [
   { href: "/game", label: "Play", icon: Trophy },
   { href: "/team-knockout", label: "Team", icon: UsersRound },
   { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
+  { href: "/rules", label: "Rules", icon: BookOpenText },
   { href: "/profile", label: "Profile", icon: UserRound },
+];
+
+const publicNav = [
+  { href: "/rules", label: "Rules & Prizes", icon: BookOpenText },
 ];
 
 export function TopNav({
@@ -22,7 +28,7 @@ export function TopNav({
   active?: string;
   publicMode?: boolean;
 }) {
-  const items = publicMode ? [] : playerNav;
+  const items = publicMode ? publicNav : playerNav;
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
@@ -40,7 +46,7 @@ export function TopNav({
           </span>
         </Link>
 
-        {!publicMode ? (
+        {items.length ? (
           <nav className="hidden shrink-0 items-center gap-1 lg:flex">
             {items.map((item) => {
               const Icon = item.icon;
@@ -64,12 +70,20 @@ export function TopNav({
         ) : null}
 
         {publicMode ? (
-          <Link
-            href="/login?next=/game&mode=login"
-            className="grid h-11 shrink-0 place-items-center rounded bg-[#d71920] px-3 text-sm font-black text-white hover:bg-red-700"
-          >
-            Sign In
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/rules"
+              className="grid h-10 place-items-center rounded bg-white/10 px-3 text-xs font-black text-white hover:bg-white/15 lg:hidden"
+            >
+              Rules
+            </Link>
+            <Link
+              href="/login?next=/game&mode=login"
+              className="grid h-10 place-items-center rounded bg-[#d71920] px-3 text-xs font-black text-white hover:bg-red-700 sm:h-11 sm:text-sm"
+            >
+              Sign In
+            </Link>
+          </div>
         ) : (
           <Link
             href="/predict"

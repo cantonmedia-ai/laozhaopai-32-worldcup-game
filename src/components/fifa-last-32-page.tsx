@@ -104,7 +104,7 @@ export async function FifaLast32Page() {
                 href="/rules"
                 className="inline-flex h-13 w-full items-center justify-center rounded border border-white/30 px-5 text-center font-black text-white hover:bg-white/10 sm:w-auto md:px-6"
               >
-                查看规则
+                Rules & Prizes
               </Link>
             </div>
             <div className="mt-5 hidden max-w-3xl grid-cols-2 gap-2 md:mt-8 md:grid md:grid-cols-4 md:gap-3">

@@ -11,11 +11,11 @@ export const knockoutWinnerAdminTitle =
   "淘汰赛赢家战管理\nKnockout Winner Challenge Admin Control";
 
 export const knockoutRoundPoints: Record<string, number> = {
-  r32: 5,
-  r16: 8,
-  qf: 12,
-  sf: 18,
-  final: 30,
+  r32: 1,
+  r16: 2,
+  qf: 4,
+  sf: 6,
+  final: 10,
 };
 
 export function matchStatusLabel(
