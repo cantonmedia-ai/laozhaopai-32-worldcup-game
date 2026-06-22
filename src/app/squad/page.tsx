@@ -49,7 +49,7 @@ function demoMembers(): SquadMember[] {
       team_no: teamNo,
       team_name: `Team ${teamNo}`,
       team_status:
-        friendCount >= 5 ? "full" : friendCount >= 2 ? "active" : "forming",
+        friendCount >= 4 ? "full" : friendCount >= 2 ? "active" : "forming",
       team_member_count: teamMembers.length,
       team_friend_count: friendCount,
       owner_profile_id: me.id,
@@ -183,9 +183,9 @@ export default function SquadPage() {
     () => [
       "Every player has their own referral_code and can invite friends.",
       "When a friend joins from your code, they enter your current open team.",
-      "Every team has one master player plus maximum 5 invited friends.",
+      "Every team has one master player plus maximum 4 invited friends.",
       "A team is considered formed when it has at least 2 invited friends.",
-      "When your team reaches 5 friends, your next invited friend automatically starts your next team.",
+      "When your team reaches 4 friends, your next invited friend automatically starts your next team.",
       "Your friend also has their own code. If they invite someone, that person enters your friend's own team.",
     ],
     [],
@@ -232,7 +232,7 @@ export default function SquadPage() {
         <SectionHeader
           eyebrow="Team"
           title="我的团队"
-          body="每位玩家都有自己的邀请码。朋友用你的码加入，会进入你的队伍。每队 1 位队主 + 最多 5 位朋友；朋友用自己的码邀请人，会建立他自己的队伍。"
+          body="每位玩家都有自己的邀请码。朋友用你的码加入，会进入你的队伍。每队总共 5 人：1 位队主 + 最多 4 位朋友；朋友用自己的码邀请人，会建立他自己的队伍。"
         />
 
         {message ? (
@@ -343,7 +343,7 @@ export default function SquadPage() {
                     </p>
                   </div>
                   <div className="rounded bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">
-                    Master + {team.team_friend_count}/5 friends
+                    Master + {team.team_friend_count}/4 friends
                   </div>
                 </div>
 

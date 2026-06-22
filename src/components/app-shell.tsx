@@ -148,6 +148,10 @@ export function PageShell({
     <div className="min-h-screen w-full overflow-x-hidden bg-slate-100 pb-24 text-slate-950 md:pb-0">
       <TopNav active={active} publicMode={publicMode} />
       {children}
+      <footer className="px-4 py-6 text-center text-xs leading-relaxed text-slate-500">
+        <p>© 2026 Brainwave Games</p>
+        <p>Powered by Brainwave AI</p>
+      </footer>
       <MobileNav active={active} publicMode={publicMode} />
     </div>
   );

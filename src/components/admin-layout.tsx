@@ -45,7 +45,7 @@ export async function AdminLayout({
           <span className="grid size-9 place-items-center rounded bg-[#d71920]">
             ⚽
           </span>
-          Admin 后台管理
+          Brainwave AI Admin Console
         </Link>
         <nav className="grid gap-1">
           {adminNav.map((item) => {

@@ -31,6 +31,9 @@ export default function ResultsPage() {
             </Link>
           </div>
         </div>
+        <p className="mt-3 text-center text-xs font-semibold text-[#b99a35]">
+          A Brainwave AI Experience
+        </p>
       </main>
     </PageShell>
   );
