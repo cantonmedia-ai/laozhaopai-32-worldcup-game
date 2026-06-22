@@ -109,11 +109,13 @@ async function ensurePlayerProfile(
 export function AuthButtons({
   next = "/game",
   showSetupNote = false,
+  initialMode = "signup",
 }: {
   next?: string;
   showSetupNote?: boolean;
+  initialMode?: AuthMode;
 }) {
-  const [mode, setMode] = useState<AuthMode>("signup");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [loading, setLoading] = useState<"google" | "signup" | "login" | "">("");
   const [errorMessage, setErrorMessage] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -273,6 +275,39 @@ export function AuthButtons({
 
   return (
     <div className="grid gap-4">
+      <div className="grid grid-cols-2 rounded bg-slate-100 p-1 text-sm font-black">
+        <button
+          type="button"
+          disabled={isBusy}
+          onClick={() => {
+            setMode("signup");
+            setErrorMessage("");
+          }}
+          className={`h-10 rounded transition ${
+            mode === "signup"
+              ? "bg-[#d71920] text-white shadow"
+              : "text-slate-600 hover:text-slate-950"
+          } disabled:opacity-60`}
+        >
+          New Player
+        </button>
+        <button
+          type="button"
+          disabled={isBusy}
+          onClick={() => {
+            setMode("login");
+            setErrorMessage("");
+          }}
+          className={`h-10 rounded transition ${
+            mode === "login"
+              ? "bg-[#071525] text-white shadow"
+              : "text-slate-600 hover:text-slate-950"
+          } disabled:opacity-60`}
+        >
+          Login
+        </button>
+      </div>
+
       <button
         type="button"
         disabled={isBusy}
