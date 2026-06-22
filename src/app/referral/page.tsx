@@ -105,7 +105,7 @@ export default async function ReferralPage() {
             })
           ) : (
             <p className="px-5 py-8 text-center font-bold text-slate-500">
-              No invited players yet. Share your link to start your squad.
+              No invited players yet. Share your link to start your team.
             </p>
           )}
         </section>

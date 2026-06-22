@@ -230,8 +230,8 @@ export default function SquadPage() {
     <PageShell active="/squad">
       <main className="mx-auto max-w-6xl px-4 py-10">
         <SectionHeader
-          eyebrow="Squad"
-          title="我的战队"
+          eyebrow="Team"
+          title="我的团队"
           body="每位玩家都有自己的邀请码。朋友用你的码加入，会进入你的队伍。每队 1 位队主 + 最多 5 位朋友；朋友用自己的码邀请人，会建立他自己的队伍。"
         />
 
@@ -260,7 +260,7 @@ export default function SquadPage() {
           </p>
           <p className="mt-2 text-sm font-bold text-slate-500">
             Share this link to build your own team. Your friends should share
-            from their own Squad page to build their own team.
+            from their own Team page to build their own team.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button
@@ -393,7 +393,7 @@ export default function SquadPage() {
             <div className="flex items-center gap-2">
               <UsersRound className="text-[#d71920]" />
               <h2 className="text-xl font-black text-slate-950">
-                How members are identified
+                How team members are identified
               </h2>
             </div>
             <div className="mt-4 grid gap-3 text-sm font-semibold text-slate-700">

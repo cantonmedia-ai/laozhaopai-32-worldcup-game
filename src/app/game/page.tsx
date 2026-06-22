@@ -415,7 +415,7 @@ export default async function GamePage() {
                 href="/squad"
                 className="flex h-11 items-center justify-center rounded bg-[#071525] px-4 font-black text-white"
               >
-                My Squad
+                My Team
               </Link>
             </div>
           </div>

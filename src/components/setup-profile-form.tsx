@@ -104,7 +104,7 @@ export function SetupProfileForm() {
     <form onSubmit={handleSubmit} className="card grid gap-4 p-5">
       {storedReferralCode ? (
         <div className="rounded bg-green-50 p-3 text-sm font-bold text-green-800">
-          Invite code detected: {storedReferralCode}. Your squad link will be recorded after setup.
+          Invite code detected: {storedReferralCode}. Your team link will be recorded after setup.
         </div>
       ) : null}
 

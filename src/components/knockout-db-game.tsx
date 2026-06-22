@@ -161,13 +161,13 @@ export function KnockoutDbGame({
             </h2>
             <p className="mt-1 text-sm font-semibold text-slate-600">
               Use your personal referral link to invite friends. Friends who sign
-              up from your link are grouped into your squad automatically.
+              up from your link are grouped into your team automatically.
             </p>
             <a
               href="/squad"
               className="mt-4 flex h-11 w-full items-center justify-center rounded bg-[#d71920] font-black text-white"
             >
-              Open My Squad
+              Open My Team
             </a>
           </div>
         </div>
