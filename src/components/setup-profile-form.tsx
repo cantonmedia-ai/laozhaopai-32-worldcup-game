@@ -78,7 +78,10 @@ export function SetupProfileForm() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) throw new Error("Please sign in first.");
+      if (!user) {
+        router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
+        return;
+      }
 
       const profilePayload = {
         auth_user_id: user.id,

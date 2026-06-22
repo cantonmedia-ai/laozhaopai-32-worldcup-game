@@ -9,6 +9,8 @@ const protectedRoutes = [
   "/referral",
   "/squad",
   "/profile",
+  "/profile-setup",
+  "/setup-profile",
   "/results",
 ];
 
@@ -122,6 +124,8 @@ export const config = {
     "/referral/:path*",
     "/squad/:path*",
     "/profile/:path*",
+    "/profile-setup",
+    "/setup-profile",
     "/results/:path*",
     "/admin",
     "/admin/:path*",
