@@ -94,8 +94,6 @@ export function KnockoutDbGame({
   );
   const [message, setMessage] = useState("");
   const [savingMatch, setSavingMatch] = useState("");
-  const [teamName, setTeamName] = useState("");
-  const [teamCode, setTeamCode] = useState("");
   const [now, setNow] = useState(0);
 
   useEffect(() => {
@@ -149,79 +147,28 @@ export function KnockoutDbGame({
     }
   }
 
-  async function createTeam() {
-    setMessage("");
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.rpc("create_game_team", {
-        p_team_name: teamName,
-      });
-      if (error) throw new Error(error.message);
-      window.location.reload();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to create team.");
-    }
-  }
-
-  async function joinTeam() {
-    setMessage("");
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.rpc("join_game_team", {
-        p_team_code: teamCode,
-      });
-      if (error) throw new Error(error.message);
-      window.location.reload();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to join team.");
-    }
-  }
-
   if (mode === "team" && !teamContext) {
     return (
       <div className="grid gap-5">
-        <div className="card grid gap-4 p-5 md:grid-cols-2">
-          <div className="rounded bg-yellow-50 p-4 text-sm font-bold text-yellow-900 md:col-span-2">
+        <div className="card grid gap-4 p-5">
+          <div className="rounded bg-yellow-50 p-4 text-sm font-bold text-yellow-900">
             Team formation is open now. Team match prediction will open after
             Round of 32 fixtures are confirmed and published by admin.
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-950">Create a Team</h2>
+            <h2 className="text-xl font-black text-slate-950">
+              Form your team by referral
+            </h2>
             <p className="mt-1 text-sm font-semibold text-slate-600">
-              Each user can join one team. Team score uses average score.
+              Use your personal referral link to invite friends. Friends who sign
+              up from your link are grouped into your squad automatically.
             </p>
-            <input
-              value={teamName}
-              onChange={(event) => setTeamName(event.target.value)}
-              className="mt-4 h-12 w-full rounded border border-slate-200 px-3 font-semibold"
-              placeholder="Team name"
-            />
-            <button
-              type="button"
-              onClick={createTeam}
-              className="mt-3 h-11 w-full rounded bg-[#d71920] font-black text-white"
+            <a
+              href="/squad"
+              className="mt-4 flex h-11 w-full items-center justify-center rounded bg-[#d71920] font-black text-white"
             >
-              Create Team
-            </button>
-          </div>
-          <div>
-            <h2 className="text-xl font-black text-slate-950">Join a Team</h2>
-            <p className="mt-1 text-sm font-semibold text-slate-600">
-              Enter a team invite code from your friend.
-            </p>
-            <input
-              value={teamCode}
-              onChange={(event) => setTeamCode(event.target.value)}
-              className="mt-4 h-12 w-full rounded border border-slate-200 px-3 font-semibold uppercase"
-              placeholder="TEAMCODE"
-            />
-            <button
-              type="button"
-              onClick={joinTeam}
-              className="mt-3 h-11 w-full rounded bg-[#071525] font-black text-white"
-            >
-              Join Team
-            </button>
+              Open My Squad
+            </a>
           </div>
         </div>
         {message ? (

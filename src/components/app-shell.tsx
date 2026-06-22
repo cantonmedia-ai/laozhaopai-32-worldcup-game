@@ -11,7 +11,7 @@ import clsx from "clsx";
 
 const playerNav = [
   { href: "/game", label: "Play", icon: Trophy },
-  { href: "/team-knockout", label: "Team", icon: UsersRound },
+  { href: "/squad", label: "Team", icon: UsersRound },
   { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
   { href: "/rules", label: "Rules", icon: BookOpenText },
   { href: "/profile", label: "Profile", icon: UserRound },

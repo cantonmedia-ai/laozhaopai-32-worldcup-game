@@ -126,7 +126,7 @@ export default async function PredictPage() {
                 Start Game 1 / 开始预测
               </a>
               <a
-                href="/team-knockout"
+                href="/squad"
                 className="flex h-12 items-center justify-center rounded bg-[#071525] font-black text-white"
               >
                 Create / Join Team

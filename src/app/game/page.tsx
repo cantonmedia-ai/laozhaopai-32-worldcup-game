@@ -26,6 +26,20 @@ type TeamSummary = {
   members: number;
 } | null;
 
+type SquadMember = {
+  relationship:
+    | "my_team_owner"
+    | "invited_by_me"
+    | "team_i_joined"
+    | "same_team_member";
+  team_id: string;
+  team_no: number;
+  team_name: string;
+  team_member_count: number;
+  referral_code: string;
+  total_score: number;
+};
+
 type DashboardData = {
   myPoints: number;
   myRank: number | null;
@@ -62,7 +76,7 @@ const gameCards = [
   },
   {
     id: "game3",
-    href: "/team-knockout",
+    href: "/squad",
     title: "游戏 3：团队淘汰赛赢家战",
     english: "Team Knockout Winner Challenge",
     badge: "组队开放中 / Team Formation Open",
@@ -137,31 +151,29 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
           .in("match_id", openMatchIds)
       : { data: [] };
 
-  const { data: member } = authUserId
-    ? await supabase
-        .from("game_team_members")
-        .select("team_id, game_teams(team_name, team_code)")
-        .eq("user_id", authUserId)
-        .eq("status", "active")
-        .maybeSingle()
-    : { data: null };
-
   let team: TeamSummary = null;
-  if (member?.team_id) {
-    const gameTeam = Array.isArray(member.game_teams)
-      ? member.game_teams[0]
-      : member.game_teams;
-    const { data: summary } = await supabase
-      .from("team_score_summary")
-      .select("total_points, active_member_count")
-      .eq("team_id", member.team_id)
-      .maybeSingle();
-    team = {
-      name: gameTeam?.team_name ?? "My Team",
-      code: gameTeam?.team_code ?? "",
-      totalPoints: Number(summary?.total_points ?? 0),
-      members: Number(summary?.active_member_count ?? 0),
-    };
+  if (authUserId) {
+    const { data: squadRows } = await supabase.rpc("get_my_squad");
+    const squadMembers = (squadRows ?? []) as SquadMember[];
+    const primaryMember =
+      squadMembers.find((item) => item.relationship === "my_team_owner") ??
+      squadMembers.find((item) => item.relationship === "team_i_joined") ??
+      squadMembers[0];
+    const sameTeam = primaryMember
+      ? squadMembers.filter((item) => item.team_id === primaryMember.team_id)
+      : [];
+
+    if (primaryMember) {
+      team = {
+        name: primaryMember.team_name ?? `Team ${primaryMember.team_no}`,
+        code: primaryMember.referral_code ?? "",
+        totalPoints: sameTeam.reduce(
+          (sum, item) => sum + Number(item.total_score ?? 0),
+          0,
+        ),
+        members: Number(primaryMember.team_member_count ?? sameTeam.length),
+      };
+    }
   }
 
   return {
@@ -243,7 +255,7 @@ export default async function GamePage() {
                 <ArrowRight size={18} />
               </Link>
               <Link
-                href="/team-knockout"
+                href="/squad"
                 className="flex h-12 items-center justify-center gap-2 rounded bg-white px-5 text-center font-black text-[#071525] hover:bg-slate-100"
               >
                 Create / Join Team <UsersRound size={18} />
@@ -382,16 +394,16 @@ export default async function GamePage() {
             )}
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Link
-                href="/team-knockout"
+                href="/squad"
                 className="flex h-11 items-center justify-center rounded bg-[#d71920] px-4 font-black text-white"
               >
-                Create Team
+                Invite Friends
               </Link>
               <Link
-                href="/team-knockout"
+                href="/squad"
                 className="flex h-11 items-center justify-center rounded bg-[#071525] px-4 font-black text-white"
               >
-                Join Team
+                My Squad
               </Link>
             </div>
           </div>
