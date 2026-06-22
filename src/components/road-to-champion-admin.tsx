@@ -109,7 +109,7 @@ export function RoadToChampionAdmin({
       });
 
       if (error) throw new Error(error.message);
-      setMessage(`${stage.stage_name} settings saved.`);
+      setMessage(`${roadStageCopy[stage.stage_key].shortName} settings saved.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to save stage.");
     } finally {
@@ -130,7 +130,7 @@ export function RoadToChampionAdmin({
       });
 
       if (error) throw new Error(error.message);
-      setMessage(`${stage.stage_name} official result saved.`);
+      setMessage(`${roadStageCopy[stage.stage_key].shortName} official result saved.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to save result.");
     } finally {
@@ -149,7 +149,7 @@ export function RoadToChampionAdmin({
       });
 
       if (error) throw new Error(error.message);
-      setMessage(`${stage.stage_name} scores calculated.`);
+      setMessage(`${roadStageCopy[stage.stage_key].shortName} scores calculated.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to calculate score.");
     } finally {
@@ -175,11 +175,18 @@ export function RoadToChampionAdmin({
             <div className="grid gap-4 border-b border-slate-100 p-5 lg:grid-cols-[1fr_auto]">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
-                  {roadStageCopy[stage.stage_key].title}
+                  {roadStageCopy[stage.stage_key].shortName}
                 </p>
                 <h2 className="mt-2 text-2xl font-black text-slate-950">
-                  {stage.stage_name}
+                  {roadStageCopy[stage.stage_key].title.split("\n").map((line) => (
+                    <span key={line} className="block leading-tight">
+                      {line}
+                    </span>
+                  ))}
                 </h2>
+                <p className="mt-1 text-sm font-semibold text-slate-600">
+                  {roadStageCopy[stage.stage_key].body}
+                </p>
                 <p className="mt-1 text-sm font-semibold text-slate-600">
                   Current due date: {formatMalaysiaDate(stage.due_at)}
                 </p>

@@ -8,6 +8,7 @@ import {
 import { requireCompletedProfile } from "@/lib/auth-guards";
 import { getCurrentRound, teams as demoTeams } from "@/lib/demo-data";
 import { sortRoadStages, type RoadStageKey } from "@/lib/road-to-champion";
+import { stageInlineName } from "@/lib/stage-labels";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
 type RankingRow = {
@@ -20,7 +21,7 @@ function demoStages(): RoadStage[] {
   return sortRoadStages([
     {
       stage_key: "last_16",
-      stage_name: "Last 16",
+      stage_name: stageInlineName("last_16"),
       required_selection_count: 16,
       points_per_correct: 2,
       perfect_bonus_points: 20,
@@ -29,7 +30,7 @@ function demoStages(): RoadStage[] {
     },
     {
       stage_key: "last_8",
-      stage_name: "Last 8",
+      stage_name: stageInlineName("last_8"),
       required_selection_count: 8,
       points_per_correct: 4,
       perfect_bonus_points: 20,
@@ -38,7 +39,7 @@ function demoStages(): RoadStage[] {
     },
     {
       stage_key: "last_4",
-      stage_name: "Last 4",
+      stage_name: stageInlineName("last_4"),
       required_selection_count: 4,
       points_per_correct: 8,
       perfect_bonus_points: 20,
@@ -47,7 +48,7 @@ function demoStages(): RoadStage[] {
     },
     {
       stage_key: "finalists",
-      stage_name: "Finalists",
+      stage_name: stageInlineName("final"),
       required_selection_count: 2,
       points_per_correct: 15,
       perfect_bonus_points: 20,

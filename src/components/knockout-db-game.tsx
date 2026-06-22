@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { Copy, Loader2, Send, UsersRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { countdownLabel } from "@/lib/knockout-winner";
+import { stageDescription, stageDisplayName } from "@/lib/stage-labels";
 
 export type KnockoutTeam = {
   id: string;
@@ -112,7 +113,7 @@ export function KnockoutDbGame({
     [predictions],
   );
 
-  const activeRound = matches[0]?.round_name ?? "Not Created";
+  const activeRound = matches[0] ? stageDisplayName(matches[0].round_key) : "Not Created";
   const nextDue = matches
     .filter((match) => new Date(match.prediction_lock_at).getTime() > now)
     .sort(
@@ -233,7 +234,13 @@ export function KnockoutDbGame({
       <section className="grid gap-3 rounded-lg bg-[#071525] p-4 text-white md:grid-cols-4">
         <div className="rounded bg-white/10 p-4">
           <p className="text-sm font-bold text-white/65">Current round</p>
-          <p className="mt-1 text-2xl font-black">{activeRound}</p>
+          <p className="mt-1 text-2xl font-black">
+            {activeRound.split("\n").map((line) => (
+              <span key={line} className="block leading-tight">
+                {line}
+              </span>
+            ))}
+          </p>
         </div>
         <div className="rounded bg-white/10 p-4">
           <p className="text-sm font-bold text-white/65">
@@ -323,7 +330,11 @@ export function KnockoutDbGame({
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded bg-[#071525] px-3 py-1 text-xs font-black text-white">
-                    {match.round_name}
+                    {stageDisplayName(match.round_key).split("\n").map((line) => (
+                      <span key={line} className="block leading-tight">
+                        {line}
+                      </span>
+                    ))}
                   </span>
                   <span
                     className={clsx(
@@ -337,6 +348,9 @@ export function KnockoutDbGame({
                     {label}
                   </span>
                 </div>
+                <p className="mt-2 text-sm font-semibold text-slate-600">
+                  {stageDescription(match.round_key)}
+                </p>
                 <p className="mt-2 text-sm font-semibold text-slate-600">
                   Match date: {new Date(match.match_start_at).toLocaleString("en-MY")}
                 </p>

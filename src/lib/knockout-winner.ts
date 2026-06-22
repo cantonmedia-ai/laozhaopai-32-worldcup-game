@@ -3,7 +3,7 @@ export const knockoutWinnerNameEn = "Knockout Winner Challenge";
 export const knockoutWinnerTitle = `${knockoutWinnerNameCn}\n${knockoutWinnerNameEn}`;
 export const knockoutWinnerSubtitle = "预测每一轮淘汰赛赢家，个人积分冲排行榜。";
 export const knockoutWinnerDescription =
-  "从 Last 32 开始，预测每一场淘汰赛的赢家。猜中越多，积分越高，排行榜越前，赢奖机会越大。";
+  "从 32强生死战 / Round of 32 开始，预测每一场淘汰赛的赢家。猜中越多，积分越高，排行榜越前，赢奖机会越大。";
 export const knockoutWinnerCta = "参加个人赢家战";
 export const knockoutWinnerRankingTitle =
   "淘汰赛赢家战排行榜\nKnockout Winner Challenge Ranking";

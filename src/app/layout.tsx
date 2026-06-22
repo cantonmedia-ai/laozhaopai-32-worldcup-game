@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://games.brainwaveai.my"),
-  title: "FIFA World Cup 2026 Last 32 Challenge",
-  description: "Last 32 Challenge prediction game on games.brainwaveai.my",
+  title: "FIFA World Cup 2026 Knockout Challenge",
+  description: "Knockout prediction game on games.brainwaveai.my",
 };
 
 export default function RootLayout({

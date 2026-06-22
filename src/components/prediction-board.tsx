@@ -10,6 +10,7 @@ import {
 } from "@/lib/knockout-winner";
 import { getTeam, predictions, rounds } from "@/lib/demo-data";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { stageDisplayName } from "@/lib/stage-labels";
 import type { Match } from "@/types/game";
 import { MatchCard, type MatchScoreGuess } from "./match-card";
 
@@ -26,12 +27,7 @@ function isValidDraft(draft: PredictionDraft) {
 
 function roundName(roundId: string) {
   const round = rounds.find((item) => item.id === roundId);
-  if (!round) return "Last 32";
-  if (round.id === "r32") return "Last 32";
-  if (round.id === "r16") return "Last 16";
-  if (round.id === "qf") return "Last 8";
-  if (round.id === "sf") return "Last 4";
-  return "Final";
+  return stageDisplayName(round?.id ?? roundId);
 }
 
 export function PredictionBoard({ matches }: { matches: Match[] }) {

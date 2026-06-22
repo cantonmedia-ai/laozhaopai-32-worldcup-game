@@ -55,7 +55,7 @@ export const rounds: GameRound[] = [
   },
   {
     id: "r16",
-    name: "Round of 16",
+    name: "Sweet 16",
     labelCn: "16强",
     order: 2,
     scoringPoints: 8,
@@ -64,7 +64,7 @@ export const rounds: GameRound[] = [
   },
   {
     id: "qf",
-    name: "Quarter Final",
+    name: "Elite 8",
     labelCn: "8强",
     order: 3,
     scoringPoints: 12,
@@ -73,7 +73,7 @@ export const rounds: GameRound[] = [
   },
   {
     id: "sf",
-    name: "Semi Final",
+    name: "Final 4",
     labelCn: "4强",
     order: 4,
     scoringPoints: 18,
@@ -82,7 +82,7 @@ export const rounds: GameRound[] = [
   },
   {
     id: "final",
-    name: "Final",
+    name: "Grand Final",
     labelCn: "决赛",
     order: 5,
     scoringPoints: 30,

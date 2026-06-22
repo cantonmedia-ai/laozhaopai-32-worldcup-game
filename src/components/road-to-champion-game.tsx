@@ -183,7 +183,7 @@ export function RoadToChampionGame({
           </p>
           <h2 className="mt-2 text-2xl font-black">
             {nextStage
-              ? `Next deadline: ${roadStageCopy[nextStage.stage_key].shortName} Prediction closes on ${formatMalaysiaDate(nextStage.due_at)}`
+              ? `Next deadline: ${roadStageCopy[nextStage.stage_key].shortName} closes on ${formatMalaysiaDate(nextStage.due_at)}`
               : "All open deadlines are closed for now."}
           </h2>
         </div>
@@ -261,7 +261,11 @@ export function RoadToChampionGame({
                   </span>
                 </div>
                 <h2 className="mt-3 text-2xl font-black text-slate-950">
-                  {roadStageCopy[stage.stage_key].title}
+                  {roadStageCopy[stage.stage_key].title.split("\n").map((line) => (
+                    <span key={line} className="block leading-tight">
+                      {line}
+                    </span>
+                  ))}
                 </h2>
                 <p className="mt-1 font-semibold text-slate-600">
                   {roadStageCopy[stage.stage_key].body}

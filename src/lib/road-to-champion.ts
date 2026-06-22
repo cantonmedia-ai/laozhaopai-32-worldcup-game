@@ -1,3 +1,9 @@
+import {
+  stageDescription,
+  stageDisplayName,
+  stageEnglishName,
+} from "@/lib/stage-labels";
+
 export const roadStageOrder = [
   "last_16",
   "last_8",
@@ -17,24 +23,24 @@ export const roadStageCopy: Record<
   }
 > = {
   last_16: {
-    shortName: "Last 16",
-    title: "Guess Last 16",
-    body: "Pick 16 teams you think will survive.",
+    shortName: stageEnglishName("last_16"),
+    title: stageDisplayName("last_16"),
+    body: stageDescription("last_16"),
   },
   last_8: {
-    shortName: "Last 8",
-    title: "Guess Last 8",
-    body: "Pick 8 teams you think will reach quarter-final.",
+    shortName: stageEnglishName("last_8"),
+    title: stageDisplayName("last_8"),
+    body: stageDescription("last_8"),
   },
   last_4: {
-    shortName: "Last 4",
-    title: "Guess Last 4",
-    body: "Pick 4 teams you think will reach semi-final.",
+    shortName: stageEnglishName("last_4"),
+    title: stageDisplayName("last_4"),
+    body: stageDescription("last_4"),
   },
   finalists: {
-    shortName: "Final",
-    title: "Guess Finalists",
-    body: "Pick 2 teams you think will reach the final.",
+    shortName: stageEnglishName("final"),
+    title: stageDisplayName("final"),
+    body: stageDescription("final"),
   },
   champion: {
     shortName: "Champion",

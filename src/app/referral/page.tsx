@@ -3,6 +3,7 @@ import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
+import { stageInlineName } from "@/lib/stage-labels";
 
 type InviteRow = {
   id: string;
@@ -68,7 +69,7 @@ export default async function ReferralPage() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <CopyLinkButton value={referralLink} />
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Join my FIFA Last 32 Seats game: ${referralLink}`)}`}
+              href={`https://wa.me/?text=${encodeURIComponent(`Join my FIFA ${stageInlineName("last_32")} game: ${referralLink}`)}`}
               className="flex h-12 items-center justify-center gap-2 rounded bg-[#0f8a4b] font-black text-white"
             >
               <Share2 size={18} /> Share to WhatsApp

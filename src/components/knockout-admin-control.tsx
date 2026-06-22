@@ -4,6 +4,12 @@ import Image from "next/image";
 import { useState } from "react";
 import { Calculator, Loader2, Save } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  knockoutStageOrder,
+  stageDescription,
+  stageDisplayName,
+  stageInlineName,
+} from "@/lib/stage-labels";
 import type { KnockoutMatch, KnockoutTeam } from "@/components/knockout-db-game";
 
 type RoundRow = {
@@ -12,13 +18,7 @@ type RoundRow = {
   status: string;
 };
 
-const roundOptions = [
-  ["last_32", "Last 32"],
-  ["last_16", "Last 16"],
-  ["last_8", "Last 8"],
-  ["last_4", "Last 4"],
-  ["final", "Final"],
-];
+const roundOptions = knockoutStageOrder.map((key) => [key, stageInlineName(key)] as const);
 
 function flagPath(team: KnockoutTeam) {
   return team.flag_asset_path || team.flag_url || "";
@@ -124,12 +124,21 @@ export function KnockoutAdminControl({
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-5">
-        {roundOptions.map(([key, label]) => {
+        {roundOptions.map(([key]) => {
           const row = rounds.find((item) => item.round_key === key);
           const count = matches.filter((match) => match.round_key === key).length;
           return (
             <div key={key} className="rounded bg-white p-4 shadow-sm">
-              <p className="font-black text-slate-950">{label}</p>
+              <p className="font-black text-slate-950">
+                {stageDisplayName(key).split("\n").map((line) => (
+                  <span key={line} className="block leading-tight">
+                    {line}
+                  </span>
+                ))}
+              </p>
+              <p className="mt-1 text-xs font-bold text-slate-500">
+                {stageDescription(key)}
+              </p>
               <p className="mt-1 text-sm font-bold text-slate-500">
                 {row?.status ?? "not_created"}
               </p>
@@ -202,7 +211,8 @@ export function KnockoutAdminControl({
               >
                 {matches.map((match) => (
                   <option key={match.id} value={match.id}>
-                    {match.round_name} #{match.match_number}: {match.team_a.country_code} vs {match.team_b.country_code}
+                    {stageInlineName(match.round_key)} #{match.match_number}:{" "}
+                    {match.team_a.country_code} vs {match.team_b.country_code}
                   </option>
                 ))}
               </select>
@@ -231,10 +241,18 @@ export function KnockoutAdminControl({
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
               <select value={previousRound} onChange={(event) => setPreviousRound(event.target.value)} className="h-11 rounded border border-slate-200 px-3">
-                <option value="last_32">After Last 32, create Last 16</option>
-                <option value="last_16">After Last 16, create Last 8</option>
-                <option value="last_8">After Last 8, create Last 4</option>
-                <option value="last_4">After Last 4, create Final</option>
+                <option value="last_32">
+                  After {stageInlineName("last_32")}, create {stageInlineName("last_16")}
+                </option>
+                <option value="last_16">
+                  After {stageInlineName("last_16")}, create {stageInlineName("last_8")}
+                </option>
+                <option value="last_8">
+                  After {stageInlineName("last_8")}, create {stageInlineName("last_4")}
+                </option>
+                <option value="last_4">
+                  After {stageInlineName("last_4")}, create {stageInlineName("final")}
+                </option>
               </select>
               <button type="button" onClick={createNextRound} disabled={busy === "next"} className="h-11 rounded bg-[#f4c542] px-4 font-black text-[#071525] disabled:bg-slate-300">
                 Create Next Round
@@ -261,7 +279,7 @@ export function KnockoutAdminControl({
           <tbody>
             {matches.map((match) => (
               <tr key={match.id} className="border-t border-slate-100">
-                <td className="p-4 font-black">{match.round_name}</td>
+                <td className="p-4 font-black">{stageInlineName(match.round_key)}</td>
                 <td className="p-4">{match.match_number}</td>
                 <td className="p-4">{match.team_a.country_name}</td>
                 <td className="p-4">{match.team_b.country_name}</td>

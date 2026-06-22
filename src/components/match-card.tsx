@@ -3,6 +3,7 @@
 import { Check, Clock, LockKeyhole } from "lucide-react";
 import clsx from "clsx";
 import { countdownLabel, matchStatusLabel } from "@/lib/knockout-winner";
+import { stageDisplayName } from "@/lib/stage-labels";
 import type { Match, Team } from "@/types/game";
 import { TeamFlag } from "./team-flag";
 
@@ -50,7 +51,11 @@ export function MatchCard({
       <div className="mb-4 grid gap-3 text-sm sm:grid-cols-[1fr_auto] sm:items-start">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded bg-[#071525] px-3 py-1 font-black text-white">
-            {roundName ?? "Last 32"}
+            {(roundName ?? stageDisplayName("last_32")).split("\n").map((line) => (
+              <span key={line} className="block leading-tight">
+                {line}
+              </span>
+            ))}
           </span>
           <span className="rounded bg-slate-100 px-3 py-1 font-black text-slate-700">
             Match {match.matchNo}

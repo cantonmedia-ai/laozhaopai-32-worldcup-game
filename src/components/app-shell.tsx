@@ -14,7 +14,7 @@ import {
 import clsx from "clsx";
 
 const playerNav = [
-  { href: "/fifa-last-32", label: "Last 32", icon: Home },
+  { href: "/fifa-last-32", label: "Knockout", icon: Home },
   { href: "/game", label: "Dashboard", icon: Trophy },
   { href: "/road-to-champion", label: "Road", icon: Route },
   { href: "/predict", label: "Winner", icon: ShieldCheck },
@@ -50,9 +50,9 @@ export function TopNav({
           <span className="grid size-9 shrink-0 place-items-center rounded bg-[#d71920] text-sm text-white">
             ⚽
           </span>
-          <span className="min-w-0 truncate text-sm sm:hidden">Last 32</span>
+          <span className="min-w-0 truncate text-sm sm:hidden">Knockout</span>
           <span className="hidden min-w-0 truncate text-base sm:inline">
-            Last 32 Challenge
+            Knockout Challenge
           </span>
         </Link>
 

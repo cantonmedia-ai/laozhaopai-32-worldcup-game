@@ -7,6 +7,7 @@ import {
   knockoutWinnerNameCn,
   knockoutWinnerNameEn,
 } from "@/lib/knockout-winner";
+import { stageInlineName } from "@/lib/stage-labels";
 
 type RankingRow = {
   profile_id: string;
@@ -81,7 +82,12 @@ export default async function GamePage() {
         />
 
         <div className="grid gap-4 md:grid-cols-5">
-          <StatCard label="Current Stage" value="Last 32" tone="green" />
+          <StatCard
+            label="Current Stage"
+            value="32强生死战"
+            detail="Round of 32"
+            tone="green"
+          />
           <StatCard
             label="My Ranking"
             value={myRank ? `#${myRank}` : "-"}
@@ -103,7 +109,7 @@ export default async function GamePage() {
               <p className="font-black text-[#d71920]">{card.english}</p>
               <p className="mt-2 text-slate-600">{card.body}</p>
               <p className="mt-4 text-sm font-bold text-[#0f8a4b]">
-                Current active round: Last 32
+                Current active round: {stageInlineName("last_32")}
               </p>
               <p className="text-sm font-bold text-slate-500">
                 Open the game to submit or edit before lock time.

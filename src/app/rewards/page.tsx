@@ -1,14 +1,15 @@
 import { Gift, Medal, ShieldCheck, Trophy, UsersRound } from "lucide-react";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { rewards } from "@/lib/demo-data";
+import { stageDescription, stageDisplayName } from "@/lib/stage-labels";
 
 const pointRules = [
-  ["Correct Last 32 match winner", "+5 points"],
-  ["Correct Last 16 match winner", "+8 points"],
-  ["Correct Last 8 match winner", "+12 points"],
-  ["Correct Last 4 match winner", "+18 points"],
-  ["Correct Final winner", "+30 points"],
-];
+  ["last_32", "+5 points"],
+  ["last_16", "+8 points"],
+  ["last_8", "+12 points"],
+  ["last_4", "+18 points"],
+  ["final", "+30 points"],
+] as const;
 
 const referralScheme = [
   "Every player has a referral code and referral link.",
@@ -75,7 +76,17 @@ export default function RewardsPage() {
                   key={label}
                   className="flex items-center justify-between rounded bg-slate-100 p-3"
                 >
-                  <span className="font-black text-slate-700">{label}</span>
+                  <span className="font-black text-slate-700">
+                    Correct winner:
+                    {stageDisplayName(label).split("\n").map((line) => (
+                      <span key={line} className="block leading-tight">
+                        {line}
+                      </span>
+                    ))}
+                    <span className="mt-1 block text-xs font-bold text-slate-500">
+                      {stageDescription(label)}
+                    </span>
+                  </span>
                   <span className="font-black text-[#d71920]">{value}</span>
                 </div>
               ))}

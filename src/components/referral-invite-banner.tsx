@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { cleanReferralCode } from "@/lib/referral-code";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { stageInlineName } from "@/lib/stage-labels";
 
 export function ReferralInviteBanner() {
   const [message, setMessage] = useState("");
@@ -25,7 +26,7 @@ export function ReferralInviteBanner() {
 
       if (nickname) {
         setMessage(
-          `You were invited by ${nickname}. Join the FIFA Last 32 Seats game now.`,
+          `You were invited by ${nickname}. Join the FIFA ${stageInlineName("last_32")} game now.`,
         );
       }
     }

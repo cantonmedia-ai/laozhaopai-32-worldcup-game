@@ -16,6 +16,11 @@ import {
   knockoutWinnerRankingTitle,
   knockoutWinnerSubtitle,
 } from "@/lib/knockout-winner";
+import {
+  knockoutStageOrder,
+  stageDescription,
+  stageDisplayName,
+} from "@/lib/stage-labels";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
 type SupabaseLeaderboardRow = {
@@ -103,12 +108,16 @@ export async function FifaLast32Page() {
               </Link>
             </div>
             <div className="mt-5 hidden max-w-3xl grid-cols-2 gap-2 md:mt-8 md:grid md:grid-cols-4 md:gap-3">
-              {["Last 32", "Last 16", "Last 8", "Final"].map((stage) => (
+              {knockoutStageOrder.slice(0, 4).map((stage) => (
                 <div
                   key={stage}
                   className="rounded border border-white/15 bg-white/10 px-2 py-3 text-center text-xs font-black backdrop-blur md:text-sm"
                 >
-                  {stage}
+                  {stageDisplayName(stage).split("\n").map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
                 </div>
               ))}
             </div>
@@ -159,7 +168,12 @@ export async function FifaLast32Page() {
       </section>
       <section className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 md:grid-cols-[0.85fr_1.15fr] md:gap-6 md:py-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-4">
-          <StatCard label="Current Round" value="Last 32" tone="green" />
+          <StatCard
+            label="Current Round"
+            value="32强生死战"
+            detail="Round of 32"
+            tone="green"
+          />
           <StatCard label="Correct Winner" value="5 pts" tone="gold" />
           <StatCard label="Players" value={leaderboardRows.length} detail="Signed up" />
           <StatCard label="Referral" value="Invite Rank" tone="navy" />
@@ -174,7 +188,7 @@ export async function FifaLast32Page() {
       <section className="w-full bg-white px-4 py-6 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
           {[
-            [knockoutWinnerNameCn, "从 Last 32 开始预测每一场淘汰赛赢家，猜中越多排名越高。", Trophy],
+            [knockoutWinnerNameCn, stageDescription("last_32"), Trophy],
             ["好友战队", "分享专属链接，把朋友拉进你的战区。", Share2],
             ["Prize Setting", "Knockout Winner Challenge Ranking 决定个人赢家战奖品。", Gift],
           ].map(([title, body, Icon]) => {

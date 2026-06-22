@@ -3,6 +3,7 @@ import { SectionHeader } from "@/components/app-shell";
 import { Last32AdminSelector, type AdminTeamOption } from "@/components/last32-admin-selector";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { teams as demoTeams } from "@/lib/demo-data";
+import { stageInlineName } from "@/lib/stage-labels";
 
 export default async function AdminTeamsPage() {
   let teams: AdminTeamOption[] = demoTeams.map((team) => ({
@@ -41,7 +42,7 @@ export default async function AdminTeamsPage() {
     <AdminLayout active="/admin/teams">
       <SectionHeader
         eyebrow="Teams Database"
-        title="Manage Last 32 Seats"
+        title={`Manage ${stageInlineName("last_32")}`}
         body="Admin selects teams from the database. Team names are not typed manually."
       />
       <Last32AdminSelector teams={teams} selectedTeamIds={selectedTeamIds} />

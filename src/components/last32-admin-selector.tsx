@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Loader2, Save } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { stageInlineName } from "@/lib/stage-labels";
 
 export type AdminTeamOption = {
   id: string;
@@ -76,9 +77,13 @@ export function Last32AdminSelector({
       });
 
       if (error) throw new Error(error.message);
-      setMessage("Last 32 Seats saved.");
+      setMessage(`${stageInlineName("last_32")} teams saved.`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save Last 32.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : `Unable to save ${stageInlineName("last_32")}.`,
+      );
     } finally {
       setSaving(false);
     }
@@ -88,7 +93,9 @@ export function Last32AdminSelector({
     <div className="grid gap-5">
       <div className="card grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
         <div>
-          <p className="text-sm font-black text-[#0f8a4b]">Manage Last 32 Seats</p>
+          <p className="text-sm font-black text-[#0f8a4b]">
+            Manage {stageInlineName("last_32")}
+          </p>
           <h2 className="mt-1 text-2xl font-black text-slate-950">
             Selected {selected.length} / 32
           </h2>
@@ -103,7 +110,7 @@ export function Last32AdminSelector({
           className="flex h-12 items-center justify-center gap-2 rounded bg-[#d71920] px-5 font-black text-white disabled:cursor-not-allowed disabled:bg-slate-400"
         >
           {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-          {saving ? "Saving..." : "Save Last 32"}
+          {saving ? "Saving..." : `Save ${stageInlineName("last_32")}`}
         </button>
       </div>
 

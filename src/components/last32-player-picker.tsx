@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Loader2, Save } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { stageInlineName } from "@/lib/stage-labels";
 
 export type Last32Team = {
   id: string;
@@ -59,7 +60,7 @@ export function Last32PlayerPicker({
       });
 
       if (error) throw new Error(error.message);
-      setMessage("Your Last 32 picks are saved.");
+      setMessage(`Your ${stageInlineName("last_32")} picks are saved.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to save picks.");
     } finally {
@@ -72,7 +73,9 @@ export function Last32PlayerPicker({
       <div className="rounded-lg bg-[#071525] p-4 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-bold text-white/65">Last 32 Seats</p>
+            <p className="text-sm font-bold text-white/65">
+              {stageInlineName("last_32")}
+            </p>
             <p className="text-xl font-black">Picked {picked.length} teams</p>
           </div>
           <button
