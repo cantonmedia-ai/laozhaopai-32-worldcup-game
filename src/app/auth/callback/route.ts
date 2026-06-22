@@ -14,6 +14,17 @@ function safeNextPath(value: string | null) {
   return value;
 }
 
+function getPublicOrigin(requestUrl: URL) {
+  if (
+    requestUrl.hostname === "localhost" ||
+    requestUrl.hostname === "127.0.0.1"
+  ) {
+    return requestUrl.origin;
+  }
+
+  return "https://games.brainwaveai.my";
+}
+
 function getReferralCodeFromCookie(cookieHeader: string | null) {
   const rawValue = cookieHeader
     ?.split(";")
@@ -95,7 +106,7 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
   const error = requestUrl.searchParams.get("error_description");
   const next = safeNextPath(requestUrl.searchParams.get("next"));
-  const origin = requestUrl.origin;
+  const origin = getPublicOrigin(requestUrl);
   const cookiesToSet: CookieToSet[] = [];
 
   if (error) {
