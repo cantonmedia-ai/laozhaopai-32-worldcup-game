@@ -7,6 +7,7 @@ import {
   ListChecks,
   Medal,
   Network,
+  Route,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import { requireAdmin } from "@/lib/auth-guards";
 const adminNav = [
   { href: "/admin/games", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/teams", label: "Teams", icon: ShieldCheck },
+  { href: "/admin/road-to-champion", label: "Road to Champion", icon: Route },
   { href: "/admin/rounds", label: "Rounds", icon: ListChecks },
   { href: "/admin/matches", label: "Matches", icon: ClipboardList },
   { href: "/admin/results", label: "Results", icon: Medal },

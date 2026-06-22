@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const protectedRoutes = [
   "/game",
+  "/road-to-champion",
   "/predict",
   "/leaderboard",
   "/referral",
@@ -115,6 +116,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/game/:path*",
+    "/road-to-champion/:path*",
     "/predict/:path*",
     "/leaderboard/:path*",
     "/referral/:path*",

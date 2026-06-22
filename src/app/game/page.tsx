@@ -28,6 +28,7 @@ export default async function GamePage() {
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {[
+            ["/road-to-champion", "Road to Champion", "Predict Last 16, Last 8, Finalists, and Champion."],
             ["/predict", "Last 32 Seats", "Pick your winners and guess scores."],
             ["/leaderboard", "Ranking", "See overall, round, friend, and invite rankings."],
             ["/referral", "Referral", "Copy your invite link and build your squad."],

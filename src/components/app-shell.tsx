@@ -4,6 +4,7 @@ import {
   Gift,
   Home,
   LogOut,
+  Route,
   Settings,
   ShieldCheck,
   Trophy,
@@ -15,6 +16,7 @@ import clsx from "clsx";
 const playerNav = [
   { href: "/fifa-last-32", label: "Last 32", icon: Home },
   { href: "/game", label: "Dashboard", icon: Trophy },
+  { href: "/road-to-champion", label: "Road", icon: Route },
   { href: "/predict", label: "My Picks", icon: ShieldCheck },
   { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
   { href: "/referral", label: "Referral", icon: UsersRound },
@@ -118,8 +120,7 @@ export function MobileNav({
   return (
     <nav
       className={clsx(
-        "fixed inset-x-0 bottom-0 z-40 grid border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] text-slate-700 shadow-2xl md:hidden",
-        publicMode ? "grid-cols-3" : "grid-cols-6",
+        "fixed inset-x-0 bottom-0 z-40 flex overflow-x-auto border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] text-slate-700 shadow-2xl md:hidden",
       )}
     >
       {items.map((item) => {
@@ -129,7 +130,7 @@ export function MobileNav({
             key={item.href}
             href={item.href}
             className={clsx(
-              "flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold",
+              "flex min-h-16 min-w-[72px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold",
               active === item.href ? "text-[#d71920]" : "text-slate-600",
             )}
           >
