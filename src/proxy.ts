@@ -35,6 +35,11 @@ function profileIsComplete(profile: {
   );
 }
 
+function safeNextPath(value: string | null, fallback: string) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
+  return value;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -72,10 +77,14 @@ export async function proxy(request: NextRequest) {
 
   if (!user) {
     if (pathname === "/login") return response;
+    const nextPath =
+      pathname === "/profile-setup" || pathname === "/setup-profile"
+        ? safeNextPath(request.nextUrl.searchParams.get("next"), "/game")
+        : pathname;
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.search = "";
-    loginUrl.searchParams.set("next", pathname);
+    loginUrl.searchParams.set("next", nextPath);
     return NextResponse.redirect(loginUrl);
   }
 
