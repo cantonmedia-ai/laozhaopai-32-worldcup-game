@@ -7,14 +7,6 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 type AuthMode = "signup" | "login";
 
 function getRedirectOrigin() {
-  if (window.location.hostname === "games.brainwaveai.my") {
-    return window.location.origin;
-  }
-
-  if (window.location.hostname.endsWith(".vercel.app")) {
-    return "https://games.brainwaveai.my";
-  }
-
   return window.location.origin;
 }
 

@@ -27,6 +27,19 @@ function createReferralCode() {
   return `LZP${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
+function friendlyExchangeError(message: string) {
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes("code verifier") ||
+    lowerMessage.includes("pkce")
+  ) {
+    return "Google login expired. Please start login again from this same page.";
+  }
+
+  return message || "Login failed. Please try again.";
+}
+
 function isProfileComplete(profile: {
   profile_completed: boolean | null;
   display_name: string | null;
@@ -68,7 +81,9 @@ export async function GET(request: Request) {
 
   if (exchangeError) {
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(exchangeError.message)}`,
+      `${origin}/login?error=${encodeURIComponent(
+        friendlyExchangeError(exchangeError.message),
+      )}`,
     );
   }
 

@@ -18,6 +18,7 @@ const playerNav = [
   { href: "/game", label: "Dashboard", icon: Trophy },
   { href: "/road-to-champion", label: "Road", icon: Route },
   { href: "/predict", label: "Winner", icon: ShieldCheck },
+  { href: "/team-knockout", label: "Team", icon: UsersRound },
   { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
   { href: "/referral", label: "Referral", icon: UsersRound },
   { href: "/profile", label: "Profile", icon: UserRound },

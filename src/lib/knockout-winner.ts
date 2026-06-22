@@ -29,8 +29,8 @@ export function matchStatusLabel(
   return "Open";
 }
 
-export function countdownLabel(value: string) {
-  const diff = new Date(value).getTime() - Date.now();
+export function countdownLabel(value: string, now = Date.now()) {
+  const diff = new Date(value).getTime() - now;
   if (diff <= 0) return "Closed";
 
   const days = Math.floor(diff / 86_400_000);

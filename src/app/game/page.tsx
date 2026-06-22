@@ -9,6 +9,27 @@ import {
 } from "@/lib/knockout-winner";
 import { rankingMovement } from "@/lib/scoring";
 
+const gameCards = [
+  {
+    href: "/road-to-champion",
+    title: "最强预测家",
+    english: "Ultimate Predictor",
+    body: "猜16强、8强、4强，预测最终冠军。",
+  },
+  {
+    href: "/predict",
+    title: knockoutWinnerNameCn,
+    english: knockoutWinnerNameEn,
+    body: knockoutWinnerDescription,
+  },
+  {
+    href: "/team-knockout",
+    title: "团队淘汰赛赢家战",
+    english: "Team Knockout Winner Challenge",
+    body: "加入团队一起预测每一轮赢家，团队积分冲榜赢大奖。",
+  },
+];
+
 export default async function GamePage() {
   const profile = await requireCompletedProfile("/game");
   const me = getMe();
@@ -20,7 +41,7 @@ export default async function GamePage() {
         <SectionHeader
           eyebrow="Player Dashboard"
           title={`Welcome, ${profile ? displayName(profile) : me.displayName}`}
-          body="Check your game progress, enter knockout winner picks, invite friends, and follow the ranking."
+          body="Choose a game mode, submit before the due date, and climb the right ranking."
         />
 
         <div className="grid gap-4 md:grid-cols-5">
@@ -28,19 +49,24 @@ export default async function GamePage() {
           <StatCard label="My Ranking" value={`#${me.rank}`} detail={rankingMovement(me)} tone="gold" />
           <StatCard label="My Squad" value="2 friends" />
           <StatCard label="Total Points" value={me.totalScore} tone="navy" />
-          <StatCard label="Pick Deadline" value="July 1" detail="12:00 PM" />
+          <StatCard label="Next Due" value="July 1" detail="12:00 PM" />
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            ["/road-to-champion", "Road to Champion", "Predict Last 16, Last 8, Finalists, and Champion."],
-            ["/predict", `${knockoutWinnerNameCn} · ${knockoutWinnerNameEn}`, knockoutWinnerDescription],
-            ["/leaderboard", "Ranking", "See overall, round, friend, and invite rankings."],
-            ["/referral", "Referral", "Copy your invite link and build your squad."],
-          ].map(([href, title, body]) => (
-            <Link key={href} href={href} className="card p-5 transition hover:-translate-y-1">
-              <h2 className="text-xl font-black text-slate-950">{title}</h2>
-              <p className="mt-2 text-slate-600">{body}</p>
+          {gameCards.map((card) => (
+            <Link key={card.href} href={card.href} className="card p-5 transition hover:-translate-y-1">
+              <span className="mb-3 inline-flex rounded bg-[#f4c542] px-3 py-1 text-xs font-black text-[#071525]">
+                Prize Badge
+              </span>
+              <h2 className="text-xl font-black text-slate-950">{card.title}</h2>
+              <p className="font-black text-[#d71920]">{card.english}</p>
+              <p className="mt-2 text-slate-600">{card.body}</p>
+              <p className="mt-4 text-sm font-bold text-[#0f8a4b]">
+                Current active round: {round.labelCn}
+              </p>
+              <p className="text-sm font-bold text-slate-500">
+                Predictions submitted: demo · Ranking teaser: #{me.rank}
+              </p>
             </Link>
           ))}
         </div>
