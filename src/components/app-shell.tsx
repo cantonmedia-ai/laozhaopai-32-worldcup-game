@@ -17,7 +17,7 @@ const playerNav = [
   { href: "/fifa-last-32", label: "Last 32", icon: Home },
   { href: "/game", label: "Dashboard", icon: Trophy },
   { href: "/road-to-champion", label: "Road", icon: Route },
-  { href: "/predict", label: "My Picks", icon: ShieldCheck },
+  { href: "/predict", label: "Winner", icon: ShieldCheck },
   { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
   { href: "/referral", label: "Referral", icon: UsersRound },
   { href: "/profile", label: "Profile", icon: UserRound },
@@ -167,7 +167,7 @@ export function SectionHeader({
   body,
 }: {
   eyebrow?: string;
-  title: string;
+  title: React.ReactNode;
   body?: string;
 }) {
   return (

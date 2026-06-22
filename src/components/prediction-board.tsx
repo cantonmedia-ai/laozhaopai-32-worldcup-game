@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Send } from "lucide-react";
-import { getTeam, predictions } from "@/lib/demo-data";
+import {
+  knockoutWinnerCta,
+  knockoutWinnerNameCn,
+  knockoutWinnerNameEn,
+  knockoutWinnerSubtitle,
+} from "@/lib/knockout-winner";
+import { getTeam, predictions, rounds } from "@/lib/demo-data";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { Match } from "@/types/game";
 import { MatchCard, type MatchScoreGuess } from "./match-card";
@@ -10,12 +16,22 @@ import { MatchCard, type MatchScoreGuess } from "./match-card";
 type PredictionDraft = {
   winnerTeamId?: string;
   score: MatchScoreGuess;
+  pointsEarned?: number;
+  scored?: boolean;
 };
 
 function isValidDraft(draft: PredictionDraft) {
-  if (!draft.winnerTeamId) return false;
-  if (draft.score.teamA === "" || draft.score.teamB === "") return false;
-  return true;
+  return Boolean(draft.winnerTeamId);
+}
+
+function roundName(roundId: string) {
+  const round = rounds.find((item) => item.id === roundId);
+  if (!round) return "Last 32";
+  if (round.id === "r32") return "Last 32";
+  if (round.id === "r16") return "Last 16";
+  if (round.id === "qf") return "Last 8";
+  if (round.id === "sf") return "Last 4";
+  return "Final";
 }
 
 export function PredictionBoard({ matches }: { matches: Match[] }) {
@@ -32,9 +48,11 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
           {
             winnerTeamId: savedPrediction?.predictedWinnerTeamId,
             score: {
-              teamA: savedPrediction?.predictedTeamAScore ?? "",
-              teamB: savedPrediction?.predictedTeamBScore ?? "",
+              teamA: "",
+              teamB: "",
             },
+            pointsEarned: savedPrediction?.scoreAwarded ?? 0,
+            scored: Boolean(savedPrediction?.scoreAwarded),
           },
         ];
       }),
@@ -71,21 +89,21 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        throw new Error("请先登录后再提交预测。");
+        throw new Error("Please login before submitting.");
       }
 
       for (const match of matches) {
         const draft = drafts[match.id];
 
         if (!isValidDraft(draft) || !draft.winnerTeamId) {
-          throw new Error("请先完成每场 Level 1 winner 和 Level 2 双方比分。");
+          throw new Error("Please pick a winner for every open match.");
         }
 
         const { error } = await supabase.rpc("submit_prediction", {
           p_match_id: match.id,
           p_predicted_winner_team_id: draft.winnerTeamId,
-          p_predicted_team_a_score: Number(draft.score.teamA),
-          p_predicted_team_b_score: Number(draft.score.teamB),
+          p_predicted_team_a_score: null,
+          p_predicted_team_b_score: null,
         });
 
         if (error) throw new Error(error.message);
@@ -94,7 +112,7 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
       setSaved(true);
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "提交失败，请稍后再试。",
+        error instanceof Error ? error.message : "Submit failed. Please try again.",
       );
     } finally {
       setSaving(false);
@@ -107,14 +125,15 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-bold text-white/65">
-              Prediction Progress
+              {knockoutWinnerNameCn}
             </p>
-            <p className="text-xl font-black">
-              已完成 {completedCount}/{matches.length} 场
+            <p className="text-xl font-black">{knockoutWinnerNameEn}</p>
+            <p className="mt-1 text-sm font-semibold text-white/70">
+              {knockoutWinnerSubtitle}
             </p>
           </div>
           <div className="rounded bg-white/10 px-3 py-2 text-sm font-bold">
-            Level 1 Winner + Level 2 Score
+            Picked {completedCount}/{matches.length} winners
           </div>
         </div>
       </div>
@@ -130,6 +149,9 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
             teamB={getTeam(match.teamBId)}
             selectedTeamId={draft.winnerTeamId}
             score={draft.score}
+            roundName={roundName(match.roundId)}
+            pointsEarned={draft.pointsEarned}
+            scored={draft.scored}
             onSelect={(teamId) => {
               setSaved(false);
               setErrorMessage("");
@@ -138,17 +160,6 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
                 [match.id]: {
                   ...current[match.id],
                   winnerTeamId: teamId,
-                },
-              }));
-            }}
-            onScoreChange={(score) => {
-              setSaved(false);
-              setErrorMessage("");
-              setDrafts((current) => ({
-                ...current,
-                [match.id]: {
-                  ...current[match.id],
-                  score,
                 },
               }));
             }}
@@ -162,18 +173,16 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
           onClick={submitPredictions}
           className="flex h-12 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-5 font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-500"
         >
-          <Send size={18} /> {saving ? "提交中..." : "提交预测"}
+          <Send size={18} /> {saving ? "Submitting..." : knockoutWinnerCta}
         </button>
         <p className="mt-2 text-center text-sm font-semibold text-white/70">
           {errorMessage
             ? errorMessage
             : saved
-              ? isSupabaseConfigured()
-                ? "预测已保存到 Supabase：Level 1 winner 和 Level 2 scores 都已写入 predictions 表。"
-                : "Demo 已保存：连接 Supabase 后会写入 winner + predicted_team_a_score + predicted_team_b_score。"
+              ? "Your winner picks are saved. You can edit before lock time."
               : complete
-                ? "全部完成，可以提交。截止前仍可修改。"
-                : "请完成每场 Level 1 winner 和 Level 2 双方比分。"}
+                ? "All winners selected. Submit before lock time."
+                : "Pick a winner for every open match."}
         </p>
       </div>
     </div>

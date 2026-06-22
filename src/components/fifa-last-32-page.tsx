@@ -8,6 +8,14 @@ import { PageShell, StatCard } from "@/components/app-shell";
 import { ReferralInviteBanner } from "@/components/referral-invite-banner";
 import { TeamFlag } from "@/components/team-flag";
 import { getCurrentRound, profiles, teams } from "@/lib/demo-data";
+import {
+  knockoutWinnerCta,
+  knockoutWinnerDescription,
+  knockoutWinnerNameCn,
+  knockoutWinnerNameEn,
+  knockoutWinnerRankingTitle,
+  knockoutWinnerSubtitle,
+} from "@/lib/knockout-winner";
 
 export function FifaLast32Page() {
   const round = getCurrentRound();
@@ -29,17 +37,19 @@ export function FifaLast32Page() {
               FIFA World Cup 2026
             </p>
             <h1 className="max-w-full whitespace-normal break-words text-[32px] font-black leading-[1.04] md:max-w-3xl md:text-7xl md:leading-tight">
-              Last 32 Challenge
+              {knockoutWinnerNameCn}
+              <br />
+              <span className="text-2xl md:text-5xl">{knockoutWinnerNameEn}</span>
             </h1>
             <p className="mt-3 max-w-full whitespace-normal break-words text-sm font-semibold leading-relaxed text-white/85 md:mt-5 md:max-w-2xl md:text-xl">
-              老招牌 32强冠军竞猜赛：预测王之战，谁是冠军预言家？从32强一路猜到决赛，每一轮揭晓都会更新排行榜。
+              {knockoutWinnerSubtitle} {knockoutWinnerDescription}
             </p>
             <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row md:mt-8">
               <Link
                 href="/login?next=/predict"
                 className="inline-flex h-13 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-5 text-center font-black text-white shadow-lg shadow-red-950/30 hover:bg-red-700 sm:w-auto md:px-6"
               >
-                立即参加 <ArrowRight size={18} />
+                {knockoutWinnerCta} <ArrowRight size={18} />
               </Link>
               <Link
                 href="/rules"
@@ -49,16 +59,14 @@ export function FifaLast32Page() {
               </Link>
             </div>
             <div className="mt-5 hidden max-w-3xl grid-cols-2 gap-2 md:mt-8 md:grid md:grid-cols-4 md:gap-3">
-              {["32强开始", "16强对决", "8强争夺", "决赛之夜"].map(
-                (stage) => (
-                  <div
-                    key={stage}
-                    className="rounded border border-white/15 bg-white/10 px-2 py-3 text-center text-xs font-black backdrop-blur md:text-sm"
-                  >
-                    {stage}
-                  </div>
-                ),
-              )}
+              {["Last 32", "Last 16", "Last 8", "Final"].map((stage) => (
+                <div
+                  key={stage}
+                  className="rounded border border-white/15 bg-white/10 px-2 py-3 text-center text-xs font-black backdrop-blur md:text-sm"
+                >
+                  {stage}
+                </div>
+              ))}
             </div>
             <div className="mt-5 flex w-full max-w-full flex-nowrap gap-3 overflow-x-auto pb-3 pr-6 scrollbar-clean md:mt-6 md:max-w-3xl md:pr-0">
               {teams.slice(0, 8).map((team) => (
@@ -107,20 +115,20 @@ export function FifaLast32Page() {
       </section>
       <section className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 md:grid-cols-[0.85fr_1.15fr] md:gap-6 md:py-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-4">
-          <StatCard label="当前阶段" value={round.labelCn} tone="green" />
-          <StatCard label="正确得分" value={`${round.scoringPoints}分`} tone="gold" />
-          <StatCard label="参赛玩家" value="1,280+" detail="Demo seed" />
-          <StatCard label="邀请好友" value="人气榜" tone="navy" />
+          <StatCard label="Current Round" value={round.labelCn} tone="green" />
+          <StatCard label="Correct Winner" value={`${round.scoringPoints} pts`} tone="gold" />
+          <StatCard label="Players" value="1,280+" detail="Demo seed" />
+          <StatCard label="Referral" value="Invite Rank" tone="navy" />
         </div>
-        <LeaderboardTable players={profiles.slice(0, 4)} title="实时总榜" />
+        <LeaderboardTable players={profiles.slice(0, 4)} title={knockoutWinnerRankingTitle} />
       </section>
       <LiveScoreboard />
       <section className="w-full bg-white px-4 py-6 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
           {[
-            ["预测晋级", "每场比赛选择你认为会晋级的球队。", Trophy],
+            [knockoutWinnerNameCn, "从 Last 32 开始预测每一场淘汰赛赢家，猜中越多排名越高。", Trophy],
             ["好友战队", "分享专属链接，把朋友拉进你的战区。", Share2],
-            ["周边奖励", "总榜、每轮冠军和人气邀请王都有奖。", Gift],
+            ["Prize Setting", "Knockout Winner Challenge Ranking 决定个人赢家战奖品。", Gift],
           ].map(([title, body, Icon]) => {
             const IconComponent = Icon as typeof Medal;
             return (

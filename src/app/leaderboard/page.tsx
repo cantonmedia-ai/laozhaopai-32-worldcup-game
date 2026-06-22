@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { LeaderboardTable, type LeaderboardRow } from "@/components/leaderboard";
 import { getCurrentRound, profiles, referrals } from "@/lib/demo-data";
+import { knockoutWinnerRankingTitle } from "@/lib/knockout-winner";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type LeaderboardScope = "overall" | "round" | "squad" | "invite";
@@ -24,11 +25,24 @@ type SupabaseLeaderboardRow = {
 };
 
 const tabs: Array<{ id: LeaderboardScope; label: string; title: string }> = [
-  { id: "overall", label: "总榜", title: "总排行榜" },
-  { id: "round", label: "本轮", title: "本轮排行榜" },
+  { id: "overall", label: "总榜", title: knockoutWinnerRankingTitle },
+  { id: "round", label: "本轮", title: "本轮淘汰赛赢家战排行榜" },
   { id: "squad", label: "好友战区", title: "好友战区排行榜" },
   { id: "invite", label: "人气榜", title: "邀请人气榜" },
 ];
+
+function profileToRow(profile: (typeof profiles)[number]): LeaderboardRow {
+  return {
+    id: profile.id,
+    displayName: profile.displayName,
+    avatarUrl: profile.avatarUrl,
+    totalScore: profile.totalScore,
+    rank: profile.rank,
+    previousRank: profile.previousRank,
+    correctPredictions: profile.correctPredictions,
+    totalPredictions: profile.totalPredictions,
+  };
+}
 
 function demoRows(scope: LeaderboardScope): LeaderboardRow[] {
   if (scope === "squad") {
@@ -36,9 +50,7 @@ function demoRows(scope: LeaderboardScope): LeaderboardRow[] {
       "me",
       ...referrals.map((item) => item.referredProfileId),
     ]);
-    return profiles
-      .filter((profile) => squadIds.has(profile.id))
-      .map(profileToRow);
+    return profiles.filter((profile) => squadIds.has(profile.id)).map(profileToRow);
   }
 
   if (scope === "invite") {
@@ -68,19 +80,6 @@ function demoRows(scope: LeaderboardScope): LeaderboardRow[] {
   }
 
   return profiles.filter((profile) => profile.role === "player").map(profileToRow);
-}
-
-function profileToRow(profile: (typeof profiles)[number]): LeaderboardRow {
-  return {
-    id: profile.id,
-    displayName: profile.displayName,
-    avatarUrl: profile.avatarUrl,
-    totalScore: profile.totalScore,
-    rank: profile.rank,
-    previousRank: profile.previousRank,
-    correctPredictions: profile.correctPredictions,
-    totalPredictions: profile.totalPredictions,
-  };
 }
 
 function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
@@ -141,7 +140,7 @@ export default function LeaderboardPage() {
         setMessage(
           error instanceof Error
             ? error.message
-            : "读取排行榜失败，当前显示 Demo 数据。",
+            : "Unable to load ranking. Showing demo data for now.",
         );
       } finally {
         setLoading(false);
@@ -157,25 +156,13 @@ export default function LeaderboardPage() {
   const topScore = Math.max(0, ...rows.map((row) => row.roundScore ?? row.totalScore));
   const topInvite = Math.max(0, ...rowsByScope.invite.map((row) => row.inviteCount ?? 0));
 
-  const explainer = useMemo(
-    () => [
-      "管理员确认赛果后，confirm_match_result 会计算每个 prediction 的得分。",
-      "rebuild_leaderboards 会重新整理总榜和每轮榜，并写入 leaderboard_scores。",
-      "总榜按 total_score、accuracy_rate、correct_predictions、created_at 排序。",
-      "本轮榜只看当前 round_id 的 round_score。",
-      "好友战区只显示自己、邀请关系、同队成员。",
-      "人气榜按 invite_count 排序，不会加到预测主分。",
-    ],
-    [],
-  );
-
   return (
     <PageShell active="/leaderboard">
       <main className="mx-auto max-w-7xl px-4 py-10">
         <SectionHeader
-          eyebrow="Leaderboard"
-          title="排行榜"
-          body="排行榜会在管理员确认赛果后自动更新。邀请人气只用于人气榜，不会直接加到预测分数。"
+          eyebrow="Knockout Winner Challenge"
+          title={knockoutWinnerRankingTitle}
+          body="淘汰赛赢家战排行榜会在管理员确认实际赢家后自动更新。邀请人气只用于人气榜，不会直接加到赢家战分数。"
         />
 
         {message ? (
@@ -185,10 +172,10 @@ export default function LeaderboardPage() {
         ) : null}
 
         <div className="mb-5 grid gap-4 md:grid-cols-4">
-          <StatCard label="当前阶段" value={currentRound.labelCn} tone="green" />
-          <StatCard label="当前榜单" value={activeMeta.label} tone="gold" />
-          <StatCard label="榜首分数" value={topScore} />
-          <StatCard label="最高邀请" value={topInvite} tone="navy" />
+          <StatCard label="Current Round" value={currentRound.labelCn} tone="green" />
+          <StatCard label="Current Board" value={activeMeta.label} tone="gold" />
+          <StatCard label="Top Score" value={topScore} />
+          <StatCard label="Top Invite" value={topInvite} tone="navy" />
         </div>
 
         <div className="mb-6 flex gap-2 overflow-x-auto scrollbar-clean">
@@ -208,31 +195,11 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <LeaderboardTable
-            players={rows}
-            title={loading ? `${activeMeta.title} · 读取中...` : activeMeta.title}
-            emptyText="还没有可显示的排行榜。确认赛果后会出现排名。"
-          />
-
-          <section className="card p-5">
-            <h2 className="text-xl font-black text-slate-950">
-              排名如何产生
-            </h2>
-            <ol className="mt-4 grid gap-3">
-              {explainer.map((item, index) => (
-                <li key={item} className="flex gap-3">
-                  <span className="grid size-7 shrink-0 place-items-center rounded bg-[#d71920] text-sm font-black text-white">
-                    {index + 1}
-                  </span>
-                  <span className="pt-0.5 text-sm font-semibold text-slate-700">
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </div>
+        <LeaderboardTable
+          players={rows}
+          title={loading ? `${activeMeta.title} · Loading...` : activeMeta.title}
+          emptyText="No ranking yet. Ranking updates after admin confirms winners."
+        />
       </main>
     </PageShell>
   );

@@ -49,7 +49,7 @@ export const rounds: GameRound[] = [
     name: "Round of 32",
     labelCn: "32强",
     order: 1,
-    scoringPoints: 10,
+    scoringPoints: 5,
     status: "prediction_open",
     closesAt: "2026-07-01T12:00:00+08:00",
   },
@@ -58,7 +58,7 @@ export const rounds: GameRound[] = [
     name: "Round of 16",
     labelCn: "16强",
     order: 2,
-    scoringPoints: 15,
+    scoringPoints: 8,
     status: "not_open",
     closesAt: "2026-07-06T12:00:00+08:00",
   },
@@ -67,7 +67,7 @@ export const rounds: GameRound[] = [
     name: "Quarter Final",
     labelCn: "8强",
     order: 3,
-    scoringPoints: 20,
+    scoringPoints: 12,
     status: "not_open",
     closesAt: "2026-07-10T12:00:00+08:00",
   },
@@ -76,7 +76,7 @@ export const rounds: GameRound[] = [
     name: "Semi Final",
     labelCn: "4强",
     order: 4,
-    scoringPoints: 25,
+    scoringPoints: 18,
     status: "not_open",
     closesAt: "2026-07-14T12:00:00+08:00",
   },
@@ -85,7 +85,7 @@ export const rounds: GameRound[] = [
     name: "Final",
     labelCn: "决赛",
     order: 5,
-    scoringPoints: 40,
+    scoringPoints: 30,
     status: "not_open",
     closesAt: "2026-07-18T12:00:00+08:00",
   },
@@ -189,9 +189,9 @@ export const profiles: Profile[] = rankProfiles([
 ]);
 
 export const predictions: Prediction[] = [
-  { id: "pr1", profileId: "me", roundId: "r32", matchId: "m1", predictedWinnerTeamId: "arg", predictedTeamAScore: 2, predictedTeamBScore: 1, scoreAwarded: 10, isCorrect: true },
-  { id: "pr2", profileId: "me", roundId: "r32", matchId: "m2", predictedWinnerTeamId: "fra", predictedTeamAScore: 3, predictedTeamBScore: 0, scoreAwarded: 10, isCorrect: true },
-  { id: "pr3", profileId: "me", roundId: "r32", matchId: "m3", predictedWinnerTeamId: "bra", predictedTeamAScore: 1, predictedTeamBScore: 0, scoreAwarded: 10, isCorrect: true },
+  { id: "pr1", profileId: "me", roundId: "r32", matchId: "m1", predictedWinnerTeamId: "arg", predictedTeamAScore: 2, predictedTeamBScore: 1, scoreAwarded: 5, isCorrect: true },
+  { id: "pr2", profileId: "me", roundId: "r32", matchId: "m2", predictedWinnerTeamId: "fra", predictedTeamAScore: 3, predictedTeamBScore: 0, scoreAwarded: 5, isCorrect: true },
+  { id: "pr3", profileId: "me", roundId: "r32", matchId: "m3", predictedWinnerTeamId: "bra", predictedTeamAScore: 1, predictedTeamBScore: 0, scoreAwarded: 5, isCorrect: true },
 ];
 
 export const referrals: Referral[] = [

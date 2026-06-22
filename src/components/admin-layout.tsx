@@ -22,7 +22,7 @@ const adminNav = [
   { href: "/admin/matches", label: "Matches", icon: ClipboardList },
   { href: "/admin/results", label: "Results", icon: Medal },
   { href: "/admin/players", label: "Players", icon: Users },
-  { href: "/admin/predictions", label: "Predictions", icon: ClipboardList },
+  { href: "/admin/predictions", label: "Winner Challenge", icon: ClipboardList },
   { href: "/admin/leaderboards", label: "Leaderboards", icon: Medal },
   { href: "/admin/referrals", label: "Referrals", icon: Network },
   { href: "/admin/rewards", label: "Rewards", icon: Gift },

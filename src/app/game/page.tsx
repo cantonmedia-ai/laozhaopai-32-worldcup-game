@@ -2,6 +2,11 @@ import Link from "next/link";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { getCurrentRound, getMe, profiles } from "@/lib/demo-data";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
+import {
+  knockoutWinnerDescription,
+  knockoutWinnerNameCn,
+  knockoutWinnerNameEn,
+} from "@/lib/knockout-winner";
 import { rankingMovement } from "@/lib/scoring";
 
 export default async function GamePage() {
@@ -15,7 +20,7 @@ export default async function GamePage() {
         <SectionHeader
           eyebrow="Player Dashboard"
           title={`Welcome, ${profile ? displayName(profile) : me.displayName}`}
-          body="Check your game progress, enter Last 32 picks, invite friends, and follow the ranking."
+          body="Check your game progress, enter knockout winner picks, invite friends, and follow the ranking."
         />
 
         <div className="grid gap-4 md:grid-cols-5">
@@ -29,7 +34,7 @@ export default async function GamePage() {
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {[
             ["/road-to-champion", "Road to Champion", "Predict Last 16, Last 8, Finalists, and Champion."],
-            ["/predict", "Last 32 Seats", "Pick your winners and guess scores."],
+            ["/predict", `${knockoutWinnerNameCn} · ${knockoutWinnerNameEn}`, knockoutWinnerDescription],
             ["/leaderboard", "Ranking", "See overall, round, friend, and invite rankings."],
             ["/referral", "Referral", "Copy your invite link and build your squad."],
           ].map(([href, title, body]) => (
