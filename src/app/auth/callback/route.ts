@@ -1,6 +1,13 @@
-import { NextResponse } from "next/server";
-import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { cleanReferralCode, referralStorageKey } from "@/lib/referral-code";
+
+type CookieToSet = {
+  name: string;
+  value: string;
+  options: Parameters<ReturnType<typeof NextResponse.next>["cookies"]["set"]>[2];
+};
 
 function safeNextPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return "/game";
@@ -55,35 +62,67 @@ function isProfileComplete(profile: {
   );
 }
 
-export async function GET(request: Request) {
+function redirectWithCookies(url: string, cookiesToSet: CookieToSet[]) {
+  const response = NextResponse.redirect(url);
+  cookiesToSet.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options);
+  });
+  return response;
+}
+
+function createCallbackClient(request: NextRequest, cookiesToSet: CookieToSet[]) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are not configured.");
+  }
+
+  return createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(newCookies) {
+        cookiesToSet.push(...newCookies);
+      },
+    },
+  });
+}
+
+export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const error = requestUrl.searchParams.get("error_description");
   const next = safeNextPath(requestUrl.searchParams.get("next"));
   const origin = requestUrl.origin;
+  const cookiesToSet: CookieToSet[] = [];
 
   if (error) {
-    return NextResponse.redirect(
+    return redirectWithCookies(
       `${origin}/login?error=${encodeURIComponent(error)}`,
+      cookiesToSet,
     );
   }
 
   if (!hasSupabaseServerEnv() || !code) {
-    return NextResponse.redirect(
+    return redirectWithCookies(
       `${origin}/profile-setup?demo=1&next=${encodeURIComponent(next)}`,
+      cookiesToSet,
     );
   }
 
-  const supabase = await createClient();
+  const supabase = createCallbackClient(request, cookiesToSet);
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
     code,
   );
 
   if (exchangeError) {
-    return NextResponse.redirect(
+    return redirectWithCookies(
       `${origin}/login?error=${encodeURIComponent(
         friendlyExchangeError(exchangeError.message),
       )}`,
+      cookiesToSet,
     );
   }
 
@@ -92,8 +131,9 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(
+    return redirectWithCookies(
       `${origin}/login?error=${encodeURIComponent("Login session not found.")}`,
+      cookiesToSet,
     );
   }
 
@@ -135,10 +175,11 @@ export async function GET(request: Request) {
   }
 
   if (!isProfileComplete(profile)) {
-    return NextResponse.redirect(
+    return redirectWithCookies(
       `${origin}/profile-setup?next=${encodeURIComponent(next)}`,
+      cookiesToSet,
     );
   }
 
-  return NextResponse.redirect(`${origin}${next}`);
+  return redirectWithCookies(`${origin}${next}`, cookiesToSet);
 }
