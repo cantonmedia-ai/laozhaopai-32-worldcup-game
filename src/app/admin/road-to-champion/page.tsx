@@ -1,5 +1,6 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { SectionHeader } from "@/components/app-shell";
+import { Game1SimulationAdmin } from "@/components/game1-simulation-admin";
 import { RoadToChampionAdmin } from "@/components/road-to-champion-admin";
 import type { RoadStage, RoadTeam } from "@/components/road-to-champion-game";
 import { teams as demoTeams } from "@/lib/demo-data";
@@ -77,7 +78,10 @@ export default async function AdminRoadToChampionPage() {
         body="Manage due dates, lock stages, enter official results, and calculate player scores."
       />
       {stages.length ? (
-        <RoadToChampionAdmin stages={stages} teams={teams} results={results} />
+        <div className="grid gap-6">
+          <Game1SimulationAdmin />
+          <RoadToChampionAdmin stages={stages} teams={teams} results={results} />
+        </div>
       ) : (
         <div className="rounded bg-yellow-50 p-4 text-sm font-bold text-yellow-900">
           Road to Champion stages are not created yet. Run the latest database migration first.
