@@ -57,7 +57,11 @@ const roundAliases: Record<string, string[]> = {
 
 function cronAuthorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true;
+  if (!secret) {
+    const userAgent = request.headers.get("user-agent") ?? "";
+    const cronHeader = request.headers.get("x-vercel-cron") ?? "";
+    return userAgent.toLowerCase().includes("vercel-cron") || cronHeader === "1";
+  }
   return request.headers.get("authorization") === `Bearer ${secret}`;
 }
 
