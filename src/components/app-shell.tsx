@@ -183,7 +183,7 @@ export function SectionHeader({
 }: {
   eyebrow?: string;
   title: React.ReactNode;
-  body?: string;
+  body?: React.ReactNode;
 }) {
   return (
     <div className="mb-6">
@@ -209,9 +209,9 @@ export function StatCard({
   detail,
   tone = "white",
 }: {
-  label: string;
-  value: string | number;
-  detail?: string;
+  label: React.ReactNode;
+  value: React.ReactNode;
+  detail?: React.ReactNode;
   tone?: "white" | "green" | "gold" | "navy";
 }) {
   const tones = {

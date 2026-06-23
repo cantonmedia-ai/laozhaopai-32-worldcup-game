@@ -5,6 +5,7 @@ import { AuthButtons } from "@/components/auth-buttons";
 import { LeaderboardTable, type LeaderboardRow } from "@/components/leaderboard";
 import { LiveScoreboard } from "@/components/live-scoreboard";
 import { PageShell, StatCard } from "@/components/app-shell";
+import { T } from "@/components/language-provider";
 import { ReferralInviteBanner } from "@/components/referral-invite-banner";
 import { TeamFlag } from "@/components/team-flag";
 import { teams } from "@/lib/demo-data";
@@ -151,12 +152,12 @@ export async function FifaLast32Page() {
                     FIFA World Cup 2026
                   </p>
                   <h2 className="text-2xl font-black leading-tight md:text-3xl">
-                    Join the Game
+                    <T k="home.joinTitle" />
                   </h2>
                 </div>
               </div>
               <p className="mb-5 break-words text-sm font-semibold leading-relaxed text-slate-600">
-                Sign in to play, save your score, and receive prize updates if you win.
+                <T k="home.joinSubtitle" />
               </p>
               <AuthButtons next="/game" />
               <Link
@@ -166,7 +167,7 @@ export async function FifaLast32Page() {
                 Admin
               </Link>
               <p className="mt-4 break-words rounded bg-slate-100 p-3 text-center text-xs font-bold text-slate-600">
-                Your WhatsApp number is only used for prize notification.
+                <T k="home.whatsappNote" />
               </p>
             </div>
           </div>
@@ -175,14 +176,14 @@ export async function FifaLast32Page() {
       <section className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 md:grid-cols-[0.85fr_1.15fr] md:gap-6 md:py-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-4">
           <StatCard
-            label="Current Round"
+            label={<T k="home.currentRound" />}
             value="32强生死战"
             detail="Round of 32"
             tone="green"
           />
-          <StatCard label="Correct Winner" value="5 pts" tone="gold" />
-          <StatCard label="Players" value={leaderboardRows.length} detail="Signed up" />
-          <StatCard label="Referral" value="Invite Rank" tone="navy" />
+          <StatCard label={<T k="home.correctWinner" />} value="5 pts" tone="gold" />
+          <StatCard label={<T k="home.players" />} value={leaderboardRows.length} detail={<T k="home.signedUp" />} />
+          <StatCard label={<T k="home.referral" />} value={<T k="home.inviteRank" />} tone="navy" />
         </div>
         <LeaderboardTable
           players={leaderboardRows.slice(0, 4)}

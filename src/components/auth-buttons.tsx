@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { CircleUserRound, Loader2, Mail } from "lucide-react";
+import { useLanguage } from "@/components/language-provider";
+import { t } from "@/i18n";
 import { logClientAction, logClientError } from "@/lib/monitoring-client";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -27,8 +29,12 @@ function getProvider(userProvider: unknown, fallback: "google" | "email") {
   return typeof userProvider === "string" && userProvider ? userProvider : fallback;
 }
 
-function friendlyAuthError(message: string, mode: AuthMode) {
+function friendlyAuthError(message: string, mode: AuthMode, googleNotEnabledMessage?: string) {
   const lowerMessage = message.toLowerCase();
+
+  if (lowerMessage.includes("unsupported provider") || lowerMessage.includes("provider is not enabled")) {
+    return googleNotEnabledMessage || "Google login is not enabled yet. Please use email login first.";
+  }
 
   if (lowerMessage.includes("already") || lowerMessage.includes("registered")) {
     return "This email is already registered. Please login instead.";
@@ -45,11 +51,6 @@ function friendlyAuthError(message: string, mode: AuthMode) {
   }
 
   return message || "Something went wrong. Please try again.";
-}
-
-function getGoogleButtonText(mode: AuthMode, loading: boolean) {
-  if (loading) return "Opening Google...";
-  return "Continue with Google";
 }
 
 async function ensurePlayerProfile(
@@ -128,6 +129,7 @@ export function AuthButtons({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const { language } = useLanguage();
 
   function goToProfileSetup() {
     window.location.href = `/profile/setup?next=${encodeURIComponent(next)}`;
@@ -187,7 +189,9 @@ export function AuthButtons({
       });
       setLoading("");
       setErrorMessage(
-        error instanceof Error ? error.message : "Google login failed.",
+        error instanceof Error
+          ? friendlyAuthError(error.message, mode, t("auth.googleNotEnabled", language))
+          : "Google login failed.",
       );
     }
   }
@@ -403,7 +407,7 @@ export function AuthButtons({
               : "text-slate-600 hover:text-slate-950"
           } disabled:opacity-60`}
         >
-          Sign Up
+          {t("auth.signUp", language)}
         </button>
         <button
           type="button"
@@ -418,7 +422,7 @@ export function AuthButtons({
               : "text-slate-600 hover:text-slate-950"
           } disabled:opacity-60`}
         >
-          Sign In
+          {t("auth.signInTab", language)}
         </button>
       </div>
 
@@ -433,22 +437,22 @@ export function AuthButtons({
         ) : (
           <CircleUserRound size={18} />
         )}
-        {getGoogleButtonText(mode, loading === "google")}
+        {loading === "google" ? t("auth.googleLoading", language) : t("auth.google", language)}
       </button>
       <p className="-mt-2 text-center text-xs font-bold text-slate-500">
-        Recommended. No email verification required.
+        {t("auth.googleNote", language)}
       </p>
 
       <div className="flex items-center gap-3 text-xs font-black uppercase text-slate-400">
         <span className="h-px flex-1 bg-slate-200" />
-        or
+        {t("auth.or", language)}
         <span className="h-px flex-1 bg-slate-200" />
       </div>
 
       {mode === "signup" ? (
         <form onSubmit={createAccount} className="grid gap-3">
           <label className="grid gap-1.5 text-sm font-black text-slate-700">
-            Register with Email
+            {t("auth.registerEmail", language)}
             <input
               type="email"
               value={signupEmail}
@@ -460,7 +464,7 @@ export function AuthButtons({
             />
           </label>
           <label className="grid gap-1.5 text-sm font-black text-slate-700">
-            Password
+            {t("auth.password", language)}
             <input
               type="password"
               value={signupPassword}
@@ -473,7 +477,7 @@ export function AuthButtons({
             />
           </label>
           <label className="grid gap-1.5 text-sm font-black text-slate-700">
-            Confirm Password
+            {t("auth.confirmPassword", language)}
             <input
               type="password"
               value={confirmPassword}
@@ -491,10 +495,10 @@ export function AuthButtons({
             className="mt-1 flex h-13 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-4 font-black text-white shadow-lg shadow-red-900/20 hover:bg-red-700 disabled:cursor-wait disabled:bg-slate-400"
           >
             {loading === "signup" ? <Loader2 className="animate-spin" size={18} /> : <Mail size={18} />}
-            {loading === "signup" ? "Creating..." : "Register with Email"}
+            {loading === "signup" ? t("auth.creating", language) : t("auth.createAccount", language)}
           </button>
           <p className="-mt-1 text-center text-xs font-bold text-slate-500">
-            Verification email required before joining games.
+            {t("auth.emailNote", language)}
           </p>
           <button
             type="button"
@@ -505,13 +509,13 @@ export function AuthButtons({
             }}
             className="text-center text-sm font-black text-[#0f8a4b] hover:text-[#0b6f3b] disabled:opacity-60"
           >
-            Already have an account? Sign In
+            {t("auth.haveAccount", language)}
           </button>
         </form>
       ) : (
         <form onSubmit={login} className="grid gap-3">
           <label className="grid gap-1.5 text-sm font-black text-slate-700">
-            Email
+            {t("auth.email", language)}
             <input
               type="email"
               value={loginEmail}
@@ -523,7 +527,7 @@ export function AuthButtons({
             />
           </label>
           <label className="grid gap-1.5 text-sm font-black text-slate-700">
-            Password
+            {t("auth.password", language)}
             <input
               type="password"
               value={loginPassword}
@@ -540,7 +544,7 @@ export function AuthButtons({
             className="mt-1 flex h-13 w-full items-center justify-center gap-2 rounded bg-[#071525] px-4 font-black text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 disabled:cursor-wait disabled:bg-slate-400"
           >
             {loading === "login" ? <Loader2 className="animate-spin" size={18} /> : <Mail size={18} />}
-            {loading === "login" ? "Logging in..." : "Login"}
+            {loading === "login" ? t("auth.loggingIn", language) : t("auth.login", language)}
           </button>
           <button
             type="button"
@@ -551,7 +555,7 @@ export function AuthButtons({
             }}
             className="text-center text-sm font-black text-[#0f8a4b] hover:text-[#0b6f3b] disabled:opacity-60"
           >
-            New player? Sign Up
+            {t("auth.newPlayer", language)}
           </button>
         </form>
       )}

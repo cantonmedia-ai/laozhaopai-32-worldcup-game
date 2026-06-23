@@ -8,6 +8,8 @@ import {
   UsersRound,
 } from "lucide-react";
 import { PageShell, SectionHeader } from "@/components/app-shell";
+import { T } from "@/components/language-provider";
+import type { TranslationKey } from "@/i18n";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 import { loadFirstRoundOf32Deadline } from "@/lib/football-data";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
@@ -40,7 +42,7 @@ const gameCards = [
     title: "Game 1: Ultimate Predictor",
     english: "Ultimate Predictor",
     badge: "Open Now",
-    body: "Predict which teams will reach the Sweet 16, Elite 8, Final 4, Grand Final, and champion. Submit before the prediction deadline to lock your answer.",
+    bodyKey: "game.game1Body",
     cta: "Start Prediction",
     icon: Trophy,
     lockedWhenWaiting: false,
@@ -51,7 +53,7 @@ const gameCards = [
     title: "Game 2: Knockout Winner Challenge",
     english: "\u6dd8\u6c70\u8d5b\u8d62\u5bb6\u6218",
     badge: "Opens after Round of 32",
-    body: "Predict the winner for each knockout match once Round of 32 fixtures are published.",
+    bodyKey: "game.game2Body",
     cta: "View Game 2",
     icon: ShieldCheck,
     lockedWhenWaiting: true,
@@ -233,9 +235,13 @@ export default async function GamePage() {
     <PageShell active="/game">
       <main className="mx-auto max-w-7xl px-4 py-8 md:py-10">
         <SectionHeader
-          eyebrow="Player Mission"
-          title={`Welcome, ${profile ? displayName(profile) : "Player"}`}
-          body="Submit your prediction before the Round of 32 begins."
+          eyebrow=""
+          title={(
+            <>
+              <T k="game.welcome" />, {profile ? displayName(profile) : "Player"}
+            </>
+          )}
+          body={<T k="game.intro" />}
         />
 
         <section className="overflow-hidden rounded-lg bg-[#071525] text-white shadow-sm">
@@ -245,7 +251,7 @@ export default async function GamePage() {
                 Game 1
               </p>
               <h2 className="mt-3 text-3xl font-black leading-tight md:text-5xl">
-                Ultimate Predictor
+                <T k="game.game1Name" />
                 <span className="block text-xl text-white/80 md:text-3xl">
                   最强预测家
                 </span>
@@ -256,14 +262,14 @@ export default async function GamePage() {
                 href="/road-to-champion"
                 className="flex h-14 items-center justify-center gap-2 rounded bg-[#d71920] px-5 text-center font-black text-white shadow-lg shadow-red-950/30 hover:bg-red-700"
               >
-                Start Game 1 Now{" "}
+                <T k="game.startGame1" />{" "}
                 <ArrowRight size={18} />
               </Link>
               <Link
                 href="/squad"
                 className="flex h-12 items-center justify-center gap-2 rounded bg-white px-5 text-center font-black text-[#071525] hover:bg-slate-100"
               >
-                Create / Join Team <UsersRound size={18} />
+                <T k="game.createJoinTeam" /> <UsersRound size={18} />
               </Link>
             </div>
           </div>
@@ -273,14 +279,14 @@ export default async function GamePage() {
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-[#0f8a4b]">
-                Choose What To Play
+                <T k="game.choosePlay" />
               </p>
               <h2 className="mt-1 text-2xl font-black text-slate-950">
-                Start here
+                <T k="game.startHere" />
               </h2>
             </div>
             <p className="text-sm font-bold text-slate-500">
-              Tournament status: {currentStage}
+              <T k="game.tournamentStatus" />: {currentStage}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -301,27 +307,27 @@ export default async function GamePage() {
                     }`}
                   >
                     <Icon size={14} />{" "}
-                    {card.id === "game2" && knockoutPublished ? "Open Now" : card.badge}
+                    {card.id === "game2" && knockoutPublished ? <T k="game.openNow" /> : card.badge}
                   </span>
                   <h3 className="text-xl font-black text-slate-950">{card.title}</h3>
                   <p className="font-black text-[#d71920]">{card.english}</p>
                   <p className="mt-3 min-h-16 text-sm font-semibold text-slate-600">
-                    {card.body}
+                    <T k={card.bodyKey as TranslationKey} />
                   </p>
                   <p className="mt-3 text-sm font-bold text-[#0f8a4b]">
                     {card.id === "game1"
                       ? game1Sweet16Submitted
-                        ? "Sweet 16 submitted. Next: Elite 8 waiting results."
-                        : "Current Game 1 stage: Sweet 16 open."
+                        ? <T k="game.game1Submitted" />
+                        : <T k="game.game1Open" />
                       : knockoutPublished
                         ? `Current active round: ${currentStage}`
-                        : "Waiting for Round of 32 fixtures."}
+                        : <T k="game.game2Waiting" />}
                   </p>
                   {card.id === "game1" ? (
                     <p className="mt-2 rounded bg-slate-100 p-3 text-sm font-bold text-slate-600">
                       {game1DeadlineConfirmed && game1DueAt
                         ? `Deadline: ${formatDeadline(game1DueAt)}`
-                        : "Deadline pending fixture confirmation. It will update automatically once the first Round of 32 match time is confirmed."}
+                        : <T k="game.deadlinePending" />}
                     </p>
                   ) : null}
                   {locked ? (
@@ -337,7 +343,7 @@ export default async function GamePage() {
                       href={card.href}
                       className="mt-5 flex h-11 items-center justify-center gap-2 rounded bg-[#071525] px-4 font-black text-white hover:bg-slate-800"
                     >
-                      {card.id === "game1" ? "Continue Game 1" : card.cta}{" "}
+                      {card.id === "game1" ? <T k="game.continueGame1" /> : card.cta}{" "}
                       <ArrowRight size={16} />
                     </Link>
                   )}
@@ -351,24 +357,21 @@ export default async function GamePage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="flex items-center gap-2 text-sm font-black text-white/75">
-                <Clock size={16} /> Prediction Deadline
+                <Clock size={16} /> <T k="game.predictionDeadline" />
               </p>
               <h2 className="mt-2 text-2xl font-black">
-                Submit your prediction before the Round of 32 begins.
+                <T k="game.deadlineHeadline" />
               </h2>
               {predictionDueAt ? (
                 <div className="mt-2 max-w-3xl space-y-1 font-semibold text-white/85">
-                  <p>Closes 15 minutes before the first Round of 32 match.</p>
-                  <p>Deadline: {formatDeadline(predictionDueAt)}</p>
-                  {deadlineCountdown ? <p>Closes in: {deadlineCountdown}</p> : null}
+                  <p><T k="game.deadlineRule" /></p>
+                  <p><T k="game.deadline" />: {formatDeadline(predictionDueAt)}</p>
+                  {deadlineCountdown ? <p><T k="game.closesIn" />: {deadlineCountdown}</p> : null}
                 </div>
               ) : (
                 <div className="mt-2 max-w-3xl space-y-1 font-semibold text-white/85">
-                  <p>Round of 32 fixtures are not confirmed yet.</p>
-                  <p>
-                    The deadline will be updated automatically once fixtures are
-                    published.
-                  </p>
+                  <p><T k="game.fixturesNotConfirmed" /></p>
+                  <p><T k="game.deadlineAuto" /></p>
                 </div>
               )}
             </div>
@@ -376,17 +379,17 @@ export default async function GamePage() {
               href="/road-to-champion"
               className="flex h-11 shrink-0 items-center justify-center gap-2 rounded bg-white px-4 font-black text-[#071525]"
             >
-              Continue Prediction <CheckCircle2 size={17} />
+              <T k="game.continuePrediction" /> <CheckCircle2 size={17} />
             </Link>
           </div>
         </section>
 
         <div className="mt-8 rounded-lg bg-white p-5">
-          <h2 className="text-xl font-black">Top Ranking</h2>
+          <h2 className="text-xl font-black"><T k="game.topRanking" /></h2>
           <div className="mt-4 grid gap-3">
             {topRows.length === 0 ? (
               <p className="rounded bg-slate-100 p-4 text-sm font-bold text-slate-600">
-                No signed-up players yet.
+                <T k="game.noPlayers" />
               </p>
             ) : null}
             {topRows.map((player) => (
