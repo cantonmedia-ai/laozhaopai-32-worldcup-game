@@ -276,7 +276,11 @@ async function loadContext(): Promise<ReadinessContext> {
       referralProfiles,
       publicLeaderboardScores,
     ] = await Promise.all([
-      supabase.from("profiles").select("id, auth_user_id", { count: "exact" }).eq("is_simulation", true),
+      supabase
+        .from("profiles")
+        .select("id, auth_user_id", { count: "exact" })
+        .eq("is_simulation", true)
+        .like("email", "game1-sim-%@brainwave.local"),
       supabase.from("squad_team_members").select("team_id, profile_id", { count: "exact" }).eq("is_simulation", true),
       supabase.from("user_stage_predictions").select("user_id, stage_key, personal_correct_score, team_accumulated_score, final_earned_score", { count: "exact" }).eq("is_simulation", true),
       supabase.from("stage_results").select("stage_key", { count: "exact" }).eq("is_simulation", true),
