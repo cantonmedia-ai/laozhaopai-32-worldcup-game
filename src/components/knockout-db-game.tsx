@@ -76,6 +76,35 @@ function statusLabel(match: KnockoutMatch, now: number) {
   return "Locked";
 }
 
+const knockoutRoundOrder = ["last_32", "last_16", "last_8", "last_4", "final"] as const;
+
+type KnockoutRoundKey = (typeof knockoutRoundOrder)[number];
+
+const knockoutRoundSlots: Record<KnockoutRoundKey, number> = {
+  last_32: 16,
+  last_16: 8,
+  last_8: 4,
+  last_4: 2,
+  final: 1,
+};
+
+const knockoutWaitingText: Record<KnockoutRoundKey, string> = {
+  last_32: "Round of 32 fixtures will appear once official knockout matches are published.",
+  last_16: "Sweet 16 opens after Round of 32 winners are confirmed.",
+  last_8: "Elite 8 opens after Sweet 16 winners are confirmed.",
+  last_4: "Final 4 opens after Elite 8 winners are confirmed.",
+  final: "Grand Final opens after Final 4 winners are confirmed.",
+};
+
+function normalizeRoundKey(value?: string | null): KnockoutRoundKey {
+  const normalized = String(value ?? "").toLowerCase();
+  if (normalized.includes("16")) return "last_16";
+  if (normalized.includes("8") || normalized.includes("quarter")) return "last_8";
+  if (normalized.includes("4") || normalized.includes("semi")) return "last_4";
+  if (normalized.includes("final")) return "final";
+  return "last_32";
+}
+
 export function KnockoutDbGame({
   mode,
   matches,
@@ -121,6 +150,9 @@ export function KnockoutDbGame({
   const [message, setMessage] = useState("");
   const [savingMatch, setSavingMatch] = useState("");
   const [now, setNow] = useState(0);
+  const [activeRoundKey, setActiveRoundKey] = useState<KnockoutRoundKey>(
+    normalizeRoundKey(matches[0]?.round_key),
+  );
 
   useEffect(() => {
     const updateNow = () => setNow(Date.now());
@@ -132,12 +164,29 @@ export function KnockoutDbGame({
     };
   }, []);
 
+  useEffect(() => {
+    if (!matches.length) return;
+    setActiveRoundKey(normalizeRoundKey(matches[0].round_key));
+  }, [matches]);
+
   const predictionByMatch = useMemo(
     () => Object.fromEntries(predictions.map((item) => [item.match_id, item])),
     [predictions],
   );
 
-  const activeRound = matches[0] ? stageDisplayName(matches[0].round_key) : "Not Created";
+  const matchesByRound = useMemo(() => {
+    const grouped = Object.fromEntries(
+      knockoutRoundOrder.map((roundKey) => [roundKey, [] as KnockoutMatch[]]),
+    ) as Record<KnockoutRoundKey, KnockoutMatch[]>;
+
+    for (const match of matches) {
+      grouped[normalizeRoundKey(match.round_key)].push(match);
+    }
+
+    return grouped;
+  }, [matches]);
+  const activeMatches = matchesByRound[activeRoundKey] ?? [];
+  const activeRound = stageDisplayName(activeRoundKey);
   const nextDue = matches
     .filter((match) => new Date(match.prediction_lock_at).getTime() > now)
     .sort(
@@ -189,6 +238,110 @@ export function KnockoutDbGame({
     }
   }
 
+  const stageHub = (
+    <section className="grid gap-3 rounded-lg bg-white p-4 shadow-sm">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
+          Game 2 Knockout Journey
+        </p>
+        <h2 className="mt-1 text-2xl font-black text-slate-950">
+          Knockout Winner Challenge
+        </h2>
+      </div>
+      <div className="grid gap-3 md:grid-cols-5">
+        {knockoutRoundOrder.map((roundKey) => {
+          const roundMatches = matchesByRound[roundKey] ?? [];
+          const predictedCount = roundMatches.filter(
+            (match) => predictionByMatch[match.id] || selectedByMatch[match.id],
+          ).length;
+          const scoredCount = roundMatches.filter(
+            (match) => statusLabel(match, now) === "Scored",
+          ).length;
+          const lockedCount = roundMatches.filter(
+            (match) => statusLabel(match, now) === "Locked",
+          ).length;
+          const openCount = roundMatches.filter((match) =>
+            ["Open", "Closing Soon"].includes(statusLabel(match, now)),
+          ).length;
+          const statusText = !roundMatches.length
+            ? "Waiting Fixtures"
+            : scoredCount === roundMatches.length
+              ? "Scored"
+              : openCount > 0
+                ? "Open"
+                : lockedCount > 0
+                  ? "Waiting Result"
+                  : "Waiting Result";
+
+          return (
+            <button
+              key={roundKey}
+              type="button"
+              onClick={() => setActiveRoundKey(roundKey)}
+              className={clsx(
+                "rounded-lg border p-3 text-left transition active:scale-[0.99]",
+                activeRoundKey === roundKey
+                  ? "border-[#d71920] bg-red-50"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300",
+              )}
+            >
+              <p className="whitespace-pre-line text-sm font-black text-slate-950">
+                {stageDisplayName(roundKey)}
+              </p>
+              <p
+                className={clsx(
+                  "mt-2 inline-flex rounded px-2 py-1 text-[11px] font-black",
+                  statusText === "Open" && "bg-green-100 text-green-800",
+                  statusText === "Waiting Fixtures" && "bg-yellow-100 text-yellow-800",
+                  statusText === "Waiting Result" && "bg-slate-200 text-slate-700",
+                  statusText === "Scored" && "bg-[#f4c542] text-[#071525]",
+                )}
+              >
+                {statusText}
+              </p>
+              <p className="mt-3 text-xs font-bold text-slate-500">
+                Predicted {predictedCount} / {roundMatches.length || knockoutRoundSlots[roundKey]}
+              </p>
+              <p className="mt-1 text-xs font-bold text-slate-500">
+                Matches {roundMatches.length} / {knockoutRoundSlots[roundKey]}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+
+  const waitingPanel = (
+    <section className="rounded-lg border border-yellow-200 bg-yellow-50 p-5">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-700">
+        Waiting Fixtures
+      </p>
+      <h2 className="mt-1 text-2xl font-black text-slate-950">
+        Match list not available yet.
+      </h2>
+      <p className="mt-2 text-sm font-bold text-slate-600">
+        {knockoutWaitingText[activeRoundKey]}
+      </p>
+      <p className="mt-1 text-sm font-bold text-slate-600">
+        Each match will close 15 minutes before kickoff once fixtures are published.
+      </p>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: knockoutRoundSlots[activeRoundKey] }).map((_, index) => (
+          <div
+            key={`game2-waiting-${activeRoundKey}-${index}`}
+            className="rounded-lg border border-dashed border-yellow-300 bg-white/70 p-4"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-yellow-700">
+              Match {index + 1}
+            </p>
+            <p className="mt-1 font-black text-slate-700">Waiting for qualified teams</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
   if (mode === "team" && !teamContext) {
     return (
       <div className="grid gap-5">
@@ -226,7 +379,7 @@ export function KnockoutDbGame({
     <div className="grid gap-5">
       <section className="grid gap-3 rounded-lg bg-[#071525] p-4 text-white md:grid-cols-4">
         <div className="rounded bg-white/10 p-4">
-          <p className="text-sm font-bold text-white/65">Current round</p>
+          <p className="text-sm font-bold text-white/65">Selected round</p>
           <p className="mt-1 text-2xl font-black">
             {activeRound.split("\n").map((line) => (
               <span key={line} className="block leading-tight">
@@ -254,6 +407,8 @@ export function KnockoutDbGame({
           </p>
         </div>
       </section>
+
+      {stageHub}
 
       {mode === "team" && teamContext ? (
         <section className="card grid gap-4 p-5 md:grid-cols-[1fr_auto]">
@@ -305,7 +460,9 @@ export function KnockoutDbGame({
         </div>
       ) : null}
 
-      {!matches.length ? (
+      {!activeMatches.length ? waitingPanel : null}
+
+      {false && !matches.length ? (
         <div className="card p-5 text-center font-bold text-slate-600">
           {mode === "team"
             ? "Team formation is open now. Team match prediction will open after Round of 32 fixtures are confirmed and published by admin."
@@ -313,7 +470,7 @@ export function KnockoutDbGame({
         </div>
       ) : null}
 
-      {matches.map((match) => {
+      {activeMatches.map((match) => {
         const selected = selectedByMatch[match.id];
         const prediction = predictionByMatch[match.id];
         const label = statusLabel(match, now);
@@ -350,7 +507,7 @@ export function KnockoutDbGame({
                   Match date: {new Date(match.match_start_at).toLocaleString("en-MY")}
                 </p>
                 <p className="text-sm font-semibold text-slate-600">
-                  Prediction due date:{" "}
+                  Prediction due date (15 min before kickoff):{" "}
                   {new Date(match.prediction_lock_at).toLocaleString("en-MY")}
                 </p>
                 <p className="text-sm font-semibold text-slate-600">
@@ -386,6 +543,10 @@ export function KnockoutDbGame({
             ) : null}
 
             <div className="grid grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] gap-2 p-5 sm:grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)]">
+              <div className="col-span-3 grid gap-1 rounded bg-slate-50 p-3 text-sm font-bold text-slate-600">
+                <p>Level 1: Pick the winning country.</p>
+                <p>Level 2: Guess both country scores. Winner pick and score guess are not linked.</p>
+              </div>
               {[match.team_a, match.team_b].map((team, index) => {
                 const flag = flagPath(team);
                 const picked = selected === team.id;
@@ -411,7 +572,7 @@ export function KnockoutDbGame({
                     }}
                     className={clsx(
                       index === 0 ? "col-start-1" : "col-start-3",
-                      "row-start-1 rounded-lg border-2 bg-white p-3 text-center shadow-sm transition",
+                      "row-start-2 rounded-lg border-2 bg-white p-3 text-center shadow-sm transition",
                       picked
                         ? "border-[#d71920] bg-red-50"
                         : "border-slate-100 hover:border-[#0f8a4b]",
@@ -477,7 +638,7 @@ export function KnockoutDbGame({
                   </div>
                 );
               })}
-              <div className="col-start-2 row-start-1 flex items-center justify-center">
+              <div className="col-start-2 row-start-2 flex items-center justify-center">
                 <div className="grid size-12 place-items-center rounded-full bg-[#f4c542] text-sm font-black text-[#071525]">
                   VS
                 </div>
@@ -496,7 +657,7 @@ export function KnockoutDbGame({
                 ) : (
                   <Send size={18} />
                 )}
-                Submit Winner
+                Submit Match Prediction
               </button>
               <p className="mt-3 text-xs font-bold text-slate-500">
                 Winner pick and score guess are scored separately. Score accuracy gives +0,

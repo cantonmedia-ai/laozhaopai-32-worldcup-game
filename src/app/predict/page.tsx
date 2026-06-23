@@ -100,7 +100,7 @@ export default async function PredictPage() {
           }
           body={`${knockoutWinnerSubtitle} ${knockoutWinnerDescription}`}
         />
-        {dbMatches.length ? (
+        {true ? (
           <KnockoutDbGame
             mode="solo"
             matches={dbMatches}

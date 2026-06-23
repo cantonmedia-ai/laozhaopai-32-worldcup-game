@@ -57,6 +57,15 @@ export function KnockoutAdminControl({
 
   const selectedMatch = matches.find((match) => match.id === selectedMatchId);
 
+  function lockTimeFromKickoff(value: string) {
+    if (!value) return "";
+    const kickoff = new Date(value);
+    if (Number.isNaN(kickoff.getTime())) return "";
+    const lock = new Date(kickoff.getTime() - 15 * 60 * 1000);
+    const offset = lock.getTimezoneOffset();
+    return new Date(lock.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  }
+
   async function saveMatch() {
     setBusy("save");
     setMessage("");
@@ -69,7 +78,7 @@ export function KnockoutAdminControl({
         p_team_a_id: teamAId,
         p_team_b_id: teamBId,
         p_match_start_at: new Date(matchStartAt).toISOString(),
-        p_prediction_lock_at: new Date(lockAt).toISOString(),
+        p_prediction_lock_at: new Date(lockAt || lockTimeFromKickoff(matchStartAt)).toISOString(),
         p_status: status,
       });
       if (error) throw new Error(error.message);
@@ -189,10 +198,18 @@ export function KnockoutAdminControl({
             </div>
             <label className="grid gap-1 text-sm font-black text-slate-700">
               Match date / time
-              <input type="datetime-local" value={matchStartAt} onChange={(event) => setMatchStartAt(event.target.value)} className="h-11 rounded border border-slate-200 px-3" />
+              <input
+                type="datetime-local"
+                value={matchStartAt}
+                onChange={(event) => {
+                  setMatchStartAt(event.target.value);
+                  setLockAt(lockTimeFromKickoff(event.target.value));
+                }}
+                className="h-11 rounded border border-slate-200 px-3"
+              />
             </label>
             <label className="grid gap-1 text-sm font-black text-slate-700">
-              Prediction due date / lock time
+              Prediction due date / lock time (auto: 15 min before kickoff)
               <input type="datetime-local" value={lockAt} onChange={(event) => setLockAt(event.target.value)} className="h-11 rounded border border-slate-200 px-3" />
             </label>
             <label className="grid gap-1 text-sm font-black text-slate-700">

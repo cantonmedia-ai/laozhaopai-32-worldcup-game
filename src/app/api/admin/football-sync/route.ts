@@ -57,13 +57,30 @@ function normalizeStage(value?: string) {
   return String(value ?? "").toUpperCase();
 }
 
-function isRoundOf32Fixture(match: ProviderMatch) {
+function knockoutRoundLabel(match: ProviderMatch) {
   const stage = normalizeStage(match.stage);
-  return (
-    stage.includes("LAST_32") ||
-    stage.includes("ROUND_OF_32") ||
-    stage.includes("ROUND_OF_32")
-  );
+  if (stage.includes("LAST_32") || stage.includes("ROUND_OF_32") || stage.includes("ROUND_32")) {
+    return "32强生死战 / Round of 32";
+  }
+  if (stage.includes("LAST_16") || stage.includes("ROUND_OF_16") || stage.includes("ROUND_16")) {
+    return "16强争霸战 / Sweet 16";
+  }
+  if (
+    stage.includes("QUARTER_FINAL") ||
+    stage.includes("LAST_8") ||
+    stage.includes("ROUND_OF_8")
+  ) {
+    return "八强决战 / Elite 8";
+  }
+  if (
+    stage.includes("SEMI_FINAL") ||
+    stage.includes("LAST_4") ||
+    stage.includes("ROUND_OF_4")
+  ) {
+    return "四强王者战 / Final 4";
+  }
+  if (stage.includes("FINAL")) return "冠军终极战 / Grand Final";
+  return null;
 }
 
 function normalizeTeam(team?: ProviderTeam) {
@@ -129,13 +146,17 @@ export async function GET(request: Request) {
       apiKey,
     );
     const fixtures = (data.matches ?? [])
-      .filter(isRoundOf32Fixture)
-      .map((match) => ({
-        round: "32强生死战 / Round of 32",
+      .map((match) => ({ match, round: knockoutRoundLabel(match) }))
+      .filter((row): row is { match: ProviderMatch; round: string } => Boolean(row.round))
+      .map(({ match, round }) => ({
         apiFixtureId: String(match.id),
+        round,
         teamA: normalizeTeam(match.homeTeam),
         teamB: normalizeTeam(match.awayTeam),
         matchDateTime: match.utcDate ?? "",
+        predictionDueAt: match.utcDate
+          ? new Date(new Date(match.utcDate).getTime() - 15 * 60 * 1000).toISOString()
+          : "",
         apiStatus: match.status ?? "UNKNOWN",
         publishStatus: "admin_review",
       }));
@@ -146,8 +167,8 @@ export async function GET(request: Request) {
       updatedAt: new Date().toISOString(),
       fixtures,
       message: fixtures.length
-        ? "Round of 32 fixtures detected. Admin must review before publishing."
-        : "No Round of 32 fixtures detected yet. Keep Game 2 locked.",
+        ? "Knockout fixtures detected. Admin must review before publishing."
+        : "No knockout fixtures detected yet. Keep Game 2 waiting.",
     });
   } catch (error) {
     return Response.json(
