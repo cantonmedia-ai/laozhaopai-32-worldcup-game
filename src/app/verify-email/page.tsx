@@ -23,16 +23,16 @@ export default async function VerifyEmailPage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "profile_completed, display_name, nickname, phone, phone_number, whatsapp_number, email, email_verified",
+      "profile_completed, display_name, nickname, email, email_verified",
     )
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  if (!profileIsComplete(profile)) {
-    redirect(`/profile-setup?next=${encodeURIComponent(next)}`);
-  }
-
   if (profile?.email_verified !== false) {
+    if (!profileIsComplete(profile)) {
+      redirect(`/profile/setup?next=${encodeURIComponent(next)}`);
+    }
+
     redirect(next);
   }
 

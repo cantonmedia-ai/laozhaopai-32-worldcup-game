@@ -48,7 +48,7 @@ function friendlyAuthError(message: string, mode: AuthMode) {
 
 function getGoogleButtonText(mode: AuthMode, loading: boolean) {
   if (loading) return "Opening Google...";
-  return mode === "signup" ? "Sign up with Google" : "Sign in with Google";
+  return "Continue with Google";
 }
 
 async function ensurePlayerProfile(
@@ -65,7 +65,7 @@ async function ensurePlayerProfile(
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select(
-      "id, profile_completed, display_name, nickname, phone, phone_number, whatsapp_number",
+      "id, profile_completed, display_name, nickname, email_verified, auth_provider, provider, login_provider",
     )
     .eq("auth_user_id", user.id)
     .maybeSingle();
@@ -104,11 +104,9 @@ async function ensurePlayerProfile(
   if (updateError) throw new Error(updateError.message);
 
   return {
-    completed: Boolean(
-      profile.profile_completed &&
-        (profile.display_name || profile.nickname) &&
-        (profile.phone || profile.phone_number || profile.whatsapp_number),
-    ),
+    completed: Boolean(profile.profile_completed && (profile.display_name || profile.nickname)),
+    emailVerified: profile.email_verified !== false,
+    provider: profile.auth_provider || profile.provider || profile.login_provider || provider,
   };
 }
 
@@ -131,7 +129,11 @@ export function AuthButtons({
   const [loginPassword, setLoginPassword] = useState("");
 
   function goToProfileSetup() {
-    window.location.href = `/profile-setup?next=${encodeURIComponent(next)}`;
+    window.location.href = `/profile/setup?next=${encodeURIComponent(next)}`;
+  }
+
+  function goToVerifyEmail() {
+    window.location.href = `/verify-email?next=${encodeURIComponent(next)}`;
   }
 
   function goToNext() {
@@ -221,7 +223,7 @@ export function AuthButtons({
       }
 
       await ensurePlayerProfile("email");
-      goToProfileSetup();
+      goToVerifyEmail();
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -266,6 +268,11 @@ export function AuthButtons({
       if (error) throw new Error(friendlyAuthError(error.message, "login"));
 
       const profile = await ensurePlayerProfile("email");
+      if (profile.provider === "email" && !profile.emailVerified) {
+        goToVerifyEmail();
+        return;
+      }
+
       if (profile.completed) {
         goToNext();
         return;
@@ -333,6 +340,9 @@ export function AuthButtons({
         )}
         {getGoogleButtonText(mode, loading === "google")}
       </button>
+      <p className="-mt-2 text-center text-xs font-bold text-slate-500">
+        Recommended. No email verification required.
+      </p>
 
       <div className="flex items-center gap-3 text-xs font-black uppercase text-slate-400">
         <span className="h-px flex-1 bg-slate-200" />
@@ -343,7 +353,7 @@ export function AuthButtons({
       {mode === "signup" ? (
         <form onSubmit={createAccount} className="grid gap-3">
           <label className="grid gap-1.5 text-sm font-black text-slate-700">
-            Email
+            Register with Email
             <input
               type="email"
               value={signupEmail}
@@ -386,8 +396,11 @@ export function AuthButtons({
             className="mt-1 flex h-13 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-4 font-black text-white shadow-lg shadow-red-900/20 hover:bg-red-700 disabled:cursor-wait disabled:bg-slate-400"
           >
             {loading === "signup" ? <Loader2 className="animate-spin" size={18} /> : <Mail size={18} />}
-            {loading === "signup" ? "Creating..." : "Create Account"}
+            {loading === "signup" ? "Creating..." : "Register with Email"}
           </button>
+          <p className="-mt-1 text-center text-xs font-bold text-slate-500">
+            Verification email required before joining games.
+          </p>
           <button
             type="button"
             disabled={isBusy}

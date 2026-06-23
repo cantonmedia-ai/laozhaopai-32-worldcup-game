@@ -14,6 +14,7 @@ const protectedRoutes = [
   "/squad",
   "/team",
   "/profile",
+  "/profile/setup",
   "/profile-setup",
   "/setup-profile",
   "/verify-email",
@@ -34,12 +35,28 @@ function profileIsComplete(profile: {
   phone_number: string | null;
   whatsapp_number: string | null;
   email_verified: boolean | null;
+  auth_provider: string | null;
+  provider: string | null;
+  login_provider: string | null;
 } | null) {
-  return Boolean(
-    profile?.profile_completed &&
-      (profile.display_name || profile.nickname) &&
-      (profile.phone || profile.phone_number || profile.whatsapp_number),
-  );
+  return Boolean(profile?.profile_completed && (profile.display_name || profile.nickname));
+}
+
+function providerOf(profile: {
+  auth_provider: string | null;
+  provider: string | null;
+  login_provider: string | null;
+} | null) {
+  return profile?.auth_provider || profile?.provider || profile?.login_provider || "email";
+}
+
+function needsEmailVerification(profile: {
+  email_verified: boolean | null;
+  auth_provider: string | null;
+  provider: string | null;
+  login_provider: string | null;
+} | null) {
+  return providerOf(profile) === "email" && profile?.email_verified === false;
 }
 
 function safeNextPath(value: string | null, fallback: string) {
@@ -111,6 +128,7 @@ export async function proxy(request: NextRequest) {
     if (pathname === "/login") return response;
     const nextPath =
       pathname === "/profile-setup" || pathname === "/setup-profile"
+        || pathname === "/profile/setup"
         ? safeNextPath(request.nextUrl.searchParams.get("next"), "/game")
         : pathname;
     const loginUrl = request.nextUrl.clone();
@@ -123,30 +141,21 @@ export async function proxy(request: NextRequest) {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "role, profile_completed, display_name, nickname, phone, phone_number, whatsapp_number, email_verified",
+      "role, profile_completed, display_name, nickname, phone, phone_number, whatsapp_number, email_verified, auth_provider, provider, login_provider",
     )
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  if (pathname === "/login" && profileIsComplete(profile) && profile?.email_verified !== false) {
+  if (pathname === "/login" && profileIsComplete(profile) && !needsEmailVerification(profile)) {
     const gameUrl = request.nextUrl.clone();
     gameUrl.pathname = "/game";
     gameUrl.search = "";
     return NextResponse.redirect(gameUrl);
   }
 
-  if (pathname !== "/profile-setup" && !profileIsComplete(profile)) {
-    const setupUrl = request.nextUrl.clone();
-    setupUrl.pathname = "/profile-setup";
-    setupUrl.search = "";
-    setupUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(setupUrl);
-  }
-
   if (
     pathname !== "/verify-email" &&
-    profileIsComplete(profile) &&
-    profile?.email_verified === false
+    needsEmailVerification(profile)
   ) {
     const verifyUrl = request.nextUrl.clone();
     verifyUrl.pathname = "/verify-email";
@@ -155,7 +164,20 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(verifyUrl);
   }
 
-  if (pathname === "/verify-email" && profile?.email_verified !== false) {
+  const isProfileSetupPath =
+    pathname === "/profile/setup" ||
+    pathname === "/profile-setup" ||
+    pathname === "/setup-profile";
+
+  if (!isProfileSetupPath && !profileIsComplete(profile)) {
+    const setupUrl = request.nextUrl.clone();
+    setupUrl.pathname = "/profile/setup";
+    setupUrl.search = "";
+    setupUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(setupUrl);
+  }
+
+  if (pathname === "/verify-email" && !needsEmailVerification(profile)) {
     const nextPath = safeNextPath(request.nextUrl.searchParams.get("next"), "/game");
     const nextUrl = request.nextUrl.clone();
     nextUrl.pathname = nextPath;
@@ -177,6 +199,7 @@ export const config = {
     "/squad/:path*",
     "/team/:path*",
     "/profile/:path*",
+    "/profile/setup",
     "/profile-setup",
     "/setup-profile",
     "/verify-email",

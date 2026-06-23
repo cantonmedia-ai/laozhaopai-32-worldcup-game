@@ -48,7 +48,7 @@ export default async function ProfilePage() {
             </p>
           </div>
           <Link
-            href="/profile-setup?next=/profile"
+            href="/profile/setup?next=/profile"
             className="flex h-12 items-center justify-center rounded bg-[#071525] font-black text-white"
           >
             Update Profile

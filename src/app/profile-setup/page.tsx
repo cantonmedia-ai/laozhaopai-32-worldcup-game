@@ -9,7 +9,7 @@ export default function ProfileSetupPage() {
         <SectionHeader
           eyebrow="First Login"
           title="Set Your Player Name"
-          body="Choose your nickname and add your WhatsApp number so we can contact you if you win a prize."
+          body="Choose your display name and preferred language. You can add a mobile number for prize notification."
         />
         <Suspense
           fallback={

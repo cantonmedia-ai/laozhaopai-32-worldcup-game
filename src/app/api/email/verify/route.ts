@@ -37,5 +37,5 @@ export async function GET(request: NextRequest) {
     .update({ used_at: new Date().toISOString() })
     .eq("id", tokenRow.id);
 
-  return NextResponse.redirect(new URL("/login?mode=login&verified=1", request.url));
+  return NextResponse.redirect(new URL("/profile/setup?verified=1", request.url));
 }

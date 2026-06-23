@@ -13,6 +13,10 @@ export type PlayerProfile = {
   whatsapp_number: string | null;
   email: string | null;
   email_verified: boolean | null;
+  auth_provider: string | null;
+  provider: string | null;
+  login_provider: string | null;
+  preferred_language: string | null;
   referral_code: string;
   referred_by_profile_id: string | null;
   profile_completed: boolean | null;
@@ -23,15 +27,19 @@ export function profileIsComplete(profile: Pick<
   | "profile_completed"
   | "display_name"
   | "nickname"
-  | "phone"
-  | "phone_number"
-  | "whatsapp_number"
 > | null) {
-  return Boolean(
-    profile?.profile_completed &&
-      (profile.display_name || profile.nickname) &&
-      (profile.phone || profile.phone_number || profile.whatsapp_number),
-  );
+  return Boolean(profile?.profile_completed && (profile.display_name || profile.nickname));
+}
+
+export function providerOf(profile: Pick<PlayerProfile, "auth_provider" | "provider" | "login_provider"> | null) {
+  return profile?.auth_provider || profile?.provider || profile?.login_provider || "email";
+}
+
+export function needsEmailVerification(profile: Pick<
+  PlayerProfile,
+  "email_verified" | "auth_provider" | "provider" | "login_provider"
+> | null) {
+  return providerOf(profile) === "email" && profile?.email_verified === false;
 }
 
 export function displayName(profile: Pick<PlayerProfile, "display_name" | "nickname">) {
@@ -51,7 +59,7 @@ export async function getCurrentProfile() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, auth_user_id, user_id, role, display_name, nickname, phone, phone_number, whatsapp_number, email, email_verified, referral_code, referred_by_profile_id, profile_completed",
+      "id, auth_user_id, user_id, role, display_name, nickname, phone, phone_number, whatsapp_number, email, email_verified, auth_provider, provider, login_provider, preferred_language, referral_code, referred_by_profile_id, profile_completed",
     )
     .eq("auth_user_id", user.id)
     .maybeSingle();
@@ -68,12 +76,12 @@ export async function requireCompletedProfile(next = "/game") {
     redirect(`/login?next=${encodeURIComponent(next)}`);
   }
 
-  if (!profileIsComplete(profile)) {
-    redirect(`/profile-setup?next=${encodeURIComponent(next)}`);
+  if (needsEmailVerification(profile)) {
+    redirect(`/verify-email?next=${encodeURIComponent(next)}`);
   }
 
-  if (profile.email_verified === false) {
-    redirect(`/verify-email?next=${encodeURIComponent(next)}`);
+  if (!profileIsComplete(profile)) {
+    redirect(`/profile/setup?next=${encodeURIComponent(next)}`);
   }
 
   return profile;

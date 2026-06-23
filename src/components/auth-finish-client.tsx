@@ -19,15 +19,8 @@ function isProfileComplete(profile: {
   profile_completed: boolean | null;
   display_name: string | null;
   nickname: string | null;
-  phone: string | null;
-  phone_number: string | null;
-  whatsapp_number: string | null;
 } | null) {
-  return Boolean(
-    profile?.profile_completed &&
-      (profile.display_name || profile.nickname) &&
-      (profile.phone || profile.phone_number || profile.whatsapp_number),
-  );
+  return Boolean(profile?.profile_completed && (profile.display_name || profile.nickname));
 }
 
 function friendlyExchangeError(message: string) {
@@ -58,7 +51,7 @@ export function AuthFinishClient() {
       const nextPath = safeNextPath(searchParams.get("next"));
 
       if (!isSupabaseConfigured()) {
-        router.replace(`/profile-setup?demo=1&next=${encodeURIComponent(nextPath)}`);
+        router.replace(`/profile/setup?demo=1&next=${encodeURIComponent(nextPath)}`);
         return;
       }
 
@@ -93,10 +86,11 @@ export function AuthFinishClient() {
         const provider = user.app_metadata?.provider
           ? String(user.app_metadata.provider)
           : "google";
+        const isGoogleProvider = provider === "google";
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select(
-            "id, profile_completed, display_name, nickname, phone, phone_number, whatsapp_number",
+            "id, profile_completed, display_name, nickname, email_verified, auth_provider, provider, login_provider",
           )
           .eq("auth_user_id", user.id)
           .maybeSingle();
@@ -112,6 +106,7 @@ export function AuthFinishClient() {
             login_provider: provider,
             provider,
             auth_provider: provider,
+            email_verified: isGoogleProvider,
             referral_code: createReferralCode(),
             profile_completed: false,
             created_at: new Date().toISOString(),
@@ -121,14 +116,29 @@ export function AuthFinishClient() {
           if (insertError) throw new Error(insertError.message);
 
           await applyStoredReferralCode();
-          router.replace(`/profile-setup?next=${encodeURIComponent(nextPath)}`);
+          router.replace(`/profile/setup?next=${encodeURIComponent(nextPath)}`);
           return;
         }
+
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({
+            email: user.email,
+            avatar_url: user.user_metadata?.avatar_url ?? null,
+            login_provider: provider,
+            provider,
+            auth_provider: provider,
+            ...(isGoogleProvider ? { email_verified: true } : {}),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("auth_user_id", user.id);
+
+        if (updateError) throw new Error(updateError.message);
 
         await applyStoredReferralCode();
 
         if (!isProfileComplete(profile)) {
-          router.replace(`/profile-setup?next=${encodeURIComponent(nextPath)}`);
+          router.replace(`/profile/setup?next=${encodeURIComponent(nextPath)}`);
           return;
         }
 

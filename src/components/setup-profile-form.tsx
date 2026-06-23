@@ -23,8 +23,9 @@ export function SetupProfileForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = safeNextPath(searchParams.get("next"));
-  const [nickname, setNickname] = useState("");
-  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [preferredLanguage, setPreferredLanguage] = useState<"zh" | "en">("zh");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const storedReferralCode = getStoredReferralCode();
@@ -32,31 +33,26 @@ export function SetupProfileForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const cleanName = nickname.trim();
-    const cleanWhatsapp = whatsappNumber.replace(/[\s-]/g, "");
+    const cleanName = displayName.trim();
+    const cleanMobile = mobileNumber.replace(/[\s-]/g, "");
 
     if (!cleanName) {
-      setMessage("Please enter your nickname.");
+      setMessage("Please enter your display name.");
       return;
     }
 
-    if (cleanName.length < 2 || cleanName.length > 20) {
-      setMessage("Nickname must be 2 to 20 characters.");
+    if (cleanName.length < 2 || cleanName.length > 30) {
+      setMessage("Display name must be 2 to 30 characters.");
       return;
     }
 
     if (isEmailLike(cleanName)) {
-      setMessage("Nickname cannot be an email address.");
+      setMessage("Display name cannot be an email address.");
       return;
     }
 
-    if (!cleanWhatsapp) {
-      setMessage("Please enter your WhatsApp number.");
-      return;
-    }
-
-    if (!isValidWhatsApp(cleanWhatsapp)) {
-      setMessage("Enter a valid WhatsApp number, for example 60123456789, +60123456789, or 0123456789.");
+    if (cleanMobile && !isValidWhatsApp(cleanMobile)) {
+      setMessage("Enter a valid mobile number, for example 60123456789, +60123456789, or 0123456789.");
       return;
     }
 
@@ -85,7 +81,8 @@ export function SetupProfileForm() {
         "complete_player_profile",
         {
           p_nickname: cleanName,
-          p_whatsapp_number: cleanWhatsapp,
+          p_whatsapp_number: cleanMobile || null,
+          p_preferred_language: preferredLanguage,
         },
       );
 
@@ -109,30 +106,42 @@ export function SetupProfileForm() {
       ) : null}
 
       <label className="grid gap-2 font-bold">
-        Nickname
+        Display Name
         <input
-          value={nickname}
-          onChange={(event) => setNickname(event.target.value)}
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value)}
           className="h-12 rounded border border-slate-200 px-3 font-semibold"
           placeholder="Your leaderboard name"
           minLength={2}
-          maxLength={20}
+          maxLength={30}
           required
         />
       </label>
 
       <label className="grid gap-2 font-bold">
-        WhatsApp Number
+        Mobile Number <span className="text-xs text-slate-500">(optional)</span>
         <input
-          value={whatsappNumber}
-          onChange={(event) => setWhatsappNumber(event.target.value)}
+          value={mobileNumber}
+          onChange={(event) => setMobileNumber(event.target.value)}
           className="h-12 rounded border border-slate-200 px-3 font-semibold"
           placeholder="60123456789"
-          required
         />
         <span className="text-xs font-bold text-slate-500">
-          WhatsApp number is only used for prize notification.
+          Mobile number is only used for prize notification if you win.
         </span>
+      </label>
+
+      <label className="grid gap-2 font-bold">
+        Preferred Language
+        <select
+          value={preferredLanguage}
+          onChange={(event) => setPreferredLanguage(event.target.value as "zh" | "en")}
+          className="h-12 rounded border border-slate-200 px-3 font-semibold"
+          required
+        >
+          <option value="zh">Chinese</option>
+          <option value="en">English</option>
+        </select>
       </label>
 
       <button
