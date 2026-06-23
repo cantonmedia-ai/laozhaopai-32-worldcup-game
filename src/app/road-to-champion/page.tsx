@@ -73,6 +73,31 @@ function mapGroupDataToTeams(
     .filter(Boolean) as RoadTeam[];
 }
 
+function apiGroupDataToRoadTeams(
+  groupTeams: Awaited<ReturnType<typeof loadWorldCupGroupTeams>>["teams"],
+) {
+  return groupTeams
+    .map((team) => ({
+      id: `api-${normalizeTeamKey(team.api_team_id || team.country_code || team.country_name)}`,
+      country_name: team.country_name,
+      country_code: team.country_code,
+      flag_url: team.country_flag,
+      flag_asset_path: null,
+      group_name: team.group_name,
+      group_key: team.group_key,
+      api_source: team.api_source,
+    }))
+    .sort((a, b) => {
+      const groupSort = String(a.group_key ?? "").localeCompare(
+        String(b.group_key ?? ""),
+        undefined,
+        { numeric: true },
+      );
+      if (groupSort !== 0) return groupSort;
+      return String(a.country_name ?? "").localeCompare(String(b.country_name ?? ""));
+    }) as RoadTeam[];
+}
+
 function demoStages(): RoadStage[] {
   return sortRoadStages([
     {
@@ -250,12 +275,13 @@ export default async function RoadToChampionPage() {
 
     const groupResult = await loadWorldCupGroupTeams();
     groupDebug = groupResult.debug;
-    if (groupResult.debug.available) {
+    const apiSweet16Teams = apiGroupDataToRoadTeams(groupResult.teams);
+    if (groupResult.debug.available && apiSweet16Teams.length >= 48) {
       const groupedTeams = mapGroupDataToTeams(teams, groupResult.teams);
-      if (groupedTeams.length) {
-        teams = groupedTeams;
+      if (apiSweet16Teams.length) {
+        teams = groupedTeams.length ? groupedTeams : apiSweet16Teams;
         groupDataAvailable = true;
-        teamsByStage.last_16 = groupedTeams;
+        teamsByStage.last_16 = apiSweet16Teams;
       }
     }
 
