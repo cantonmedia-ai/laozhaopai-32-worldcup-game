@@ -88,7 +88,7 @@ export function TopNav({
           </div>
         ) : (
           <Link
-            href="/predict"
+            href="/game"
             className="hidden h-11 shrink-0 items-center justify-center gap-2 rounded bg-[#d71920] px-4 text-sm font-black text-white hover:bg-red-700 sm:flex"
           >
             <ShieldCheck size={17} />

@@ -45,26 +45,14 @@ const gameCards = [
     id: "game2",
     href: "/predict",
     title: "Game 2: Knockout Winner Challenge",
-    english: "淘汰赛赢家战",
+    english: "\u6dd8\u6c70\u8d5b\u8d62\u5bb6\u6218",
     badge: "Opens after Round of 32",
     body: "Predict the winner for each knockout match once Round of 32 fixtures are published.",
     cta: "View Game 2",
     icon: ShieldCheck,
     lockedWhenWaiting: true,
   },
-  {
-    id: "game3",
-    href: "/team-knockout",
-    title: "Game 3: Team Knockout Winner Challenge",
-    english: "团队淘汰赛赢家战",
-    badge: "Team Formation Open",
-    body: "Form your team now. Team winner predictions open after Round of 32 fixtures are published.",
-    cta: "View Game 3",
-    icon: UsersRound,
-    lockedWhenWaiting: true,
-  },
 ];
-
 type ProviderMatch = {
   utcDate?: string;
   stage?: string;
@@ -200,8 +188,8 @@ export default async function GamePage() {
   const knockoutPublished = openMatchCount > 0 && Boolean(activeRoundKey);
   const currentStage = knockoutPublished
     ? stageInlineName(activeRoundKey)
-    : "小组赛进行中 / Group Stage in Progress";
-  const stagePrimary = knockoutPublished ? "32强生死战" : "小组赛进行中";
+    : "\u5c0f\u7ec4\u8d5b\u8fdb\u884c\u4e2d / Group Stage in Progress";
+  const stagePrimary = knockoutPublished ? "32\u5f3a\u751f\u6b7b\u6218" : "\u5c0f\u7ec4\u8d5b\u8fdb\u884c\u4e2d";
   const stageSecondary = knockoutPublished ? "Round of 32" : "Group Stage in Progress";
   const predictionComplete =
     openMatchCount > 0 && submittedPredictionCount >= openMatchCount;
@@ -266,7 +254,7 @@ export default async function GamePage() {
               Tournament status: {currentStage}
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {gameCards.map((card) => {
               const Icon = card.icon;
               const locked = card.lockedWhenWaiting && !knockoutPublished;

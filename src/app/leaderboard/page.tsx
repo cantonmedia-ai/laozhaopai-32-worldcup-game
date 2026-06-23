@@ -23,10 +23,10 @@ type SupabaseLeaderboardRow = {
 };
 
 const tabs: Array<{ id: LeaderboardScope; label: string; title: string }> = [
-  { id: "overall", label: "终极大奖", title: "终极大奖排行榜" },
-  { id: "round", label: "Game 1", title: "Game 1 排行榜" },
-  { id: "squad", label: "Game 2", title: "Game 2 排行榜" },
-  { id: "invite", label: "Game 3", title: "Game 3 排行榜" },
+  { id: "overall", label: "\u7ec8\u6781\u5927\u5956", title: "\u7ec8\u6781\u5927\u5956\u6392\u884c\u699c" },
+  { id: "round", label: "Game 1", title: "Game 1 \u6392\u884c\u699c" },
+  { id: "squad", label: "Game 2", title: "Game 2 \u6392\u884c\u699c" },
+  { id: "invite", label: "Team", title: "Team \u6392\u884c\u699c" },
 ];
 
 function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
@@ -109,8 +109,8 @@ export default function LeaderboardPage() {
       <main className="mx-auto max-w-7xl px-4 py-10">
         <SectionHeader
           eyebrow="Ranking"
-          title="排行榜"
-          body="终极大奖显示全部游戏总排行。Game 1、Game 2、Game 3 可分别查看各游戏排行。"
+          title="\u6392\u884c\u699c"
+          body="\u7ec8\u6781\u5927\u5956\u663e\u793a\u5168\u90e8\u6e38\u620f\u603b\u6392\u884c\u3002Game 1\u3001Game 2\u3001Team \u53ef\u5206\u522b\u67e5\u770b\u5404\u6392\u884c\u3002"
         />
 
         {message ? (
