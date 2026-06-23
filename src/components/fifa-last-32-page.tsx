@@ -159,6 +159,12 @@ export async function FifaLast32Page() {
                 Sign in to play, save your score, and receive prize updates if you win.
               </p>
               <AuthButtons next="/game" />
+              <Link
+                href="/admin-login"
+                className="mt-3 flex h-11 w-full items-center justify-center rounded border border-slate-200 bg-white text-sm font-black text-slate-700 hover:bg-slate-50"
+              >
+                Admin
+              </Link>
               <p className="mt-4 break-words rounded bg-slate-100 p-3 text-center text-xs font-bold text-slate-600">
                 Your WhatsApp number is only used for prize notification.
               </p>
