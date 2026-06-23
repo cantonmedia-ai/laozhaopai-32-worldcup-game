@@ -148,7 +148,7 @@ export function RoadToChampionGame({
   const [savingStage, setSavingStage] = useState("");
   const [messageByStage, setMessageByStage] = useState<Record<string, string>>({});
   const [confirmStage, setConfirmStage] = useState<RoadStage | null>(null);
-  const [successStageKey, setSuccessStageKey] = useState<RoadStageKey | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -192,6 +192,10 @@ export function RoadToChampionGame({
         ? "Submitted - editable before deadline"
         : visualStageStatus;
   const locked = visualStageStatus !== "Open for prediction";
+  const last16Stage = stages.find((stage) => stage.stage_key === "last_16") ?? activeStage;
+  const last16Submitted = submittedByStage.last_16 ?? false;
+  const last16Locked = visualStatus(last16Stage, now) !== "Open for prediction";
+  const cleanSubmittedView = last16Submitted && (!editMode || last16Locked);
   const complete = selected.length === required;
   const stageMessage = messageByStage[activeStage.stage_key];
   const activePrediction = predictions.find(
@@ -282,7 +286,6 @@ export function RoadToChampionGame({
 
   function toggle(teamId: string) {
     if (locked) return;
-    setSuccessStageKey(null);
 
     setMessageByStage((current) => ({
       ...current,
@@ -372,7 +375,9 @@ export function RoadToChampionGame({
           ...current,
           [activeStage.stage_key]: true,
         }));
-        setSuccessStageKey(activeStage.stage_key);
+        if (activeStage.stage_key === "last_16") {
+          setEditMode(false);
+        }
       }
 
       setMessageByStage((current) => ({
@@ -812,49 +817,15 @@ export function RoadToChampionGame({
     </aside>
   );
 
-  const showSubmissionSummary = Boolean(successStageKey) || submitted;
-  const canEditSubmittedPrediction = showSubmissionSummary && !locked;
-  const summaryStageKeys = roadStageOrder.filter((stageKey) =>
-    stages.some((stage) => stage.stage_key === stageKey),
-  );
-  const compactTeamList = (stageKey: RoadStageKey, emptyText: string) => {
-    const stageTeams = selectedTeamsForStage(stageKey);
+  const showSubmissionSummary = cleanSubmittedView;
+  const canEditSubmittedPrediction = showSubmissionSummary && !last16Locked;
+  function startEditPrediction() {
+    setActiveStageKey("last_16");
+    setSearchTerm("");
+    setEditMode(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-    if (!stageTeams.length) {
-      return (
-        <p className="rounded bg-slate-50 px-3 py-2 text-sm font-bold text-slate-500">
-          {emptyText}
-        </p>
-      );
-    }
-
-    return (
-      <div className="grid gap-2 sm:grid-cols-2">
-        {stageTeams.map((team) => (
-          <div
-            key={`summary-${stageKey}-${team.id}`}
-            className="flex min-w-0 items-center gap-2 rounded border border-slate-200 bg-white px-3 py-2"
-          >
-            <span className="grid h-8 w-11 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
-              {flagPath(team) ? (
-                <img
-                  src={flagPath(team)}
-                  alt=""
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                team.country_code
-              )}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm font-black text-slate-950">
-              {team.country_name}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  };
   const submissionSummary = showSubmissionSummary ? (
     <section
       id="my-game1-prediction"
@@ -878,7 +849,7 @@ export function RoadToChampionGame({
               <span className="block text-green-700">
                 {canEditSubmittedPrediction
                   ? "You can still edit your prediction before the deadline."
-                  : "Prediction is locked and can no longer be edited."}
+                  : "Prediction locked after deadline."}
               </span>
             </p>
           </div>
@@ -961,45 +932,6 @@ export function RoadToChampionGame({
           )}
         </div>
 
-        <div className="rounded-lg border border-slate-200 p-4">
-          <h3 className="text-xl font-black text-slate-950">
-            Your Game 1 Prediction Summary
-          </h3>
-          <div className="mt-4 grid gap-4">
-            {summaryStageKeys.map((stageKey) => {
-              const stage = stages.find((item) => item.stage_key === stageKey);
-              if (!stage) return null;
-              const isChampion = stageKey === "champion";
-              return (
-                <div
-                  key={`full-summary-${stageKey}`}
-                  className={clsx(
-                    "rounded-lg border p-3",
-                    isChampion
-                      ? "border-[#f4c542] bg-[#fff8df]"
-                      : "border-slate-200 bg-slate-50",
-                  )}
-                >
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <p className="whitespace-pre-line text-sm font-black text-slate-950">
-                      {roadStageCopy[stageKey].shortName}
-                    </p>
-                    <span className="rounded bg-white px-2 py-1 text-xs font-black text-slate-500">
-                      {(selectedByStage[stageKey] ?? []).length} / {stage.required_selection_count}
-                    </span>
-                  </div>
-                  {compactTeamList(
-                    stageKey,
-                    stageKey === "last_16"
-                      ? "No Last 16 picks submitted yet."
-                      : "Not selected yet.",
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         <div className="rounded-lg bg-[#071525] p-4 text-center text-white">
           <p className="text-lg font-black">
             Good luck! Your road to champion has started.
@@ -1009,12 +941,25 @@ export function RoadToChampionGame({
           </p>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-3">
+          {canEditSubmittedPrediction ? (
+            <button
+              type="button"
+              onClick={startEditPrediction}
+              className="h-12 rounded bg-[#d71920] px-4 text-sm font-black text-white"
+            >
+              Edit Prediction
+            </button>
+          ) : (
+            <span className="flex min-h-12 items-center justify-center rounded bg-slate-200 px-4 text-center text-sm font-black text-slate-500">
+              Prediction locked after deadline.
+            </span>
+          )}
           <a
-            href="#my-game1-prediction"
-            className="flex h-12 items-center justify-center rounded bg-[#071525] px-4 text-center text-sm font-black text-white"
+            href="/team"
+            className="flex h-12 items-center justify-center rounded bg-[#0f8a4b] px-4 text-center text-sm font-black text-white"
           >
-            View My Prediction
+            Invite Friends / Join Team
           </a>
           <a
             href="/leaderboard"
@@ -1022,25 +967,6 @@ export function RoadToChampionGame({
           >
             Go to Leaderboard
           </a>
-          <a
-            href="/team"
-            className="flex h-12 items-center justify-center rounded bg-[#0f8a4b] px-4 text-center text-sm font-black text-white"
-          >
-            Invite Friends / Join Team
-          </a>
-          {canEditSubmittedPrediction ? (
-            <button
-              type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="h-12 rounded bg-[#d71920] px-4 text-sm font-black text-white"
-            >
-              Edit Prediction
-            </button>
-          ) : (
-            <span className="flex h-12 items-center justify-center rounded bg-slate-200 px-4 text-sm font-black text-slate-500">
-              Prediction Locked
-            </span>
-          )}
         </div>
       </div>
     </section>
@@ -1061,6 +987,10 @@ export function RoadToChampionGame({
         }
       `}</style>
 
+      {cleanSubmittedView ? (
+        submissionSummary
+      ) : (
+        <>
       <section className="overflow-hidden rounded-lg bg-[#071525] text-white shadow-sm">
         <div className="bg-[url('/assets/backgrounds/bg_hero_stadium.png')] bg-cover bg-center p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1158,29 +1088,29 @@ export function RoadToChampionGame({
         </div>
       </section>
 
-      <div className="flex items-center gap-2 overflow-x-auto rounded-lg bg-white p-3 shadow-sm">
-        {roadStageOrder.map((stageKey) => {
-          const stage = stages.find((item) => item.stage_key === stageKey);
-          if (!stage) return null;
-          return (
-            <button
-              key={stageKey}
-              type="button"
-              onClick={() => setActiveStageKey(stageKey)}
-              className={clsx(
-                "shrink-0 rounded px-3 py-2 text-xs font-black",
-                activeStageKey === stageKey
-                  ? "bg-[#d71920] text-white"
-                  : "bg-slate-100 text-slate-700",
-              )}
-            >
-              {roadStageCopy[stageKey].shortName}
-            </button>
-          );
-        })}
-      </div>
-
-      {submissionSummary}
+      {!last16Submitted ? (
+        <div className="flex items-center gap-2 overflow-x-auto rounded-lg bg-white p-3 shadow-sm">
+          {roadStageOrder.map((stageKey) => {
+            const stage = stages.find((item) => item.stage_key === stageKey);
+            if (!stage) return null;
+            return (
+              <button
+                key={stageKey}
+                type="button"
+                onClick={() => setActiveStageKey(stageKey)}
+                className={clsx(
+                  "shrink-0 rounded px-3 py-2 text-xs font-black",
+                  activeStageKey === stageKey
+                    ? "bg-[#d71920] text-white"
+                    : "bg-slate-100 text-slate-700",
+                )}
+              >
+                {roadStageCopy[stageKey].shortName}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="sticky top-14 z-20 lg:hidden">
         <details className="rounded-lg border border-slate-200 bg-white shadow-lg">
@@ -1278,7 +1208,7 @@ export function RoadToChampionGame({
                 <Send size={18} />
                 {complete
                   ? submitted
-                    ? "Update Submitted Prediction"
+                    ? "Update Prediction"
                     : "Submit Sweet 16 Prediction"
                   : `Select ${remaining} more to submit`}
               </button>
@@ -1304,15 +1234,17 @@ export function RoadToChampionGame({
             onClick={() => setConfirmStage(activeStage)}
             className="flex h-12 items-center justify-center gap-2 rounded bg-[#d71920] px-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
           >
-            {complete ? (submitted ? "Update" : "Submit") : `${remaining} more`}
+            {complete ? (submitted ? "Update Prediction" : "Submit") : `${remaining} more`}
           </button>
         </div>
         <p className="mt-1 text-center text-xs font-semibold text-slate-500">
           Save your picks and continue later.
         </p>
       </div>
+        </>
+      )}
 
-      {confirmStage ? (
+      {!cleanSubmittedView && confirmStage ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4">
           <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-2xl">
             <div className="mx-auto grid size-12 place-items-center rounded-full bg-[#f4c542] text-[#071525]">
