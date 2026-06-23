@@ -39,6 +39,26 @@ type StageRow = {
   stage_key: string;
   required_selection_count: number;
   status: string;
+  due_at: string;
+  points_per_correct: number;
+};
+
+type StagePrediction = {
+  id: string;
+  user_id: string;
+  selected_team_ids: string[];
+  status: string;
+};
+
+type ProfileRow = {
+  id: string;
+  auth_user_id: string | null;
+};
+
+type SquadMemberRow = {
+  team_id: string;
+  profile_id: string;
+  joined_at: string;
 };
 
 const finishedStatuses = new Set(["FINISHED", "AWARDED"]);
@@ -180,6 +200,163 @@ function findLocalTeamId(providerTeam: ProviderTeam | null, teams: DbTeam[]) {
   return loose?.id ?? null;
 }
 
+async function updatePartialStageScores({
+  supabase,
+  stage,
+  stageKey,
+  officialTeamIds,
+}: {
+  supabase: ReturnType<typeof createServiceClient>;
+  stage: StageRow;
+  stageKey: string;
+  officialTeamIds: string[];
+}) {
+  const { data: predictionRows, error: predictionError } = await supabase
+    .from("user_stage_predictions")
+    .select("id, user_id, selected_team_ids, status")
+    .eq("stage_key", stageKey)
+    .in("status", ["submitted", "locked"]);
+
+  if (predictionError) throw new Error(predictionError.message);
+
+  const predictions = (predictionRows ?? []) as StagePrediction[];
+  if (!predictions.length) {
+    return { updatedPredictions: 0, pointTransactions: 0 };
+  }
+
+  const userIds = [...new Set(predictions.map((row) => row.user_id))];
+  const { data: profileRows, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, auth_user_id")
+    .in("auth_user_id", userIds);
+
+  if (profileError) throw new Error(profileError.message);
+
+  const profiles = (profileRows ?? []) as ProfileRow[];
+  const profileByUserId = new Map(
+    profiles
+      .filter((profile) => profile.auth_user_id)
+      .map((profile) => [profile.auth_user_id as string, profile]),
+  );
+  const profileIds = profiles.map((profile) => profile.id);
+
+  const { data: memberRows, error: memberError } = profileIds.length
+    ? await supabase
+        .from("squad_team_members")
+        .select("team_id, profile_id, joined_at")
+    : { data: [], error: null };
+
+  if (memberError) throw new Error(memberError.message);
+
+  const members = ((memberRows ?? []) as SquadMemberRow[]).filter((member) =>
+    new Date(member.joined_at).getTime() <= new Date(stage.due_at).getTime(),
+  );
+  const memberProfileIds = [...new Set(members.map((member) => member.profile_id))];
+  const missingProfileIds = memberProfileIds.filter((id) => !profiles.some((profile) => profile.id === id));
+  let memberProfiles = profiles;
+
+  if (missingProfileIds.length) {
+    const { data: extraProfiles, error: extraProfileError } = await supabase
+      .from("profiles")
+      .select("id, auth_user_id")
+      .in("id", missingProfileIds);
+
+    if (extraProfileError) throw new Error(extraProfileError.message);
+    memberProfiles = [...profiles, ...((extraProfiles ?? []) as ProfileRow[])];
+  }
+
+  const userIdByProfileId = new Map(
+    memberProfiles
+      .filter((profile) => profile.auth_user_id)
+      .map((profile) => [profile.id, profile.auth_user_id as string]),
+  );
+  const membersByTeam = new Map<string, SquadMemberRow[]>();
+  const membershipsByProfile = new Map<string, SquadMemberRow[]>();
+
+  for (const member of members) {
+    const teamMembers = membersByTeam.get(member.team_id) ?? [];
+    teamMembers.push(member);
+    membersByTeam.set(member.team_id, teamMembers);
+
+    const profileMemberships = membershipsByProfile.get(member.profile_id) ?? [];
+    profileMemberships.push(member);
+    membershipsByProfile.set(member.profile_id, profileMemberships);
+  }
+
+  const personalByUserId = new Map<string, number>();
+  const correctCountByUserId = new Map<string, number>();
+
+  for (const prediction of predictions) {
+    const selectedIds = prediction.selected_team_ids ?? [];
+    const correctCount = selectedIds.filter((id) => officialTeamIds.includes(id)).length;
+    const personalPoints = correctCount * Number(stage.points_per_correct ?? 0);
+    correctCountByUserId.set(prediction.user_id, correctCount);
+    personalByUserId.set(prediction.user_id, personalPoints);
+  }
+
+  function teamForProfile(profileId: string) {
+    const eligible = (membershipsByProfile.get(profileId) ?? [])
+      .filter((member) => (membersByTeam.get(member.team_id) ?? []).length >= 2)
+      .sort(
+        (a, b) =>
+          new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime(),
+      );
+
+    return eligible[0]?.team_id ?? null;
+  }
+
+  function teamPoints(teamId: string | null) {
+    if (!teamId) return 0;
+    return (membersByTeam.get(teamId) ?? []).reduce((sum, member) => {
+      const userId = userIdByProfileId.get(member.profile_id);
+      return sum + (userId ? personalByUserId.get(userId) ?? 0 : 0);
+    }, 0);
+  }
+
+  let updatedPredictions = 0;
+  let pointTransactions = 0;
+
+  for (const prediction of predictions) {
+    const profile = profileByUserId.get(prediction.user_id);
+    const personalPoints = personalByUserId.get(prediction.user_id) ?? 0;
+    const correctCount = correctCountByUserId.get(prediction.user_id) ?? 0;
+    const accumulatedTeamPoints = profile ? teamPoints(teamForProfile(profile.id)) : 0;
+    const finalPoints = personalPoints + accumulatedTeamPoints;
+
+    const update = await supabase
+      .from("user_stage_predictions")
+      .update({
+        correct_count: correctCount,
+        bonus_earned: 0,
+        points_earned: finalPoints,
+        personal_correct_score: personalPoints,
+        team_accumulated_score: accumulatedTeamPoints,
+        final_earned_score: finalPoints,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", prediction.id);
+
+    if (update.error) throw new Error(update.error.message);
+    updatedPredictions += 1;
+
+    const transaction = await supabase.from("point_transactions").upsert(
+      {
+        user_id: prediction.user_id,
+        source_type: "road_to_champion",
+        stage_key: stageKey,
+        points: finalPoints,
+        description: `${stageKey} partial live score`,
+      },
+      { onConflict: "user_id,source_type,stage_key" },
+    );
+
+    if (transaction.error) throw new Error(transaction.error.message);
+    pointTransactions += 1;
+  }
+
+  return { updatedPredictions, pointTransactions };
+}
+
 async function syncGame1Results() {
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
   if (!apiKey) {
@@ -219,7 +396,7 @@ async function syncGame1Results() {
         .eq("is_active", true),
       supabase
         .from("prediction_stages")
-        .select("stage_key, required_selection_count, status"),
+        .select("stage_key, required_selection_count, status, due_at, points_per_correct"),
     ]);
 
   if (teamError) throw new Error(teamError.message);
@@ -268,7 +445,7 @@ async function syncGame1Results() {
     ];
     const requiredCount = Number(stage.required_selection_count ?? rule.requiredCount);
 
-    if (winnerIds.length !== requiredCount) {
+    if (winnerIds.length === 0) {
       skipped += 1;
       details.push({
         stageKey: rule.stageKey,
@@ -276,6 +453,39 @@ async function syncGame1Results() {
         expectedWinners: requiredCount,
         detectedWinners: winnerIds.length,
         finishedMatches: finishedMatches.length,
+      });
+      continue;
+    }
+
+    await supabase.from("stage_results").upsert(
+      {
+        stage_key: rule.stageKey,
+        official_team_ids: winnerIds,
+        is_simulation: false,
+        confirmed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "stage_key,is_simulation" },
+    );
+
+    if (winnerIds.length !== requiredCount) {
+      const partial = await updatePartialStageScores({
+        supabase,
+        stage,
+        stageKey: rule.stageKey,
+        officialTeamIds: winnerIds,
+      });
+
+      await supabase.rpc("rebuild_final_score_summaries");
+
+      details.push({
+        stageKey: rule.stageKey,
+        status: "partial_scored",
+        expectedWinners: requiredCount,
+        detectedWinners: winnerIds.length,
+        finishedMatches: finishedMatches.length,
+        updatedPredictions: partial.updatedPredictions,
+        pointTransactions: partial.pointTransactions,
       });
       continue;
     }
