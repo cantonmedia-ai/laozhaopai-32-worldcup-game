@@ -247,16 +247,6 @@ export default async function GamePage() {
                   {stageSecondary}
                 </span>
               </h2>
-              <div className="mt-4 grid gap-2 text-sm font-bold text-white/75 sm:grid-cols-2">
-                <p className="rounded bg-white/10 p-3">
-                  Game 1: 开放中 / Open Now
-                </p>
-                <p className="rounded bg-white/10 p-3">
-                  {knockoutPublished
-                    ? `Deadline: ${formatDeadline(nextDeadline)}`
-                    : "Game 2 & 3 predictions open after Round of 32 is confirmed."}
-                </p>
-              </div>
             </div>
             <div className="grid gap-3">
               <Link
