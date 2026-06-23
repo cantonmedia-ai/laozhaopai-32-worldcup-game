@@ -98,6 +98,23 @@ function apiGroupDataToRoadTeams(
     }) as RoadTeam[];
 }
 
+function fallbackTeamsToWorldCupGroups(teams: RoadTeam[]) {
+  const groupNames = Array.from({ length: 12 }, (_, index) =>
+    `Group ${String.fromCharCode(65 + index)}`,
+  );
+
+  return teams.slice(0, 48).map((team, index) => {
+    const groupIndex = Math.floor(index / 4);
+    const groupName = groupNames[groupIndex] ?? "Group Pending";
+    return {
+      ...team,
+      group_name: team.group_name ?? groupName,
+      group_key: team.group_key ?? String.fromCharCode(65 + groupIndex),
+      api_source: team.api_source ?? "fallback-grouped-list",
+    };
+  });
+}
+
 function demoStages(): RoadStage[] {
   return sortRoadStages([
     {
@@ -282,6 +299,13 @@ export default async function RoadToChampionPage() {
         teams = groupedTeams.length ? groupedTeams : apiSweet16Teams;
         groupDataAvailable = true;
         teamsByStage.last_16 = apiSweet16Teams;
+      }
+    } else {
+      const fallbackSweet16Teams = fallbackTeamsToWorldCupGroups(teams);
+      if (fallbackSweet16Teams.length) {
+        teams = fallbackSweet16Teams;
+        groupDataAvailable = true;
+        teamsByStage.last_16 = fallbackSweet16Teams;
       }
     }
 

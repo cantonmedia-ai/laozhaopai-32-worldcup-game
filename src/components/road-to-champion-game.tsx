@@ -99,6 +99,11 @@ function stageTitle(stage: RoadStage) {
   return roadStageCopy[stage.stage_key].title;
 }
 
+const sweet16GroupBoxes = Array.from({ length: 12 }, (_, index) => ({
+  groupName: `Group ${String.fromCharCode(65 + index)}`,
+  groupKey: String.fromCharCode(65 + index),
+}));
+
 export function RoadToChampionGame({
   stages,
   teams,
@@ -232,6 +237,34 @@ export function RoadToChampionGame({
         a.groupKey.localeCompare(b.groupKey, undefined, { numeric: true }),
       );
   }, [filteredTeams]);
+  const sweet16Groups = useMemo(() => {
+    const byKey = new Map(
+      groupedTeams.map((group) => [
+        String(group.groupKey ?? group.groupName).toUpperCase(),
+        group,
+      ]),
+    );
+    const byName = new Map(
+      groupedTeams.map((group) => [group.groupName.toUpperCase(), group]),
+    );
+
+    return sweet16GroupBoxes.map((box) => {
+      const group =
+        byKey.get(box.groupKey) ??
+        byName.get(box.groupName.toUpperCase()) ?? {
+          groupName: box.groupName,
+          groupKey: box.groupKey,
+          teams: [],
+        };
+
+      return {
+        ...group,
+        groupName: box.groupName,
+        groupKey: box.groupKey,
+        teams: group.teams.slice(0, 4),
+      };
+    });
+  }, [groupedTeams]);
 
   function toggle(teamId: string) {
     if (locked) return;
@@ -495,10 +528,11 @@ export function RoadToChampionGame({
         <span className="font-black">Sweet 16 source:</span>{" "}
         12 groups from the live API. Each group table should contain 4 countries.
       </div>
-      {groupedTeams.map((group) => {
+      {sweet16Groups.map((group) => {
         const groupSelected = group.teams.filter((team) =>
           selected.includes(team.id),
         ).length;
+        const missingSlots = Math.max(0, 4 - group.teams.length);
 
         return (
           <section
@@ -584,18 +618,36 @@ export function RoadToChampionGame({
                   </button>
                 );
               })}
-              {group.teams.length < 4 ? (
-                <div className="bg-yellow-50 px-3 py-2 text-xs font-black text-yellow-900">
-                  API currently shows only {group.teams.length}/4 countries for this group.
-                </div>
-              ) : null}
+              {group.teams.length < 4
+                ? Array.from({ length: missingSlots }).map((_, index) => (
+                    <div
+                      key={`${group.groupName}-slot-${index}`}
+                      className="grid min-h-16 w-full grid-cols-[52px_1fr_48px] items-center gap-3 bg-yellow-50 px-4 py-2"
+                    >
+                      <span className="grid h-9 w-12 place-items-center rounded bg-yellow-100 text-[10px] font-black text-yellow-800">
+                        TBC
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-black text-yellow-950">
+                          Waiting for API country
+                        </span>
+                        <span className="mt-0.5 block text-xs font-bold uppercase text-yellow-700">
+                          Slot {group.teams.length + index + 1} / 4
+                        </span>
+                      </span>
+                      <span className="text-right text-xs font-black text-yellow-700">
+                        -
+                      </span>
+                    </div>
+                  ))
+                : null}
             </div>
           </section>
         );
       })}
-      {groupedTeams.length !== 12 ? (
+      {groupedTeams.length !== 12 || groupedTeams.some((group) => group.teams.length !== 4) ? (
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm font-black text-yellow-900 lg:col-span-2">
-          API currently shows {groupedTeams.length}/12 groups. Sweet 16 should have 12 groups when the full World Cup group data is published.
+          Sweet 16 now always displays 12 group boxes with 4 slots each. API/fallback currently fills {groupedTeams.length}/12 groups.
         </div>
       ) : null}
       {groupedTeams.length === 0 ? (
