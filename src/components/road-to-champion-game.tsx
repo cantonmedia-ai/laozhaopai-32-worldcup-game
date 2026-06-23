@@ -227,12 +227,6 @@ export function RoadToChampionGame({
     }
 
     return [...groups.values()]
-      .map((group) => ({
-        ...group,
-        teams: group.teams.sort((a, b) =>
-          String(a.country_name ?? "").localeCompare(String(b.country_name ?? "")),
-        ),
-      }))
       .sort((a, b) =>
         a.groupKey.localeCompare(b.groupKey, undefined, { numeric: true }),
       );
@@ -526,7 +520,7 @@ export function RoadToChampionGame({
     <div className="grid gap-5 pb-48 lg:grid-cols-2 lg:pb-0">
       <div className="rounded-lg border border-[#f4c542]/40 bg-[#fff8df] p-3 text-sm font-bold text-[#071525] shadow-sm lg:col-span-2">
         <span className="font-black">Sweet 16 source:</span>{" "}
-        12 groups from the live API. Each group table should contain 4 countries.
+        Official 2026 group list. Each of the 12 group boxes contains 4 countries.
       </div>
       {sweet16Groups.map((group) => {
         const groupSelected = group.teams.filter((team) =>
@@ -647,7 +641,7 @@ export function RoadToChampionGame({
       })}
       {groupedTeams.length !== 12 || groupedTeams.some((group) => group.teams.length !== 4) ? (
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm font-black text-yellow-900 lg:col-span-2">
-          Sweet 16 now always displays 12 group boxes with 4 slots each. API/fallback currently fills {groupedTeams.length}/12 groups.
+          Sweet 16 now always displays 12 group boxes with 4 slots each. Current group list fills {groupedTeams.length}/12 groups.
         </div>
       ) : null}
       {groupedTeams.length === 0 ? (
