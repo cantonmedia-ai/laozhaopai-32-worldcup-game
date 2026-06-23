@@ -343,6 +343,73 @@ export default async function RulesPage() {
               团队最终总分 = 游戏一团队累计分 + 游戏二团队累计分
             </FormulaBox>
 
+            <div className="grid gap-4 rounded-lg bg-white/10 p-4">
+              <div>
+                <p className="font-black text-white">同一个 owner 可以拥有多支队伍</p>
+                <p className="mt-2">
+                  每一支队伍都是独立参赛单位，都会独立计算团队分，也会在团队排行榜上互相竞争。
+                  即使几支队伍是同一个 owner 创建，分数也不能合并成一个 owner 总团队分。
+                </p>
+              </div>
+
+              <div className="rounded bg-white/10 p-4">
+                <p className="font-black text-white">例子</p>
+                <div className="mt-3 grid gap-2 text-sm font-semibold md:grid-cols-3">
+                  <div className="rounded bg-[#071525]/40 p-3">
+                    <p className="font-black text-[#f4c542]">Team 1</p>
+                    <p>Deric + A + B + C + D</p>
+                  </div>
+                  <div className="rounded bg-[#071525]/40 p-3">
+                    <p className="font-black text-[#f4c542]">Team 2</p>
+                    <p>Deric + E + F + G + H</p>
+                  </div>
+                  <div className="rounded bg-[#071525]/40 p-3">
+                    <p className="font-black text-[#f4c542]">Team 3</p>
+                    <p>Deric + I + J</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-black text-white">团队分如何计算</p>
+                <p className="mt-2">
+                  Owner 的个人分数会计入他拥有的每一支队伍。所以 Team 1、Team 2、Team 3
+                  都可以加入 Deric 的个人分数来冲团队榜。每一支队伍只计算自己队内成员的分数，
+                  不会和同一个 owner 的其他队伍合并。
+                </p>
+              </div>
+
+              <div>
+                <p className="font-black text-white">Owner 个人最终得分如何计算</p>
+                <p className="mt-2">
+                  虽然 owner 的个人分数会帮助每一支自己创建的队伍，但 owner 自己个人最终得分
+                  只领取第一队 / 主队的团队加成。第二队、第三队的团队加成不会再重复加回 owner
+                  的个人总分。
+                </p>
+              </div>
+
+              <div>
+                <p className="font-black text-white">队友如何领取团队加成</p>
+                <p className="mt-2">
+                  队友只领取自己所在队伍的团队加成。Team 2 的队友领取 Team 2 的团队加成，
+                  Team 3 的队友领取 Team 3 的团队加成。
+                </p>
+              </div>
+
+              <BulletList
+                items={[
+                  "同一个 owner 可以创建多支队伍",
+                  "每一队独立参赛，独立上团队排行榜",
+                  "同一个 owner 的多支队伍可以互相竞争",
+                  "Owner 的个人分数会计入每一支自己创建的队伍",
+                  "Owner 自己只领取第一队 / 主队的团队加成",
+                  "Owner 不重复领取第二队、第三队的团队加成",
+                  "队友领取自己所在队伍的团队加成",
+                  "团队分不能按 owner 合并",
+                ]}
+              />
+            </div>
+
             <p>
               如果队长拥有多支团队，队长个人最终总分只使用主队的团队累计分。第二队、第三队等队伍会参加团队排行榜，但不会重复加到队长个人分数里。
             </p>
