@@ -143,11 +143,30 @@ export async function getEmailState() {
     supabase.from("email_logs").select("id", { count: "exact", head: true }).eq("email_type", "winner"),
   ]);
 
+  const dbTemplates = (templatesResult.data as EmailTemplate[] | null) ?? [];
+  const missingTemplates = fallbackTemplates.filter(
+    (fallback) => !dbTemplates.some((template) => template.type === fallback.type),
+  );
+
+  if (missingTemplates.length) {
+    await supabase.from("email_templates").upsert(missingTemplates, {
+      onConflict: "type",
+      ignoreDuplicates: true,
+    });
+  }
+
+  const templates = fallbackTemplates.map(
+    (fallback) =>
+      dbTemplates.find((template) => template.type === fallback.type) ?? fallback,
+  );
+  const extraTemplates = dbTemplates.filter(
+    (template) => !fallbackTemplates.some((fallback) => fallback.type === template.type),
+  );
   const queue = queueResult.data ?? [];
 
   return {
     settings: (settingsResult.data as EmailSettings | null) ?? fallbackSettings,
-    templates: (templatesResult.data as EmailTemplate[] | null) ?? fallbackTemplates,
+    templates: [...templates, ...extraTemplates],
     rules: rulesResult.data ?? fallbackRules,
     logs: logsResult.data ?? [],
     queue,

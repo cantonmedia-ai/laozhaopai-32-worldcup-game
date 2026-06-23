@@ -110,7 +110,7 @@ const reminders = [
   "每位玩家只允许使用一个账号参加。",
   "WhatsApp 号码只用于中奖通知，请确保填写正确。",
   "所有预测必须在指定截止日期前提交。",
-  "截止后不能修改答案。",
+  "预测一旦提交后，不能再修改答案。",
   "比赛结果以官方最终结果为准。",
   "如果发现重复账号、作弊行为或不公平操作，主办方有权取消相关资格。",
   "如果中奖者无法联系，主办方有权重新安排奖品处理方式。",
@@ -288,7 +288,7 @@ export default async function RulesPage() {
               ))}
             </div>
             <p className="mt-4 text-sm font-semibold text-slate-600">
-              所有预测都必须在指定截止日期前提交。截止时间一到，系统会自动锁定预测，锁定后不能修改答案。
+              所有预测都必须在指定截止日期前提交。预测一旦提交后，不能再修改答案。Once submitted, predictions cannot be changed.
             </p>
           </div>
 

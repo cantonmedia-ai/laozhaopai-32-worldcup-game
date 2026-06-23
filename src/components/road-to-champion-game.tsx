@@ -108,7 +108,19 @@ export function RoadToChampionGame({
       ) as Record<RoadStageKey, string[]>,
     [predictions, stages],
   );
+  const initialSubmittedStages = useMemo(
+    () =>
+      Object.fromEntries(
+        stages.map((stage) => [
+          stage.stage_key,
+          predictions.find((item) => item.stage_key === stage.stage_key)
+            ?.status === "submitted",
+        ]),
+      ) as Record<RoadStageKey, boolean>,
+    [predictions, stages],
+  );
   const [selectedByStage, setSelectedByStage] = useState(initialSelections);
+  const [submittedByStage, setSubmittedByStage] = useState(initialSubmittedStages);
   const [activeStageKey, setActiveStageKey] = useState<RoadStageKey>("last_16");
   const [savingStage, setSavingStage] = useState("");
   const [messageByStage, setMessageByStage] = useState<Record<string, string>>({});
@@ -128,8 +140,9 @@ export function RoadToChampionGame({
     .filter(Boolean) as RoadTeam[];
   const required = activeStage.required_selection_count;
   const remaining = Math.max(0, required - selected.length);
-  const status = visualStatus(activeStage, now);
-  const locked = status !== "Open";
+  const submitted = submittedByStage[activeStage.stage_key] ?? false;
+  const status = submitted ? "Submitted" : visualStatus(activeStage, now);
+  const locked = status !== "Open" || submitted;
   const complete = selected.length === required;
   const stageMessage = messageByStage[activeStage.stage_key];
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -169,15 +182,22 @@ export function RoadToChampionGame({
   }
 
   function save(statusToSave: "draft" | "submitted") {
+    if (submitted) return;
     setSavingStage(`${activeStage.stage_key}:${statusToSave}`);
     window.setTimeout(() => {
+      if (statusToSave === "submitted") {
+        setSubmittedByStage((current) => ({
+          ...current,
+          [activeStage.stage_key]: true,
+        }));
+      }
       setSavingStage("");
       setMessageByStage((current) => ({
         ...current,
         [activeStage.stage_key]:
           statusToSave === "draft"
             ? "Draft saved. You can continue later."
-            : "Prediction submitted. You can still edit before the deadline.",
+            : "Prediction submitted. Once submitted, predictions cannot be changed.",
       }));
       setConfirmStage(null);
     }, 350);
@@ -510,7 +530,7 @@ export function RoadToChampionGame({
             <div className="rounded-lg bg-white p-4 shadow-sm">
               <button
                 type="button"
-                disabled={Boolean(savingStage)}
+              disabled={submitted || Boolean(savingStage)}
                 onClick={() => save("draft")}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded bg-slate-100 px-4 font-black text-slate-800 disabled:opacity-60"
               >
@@ -528,7 +548,7 @@ export function RoadToChampionGame({
               </p>
               <button
                 type="button"
-                disabled={!complete || Boolean(savingStage)}
+              disabled={submitted || !complete || Boolean(savingStage)}
                 onClick={() => setConfirmStage(activeStage)}
                 className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-4 font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
               >
@@ -546,7 +566,7 @@ export function RoadToChampionGame({
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-2">
           <button
             type="button"
-            disabled={Boolean(savingStage)}
+            disabled={submitted || Boolean(savingStage)}
             onClick={() => save("draft")}
             className="flex h-12 items-center justify-center gap-2 rounded bg-slate-100 px-3 text-sm font-black text-slate-800 disabled:opacity-60"
           >
@@ -555,7 +575,7 @@ export function RoadToChampionGame({
           </button>
           <button
             type="button"
-            disabled={!complete || Boolean(savingStage)}
+            disabled={submitted || !complete || Boolean(savingStage)}
             onClick={() => setConfirmStage(activeStage)}
             className="flex h-12 items-center justify-center gap-2 rounded bg-[#d71920] px-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
           >
@@ -577,8 +597,11 @@ export function RoadToChampionGame({
               Confirm Submission?
             </h2>
             <p className="mt-3 text-center font-semibold text-slate-600">
-              You selected {required} teams for Sweet 16. You can still edit
-              before the deadline.
+              提交后将不能修改答案，请确认你的选择。
+              <span className="mt-1 block">
+                Once submitted, you cannot change your predictions. Please
+                confirm your choices.
+              </span>
             </p>
             <div className="mt-4 grid gap-2 rounded bg-slate-100 p-3 text-sm font-bold text-slate-600">
               <p>Due date: 28 Jun 2026, 11:59 pm</p>

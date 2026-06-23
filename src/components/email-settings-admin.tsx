@@ -6,12 +6,14 @@ import {
   Clock,
   Loader2,
   Mail,
+  Eye,
   RefreshCw,
   Save,
   Send,
   ShieldAlert,
   ToggleLeft,
   ToggleRight,
+  X,
 } from "lucide-react";
 import type { EmailSettings, EmailTemplate } from "@/lib/email/types";
 
@@ -71,6 +73,59 @@ const emailTypeLabels: Record<string, string> = {
   winner: "Winner Email",
 };
 
+const sampleVariables: Record<string, string> = {
+  display_name: "球圣 1988",
+  game_title: "Brainwave 世界杯竞猜赛",
+  round_name: "16强争霸战",
+  due_date: "28 Jun 2026, 11:59 PM",
+  selected_count: "8",
+  required_count: "16",
+  ranking: "18",
+  points: "85",
+};
+
+function fillVariables(value: string | null | undefined) {
+  return String(value ?? "").replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
+    sampleVariables[key] ?? "",
+  );
+}
+
+function EmailPreview({ template }: { template: EmailTemplate }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="bg-[#071525] p-5 text-white">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f4c542]">
+          Brainwave Games
+        </p>
+        <h3 className="mt-2 text-2xl font-black">
+          {fillVariables(template.subject)}
+        </h3>
+      </div>
+      <div className="p-5 text-sm font-semibold leading-6 text-slate-700">
+        {fillVariables(template.body)
+          .split("\n")
+          .map((line, index) => (
+            <p key={`${line}-${index}`} className={index ? "mt-2" : ""}>
+              {line || "\u00a0"}
+            </p>
+          ))}
+        {template.cta_text ? (
+          <div className="mt-5">
+            <span className="inline-flex rounded bg-[#d71920] px-4 py-3 font-black text-white">
+              {fillVariables(template.cta_text)}
+            </span>
+          </div>
+        ) : null}
+      </div>
+      <div className="border-t border-slate-200 p-4 text-center text-xs font-semibold text-slate-500">
+        © 2026 Brainwave Games
+        <br />
+        Powered by Brainwave AI
+      </div>
+    </div>
+  );
+}
+
 function Toggle({
   checked,
   onClick,
@@ -102,6 +157,9 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
   const [message, setMessage] = useState("");
   const [manualType, setManualType] = useState("incomplete_prediction_24hour");
   const [confirmBulk, setConfirmBulk] = useState(false);
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
+  const [templateLanguage, setTemplateLanguage] = useState<"zh" | "en">("zh");
+  const [templatePreviewMode, setTemplatePreviewMode] = useState(false);
 
   const activeTemplate = useMemo(
     () =>
@@ -177,7 +235,7 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
     }
   }
 
-  async function sendPreview(template: EmailTemplate) {
+  async function sendPreview(template: EmailTemplate, recipientEmail?: string) {
     setSaving(`preview:${template.type}`);
     setMessage("");
     try {
@@ -186,12 +244,12 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           template,
-          recipient_email: settings.test_recipient_email,
+          recipient_email: recipientEmail || settings.test_recipient_email,
         }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Unable to send preview.");
-      setMessage(payload.result?.ok ? "Preview sent." : payload.result?.error ?? "Preview logged.");
+      setMessage(payload.result?.ok ? "Test email sent successfully" : payload.result?.error ?? "Preview logged.");
       await refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to send preview.");
@@ -241,6 +299,22 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
         template.type === activeTemplate.type ? { ...template, ...update } : template,
       ),
     }));
+  }
+
+  function openTemplateEditor(type: string) {
+    setActiveTemplateType(type);
+    setTemplateLanguage("zh");
+    setTemplatePreviewMode(false);
+    setTemplateEditorOpen(true);
+  }
+
+  function promptAndSendPreview(template: EmailTemplate) {
+    const recipient = window.prompt(
+      "Test recipient email",
+      settings.test_recipient_email ?? "",
+    );
+    if (recipient === null) return;
+    void sendPreview(template, recipient.trim());
   }
 
   return (
@@ -392,7 +466,7 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
               </div>
               <button
                 type="button"
-                onClick={() => setActiveTemplateType(template.type)}
+                onClick={() => openTemplateEditor(template.type)}
                 className="mt-4 h-10 rounded bg-slate-100 px-4 text-sm font-black text-slate-700"
               >
                 Edit Template
@@ -401,6 +475,151 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
           ))}
         </div>
       </section>
+
+      {templateEditorOpen && activeTemplate ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4">
+          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
+                  Email Type
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-slate-950">
+                  {emailTypeLabels[activeTemplate.type] ?? activeTemplate.type}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTemplateEditorOpen(false)}
+                className="grid size-10 place-items-center rounded bg-slate-100 text-slate-700"
+                aria-label="Close template editor"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid gap-5 p-5">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  ["zh", "中文"],
+                  ["en", "English"],
+                ].map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setTemplateLanguage(id as "zh" | "en")}
+                    className={`rounded px-4 py-2 text-sm font-black ${
+                      templateLanguage === id
+                        ? "bg-[#d71920] text-white"
+                        : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setTemplatePreviewMode((current) => !current)}
+                  className="ml-auto flex items-center gap-2 rounded bg-slate-100 px-4 py-2 text-sm font-black text-slate-700"
+                >
+                  <Eye size={16} /> {templatePreviewMode ? "Edit" : "Preview"}
+                </button>
+              </div>
+
+              {!templatePreviewMode ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="grid gap-1 text-sm font-black text-slate-700">
+                    Email Type
+                    <input
+                      value={emailTypeLabels[activeTemplate.type] ?? activeTemplate.type}
+                      readOnly
+                      className="h-11 rounded border border-slate-200 bg-slate-100 px-3"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-black text-slate-700">
+                    Subject
+                    <input
+                      value={activeTemplate.subject}
+                      onChange={(event) => updateTemplate({ subject: event.target.value })}
+                      className="h-11 rounded border border-slate-200 px-3"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-black text-slate-700 md:col-span-2">
+                    Preview Text
+                    <input
+                      value={activeTemplate.preview_text ?? ""}
+                      onChange={(event) => updateTemplate({ preview_text: event.target.value })}
+                      className="h-11 rounded border border-slate-200 px-3"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-black text-slate-700 md:col-span-2">
+                    Email Body
+                    <textarea
+                      value={activeTemplate.body}
+                      onChange={(event) => updateTemplate({ body: event.target.value })}
+                      className="min-h-44 rounded border border-slate-200 p-3"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-black text-slate-700">
+                    CTA Button Text
+                    <input
+                      value={activeTemplate.cta_text ?? ""}
+                      onChange={(event) => updateTemplate({ cta_text: event.target.value })}
+                      className="h-11 rounded border border-slate-200 px-3"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-black text-slate-700">
+                    CTA Button URL
+                    <input
+                      value={activeTemplate.cta_url ?? ""}
+                      onChange={(event) => updateTemplate({ cta_url: event.target.value })}
+                      className="h-11 rounded border border-slate-200 px-3"
+                    />
+                  </label>
+                  <p className="rounded bg-slate-100 p-3 text-xs font-bold text-slate-500 md:col-span-2">
+                    Variables: {"{{display_name}} {{game_title}} {{round_name}} {{due_date}} {{selected_count}} {{required_count}} {{ranking}} {{points}}"}
+                  </p>
+                </div>
+              ) : (
+                <EmailPreview template={activeTemplate} />
+              )}
+
+              <div className="grid gap-3 sm:grid-cols-4">
+                <button
+                  type="button"
+                  onClick={() => saveTemplate(activeTemplate)}
+                  disabled={Boolean(saving)}
+                  className="flex h-11 items-center justify-center gap-2 rounded bg-[#071525] px-4 font-black text-white disabled:opacity-60"
+                >
+                  <Save size={17} /> Save Template
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplatePreviewMode(true)}
+                  className="flex h-11 items-center justify-center gap-2 rounded bg-slate-100 px-4 font-black text-slate-700"
+                >
+                  <Eye size={17} /> Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => promptAndSendPreview(activeTemplate)}
+                  disabled={Boolean(saving)}
+                  className="flex h-11 items-center justify-center gap-2 rounded bg-[#d71920] px-4 font-black text-white disabled:opacity-60"
+                >
+                  <Send size={17} /> Send Test Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateEditorOpen(false)}
+                  className="h-11 rounded bg-slate-100 px-4 font-black text-slate-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {activeTemplate ? (
         <section className="rounded-lg bg-white p-5 shadow-sm">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, Settings, Share2 } from "lucide-react";
+import { LogOut, Share2 } from "lucide-react";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 
@@ -7,6 +7,7 @@ export default async function ProfilePage() {
   const profile = await requireCompletedProfile("/profile");
   const whatsapp =
     profile?.whatsapp_number || profile?.phone_number || profile?.phone || "";
+  const isAdmin = profile ? ["admin", "owner"].includes(profile.role) : false;
 
   return (
     <PageShell active="/profile">
@@ -59,12 +60,14 @@ export default async function ProfilePage() {
           >
             <Share2 size={18} /> Referral
           </Link>
-          <Link
-            href="/admin"
-            className="flex h-12 items-center justify-center gap-2 rounded bg-[#f4c542] font-black text-[#071525]"
-          >
-            <Settings size={18} /> Admin
-          </Link>
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              className="text-center text-sm font-black text-slate-500 underline-offset-4 hover:text-[#071525] hover:underline"
+            >
+              Admin Console
+            </Link>
+          ) : null}
           <form action="/auth/logout" method="post">
             <button
               type="submit"
