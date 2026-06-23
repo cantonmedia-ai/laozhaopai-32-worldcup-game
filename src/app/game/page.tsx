@@ -3,7 +3,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock,
-  ShieldCheck,
   Trophy,
   UsersRound,
 } from "lucide-react";
@@ -11,6 +10,8 @@ import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { stageInlineName } from "@/lib/stage-labels";
+
+export const dynamic = "force-dynamic";
 
 type RankingRow = {
   profile_id: string;
@@ -44,7 +45,7 @@ type DashboardData = {
   myPoints: number;
   myRank: number | null;
   topRows: RankingRow[];
-  nextDeadline: string | null;
+  predictionDueAt: string | null;
   openMatchCount: number;
   submittedPredictionCount: number;
   activeRoundKey: string | null;
@@ -55,37 +56,66 @@ const gameCards = [
   {
     id: "game1",
     href: "/road-to-champion",
-    title: "游戏 1：最强预测家",
+    title: "Game 1: Ultimate Predictor",
     english: "Ultimate Predictor",
-    badge: "开放中 / Open Now",
-    body: "预测哪些球队可以进入16强、8强、4强、决赛和最终冠军。小组赛期间即可提交预测，截止后答案将锁定。",
-    cta: "Start Game 1 / 开始预测",
+    badge: "Open Now",
+    body: "Predict which teams will reach the Sweet 16, Elite 8, Final 4, Grand Final, and champion. Submit before the prediction deadline to lock your answer.",
+    cta: "Start Prediction",
     icon: Trophy,
     lockedWhenWaiting: false,
   },
-  {
-    id: "game2",
-    href: "/predict",
-    title: "游戏 2：个人淘汰赛赢家战",
-    english: "Knockout Winner Challenge",
-    badge: "等待32强名单 / Waiting for Round of 32",
-    body: "32强名单确认后开放。玩家将预测每一场淘汰赛的赢家，猜中越多，积分越高。",
-    cta: "Coming Soon / 即将开放",
-    icon: ShieldCheck,
-    lockedWhenWaiting: true,
-  },
-  {
-    id: "game3",
-    href: "/squad",
-    title: "游戏 3：团队淘汰赛赢家战",
-    english: "Team Knockout Winner Challenge",
-    badge: "组队开放中 / Team Formation Open",
-    body: "现在可以创建或加入团队。32强名单确认后，团队成员即可一起预测每场淘汰赛赢家，冲团队排行榜。",
-    cta: "Create / Join Team / 创建或加入团队",
-    icon: UsersRound,
-    lockedWhenWaiting: false,
-  },
 ];
+
+type ProviderMatch = {
+  utcDate?: string;
+  stage?: string;
+  status?: string;
+};
+
+function footballDataUrl(path: string) {
+  const competition = process.env.FOOTBALL_DATA_COMPETITION ?? "WC";
+  const season = process.env.FOOTBALL_DATA_SEASON ?? "2026";
+  const baseUrl = process.env.FOOTBALL_DATA_BASE_URL ?? "https://api.football-data.org";
+  const url = new URL(`/v4/competitions/${competition}/${path}`, baseUrl);
+  url.searchParams.set("season", season);
+  return url;
+}
+
+function isRoundOf32Fixture(match: ProviderMatch) {
+  const stage = String(match.stage ?? "").toUpperCase();
+  return (
+    stage.includes("LAST_32") ||
+    stage.includes("ROUND_OF_32") ||
+    stage.includes("ROUND OF 32")
+  );
+}
+
+async function loadPredictionDeadlineFromFixtures() {
+  const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch(footballDataUrl("matches"), {
+      headers: { "X-Auth-Token": apiKey },
+      next: { revalidate: 900 },
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as { matches?: ProviderMatch[] };
+    const firstKickoff = (data.matches ?? [])
+      .filter(isRoundOf32Fixture)
+      .map((match) => match.utcDate)
+      .filter((value): value is string => Boolean(value))
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0];
+
+    if (!firstKickoff) return null;
+
+    return new Date(new Date(firstKickoff).getTime() - 15 * 60 * 1000).toISOString();
+  } catch {
+    return null;
+  }
+}
 
 function formatDeadline(value: string | null) {
   if (!value) return "Deadline coming soon";
@@ -96,12 +126,27 @@ function formatDeadline(value: string | null) {
   }).format(new Date(value));
 }
 
+function formatCountdown(value: string | null) {
+  if (!value) return null;
+
+  const remaining = new Date(value).getTime() - Date.now();
+  if (remaining <= 0) return "Closed";
+
+  const days = Math.floor(remaining / 86_400_000);
+  const hours = Math.floor((remaining % 86_400_000) / 3_600_000);
+  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
 async function loadDashboardData(authUserId: string | null): Promise<DashboardData> {
   const emptyData: DashboardData = {
     myPoints: 0,
     myRank: null,
     topRows: [],
-    nextDeadline: null,
+    predictionDueAt: null,
     openMatchCount: 0,
     submittedPredictionCount: 0,
     activeRoundKey: null,
@@ -139,8 +184,8 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
     .order("prediction_lock_at", { ascending: true });
 
   const openMatchIds = (openMatches ?? []).map((match) => String(match.id));
-  const nextDeadline = openMatches?.[0]?.prediction_lock_at ?? null;
   const activeRoundKey = openMatches?.[0]?.round_key ?? null;
+  const predictionDueAt = await loadPredictionDeadlineFromFixtures();
 
   const { data: predictionRows } =
     authUserId && openMatchIds.length
@@ -192,7 +237,7 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
     myPoints,
     myRank,
     topRows: allRows.slice(0, 3),
-    nextDeadline,
+    predictionDueAt,
     openMatchCount: openMatchIds.length,
     submittedPredictionCount: predictionRows?.length ?? 0,
     activeRoundKey,
@@ -206,7 +251,7 @@ export default async function GamePage() {
     myPoints,
     myRank,
     topRows,
-    nextDeadline,
+    predictionDueAt,
     openMatchCount,
     submittedPredictionCount,
     activeRoundKey,
@@ -225,6 +270,7 @@ export default async function GamePage() {
     : knockoutPublished
       ? "Not completed"
       : "Waiting for Round of 32";
+  const deadlineCountdown = formatCountdown(predictionDueAt);
 
   return (
     <PageShell active="/game">
@@ -232,7 +278,7 @@ export default async function GamePage() {
         <SectionHeader
           eyebrow="Player Mission"
           title={`Welcome, ${profile ? displayName(profile) : "Player"}`}
-          body="Start with Game 1 now, form a team, then come back when Round of 32 fixtures are confirmed."
+          body="Submit your prediction before the Round of 32 begins."
         />
 
         <section className="overflow-hidden rounded-lg bg-[#071525] text-white shadow-sm">
@@ -287,8 +333,12 @@ export default async function GamePage() {
           <StatCard label="Total Points" value={myPoints} tone="navy" />
           <StatCard
             label="Next Due"
-            value={nextDeadline ? formatDeadline(nextDeadline) : "Coming soon"}
-            detail={nextDeadline ? "Malaysia time" : "Round of 32 not published"}
+            value={predictionDueAt ? formatDeadline(predictionDueAt) : "To be confirmed"}
+            detail={
+              predictionDueAt
+                ? "15 minutes before Round of 32"
+                : "Fixtures not published"
+            }
           />
         </div>
 
@@ -310,18 +360,6 @@ export default async function GamePage() {
             {gameCards.map((card) => {
               const Icon = card.icon;
               const locked = card.lockedWhenWaiting && !knockoutPublished;
-              const badge =
-                card.id === "game2" && knockoutPublished
-                  ? "开放中 / Open Now"
-                  : card.id === "game3" && knockoutPublished
-                    ? "组队与预测开放中 / Team Prediction Open"
-                    : card.badge;
-              const cta =
-                card.id === "game2" && knockoutPublished
-                  ? "Play Now / 开始预测"
-                  : card.id === "game3" && knockoutPublished
-                    ? "Team Prediction / 团队预测"
-                    : card.cta;
 
               return (
                 <div
@@ -335,7 +373,7 @@ export default async function GamePage() {
                         : "bg-[#f4c542] text-[#071525]"
                     }`}
                   >
-                    <Icon size={14} /> {badge}
+                    <Icon size={14} /> {card.badge}
                   </span>
                   <h3 className="text-xl font-black text-slate-950">{card.title}</h3>
                   <p className="font-black text-[#d71920]">{card.english}</p>
@@ -343,15 +381,7 @@ export default async function GamePage() {
                     {card.body}
                   </p>
                   <p className="mt-3 text-sm font-bold text-[#0f8a4b]">
-                    {card.id === "game1"
-                      ? "Can play during Group Stage."
-                      : card.id === "game2"
-                        ? knockoutPublished
-                          ? `Current round: ${currentStage}`
-                          : "Locked until Round of 32 fixtures are published."
-                        : knockoutPublished
-                          ? `Team prediction open: ${currentStage}`
-                          : "Team formation open. Prediction waiting for Round of 32."}
+                    Can play during Group Stage.
                   </p>
                   {locked ? (
                     <button
@@ -359,14 +389,14 @@ export default async function GamePage() {
                       disabled
                       className="mt-5 flex h-11 items-center justify-center gap-2 rounded bg-slate-300 px-4 font-black text-slate-600"
                     >
-                      {cta}
+                      {card.cta}
                     </button>
                   ) : (
                     <Link
                       href={card.href}
                       className="mt-5 flex h-11 items-center justify-center gap-2 rounded bg-[#071525] px-4 font-black text-white hover:bg-slate-800"
                     >
-                      {cta} <ArrowRight size={16} />
+                      {card.cta} <ArrowRight size={16} />
                     </Link>
                   )}
                 </div>
@@ -418,12 +448,6 @@ export default async function GamePage() {
                 ["Team status", team ? "Joined" : "Not joined"],
                 ["Total points", `${myPoints}`],
                 ["Ranking", myRank ? `#${myRank}` : "Complete prediction to enter ranking"],
-                [
-                  "Next round status",
-                  knockoutPublished
-                    ? "Open now"
-                    : "Round of 32 opens after admin publishes fixtures",
-                ],
               ].map(([label, value]) => (
                 <div key={label} className="rounded bg-slate-100 p-3">
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
@@ -440,23 +464,32 @@ export default async function GamePage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="flex items-center gap-2 text-sm font-black text-white/75">
-                <Clock size={16} /> Come Back Reminder
+                <Clock size={16} /> Prediction Deadline
               </p>
               <h2 className="mt-2 text-2xl font-black">
-                This challenge continues until the Grand Final.
+                Submit your prediction before the Round of 32 begins.
               </h2>
-              <p className="mt-2 max-w-3xl font-semibold text-white/85">
-                Game 2 and Game 3 prediction will open only after Round of 32
-                fixtures are detected and admin publishes them. Come back each
-                round to collect more points.
-              </p>
+              {predictionDueAt ? (
+                <div className="mt-2 max-w-3xl space-y-1 font-semibold text-white/85">
+                  <p>Closes 15 minutes before the first Round of 32 match.</p>
+                  <p>Deadline: {formatDeadline(predictionDueAt)}</p>
+                  {deadlineCountdown ? <p>Closes in: {deadlineCountdown}</p> : null}
+                </div>
+              ) : (
+                <div className="mt-2 max-w-3xl space-y-1 font-semibold text-white/85">
+                  <p>Round of 32 fixtures are not confirmed yet.</p>
+                  <p>
+                    The deadline will be updated automatically once fixtures are
+                    published.
+                  </p>
+                </div>
+              )}
             </div>
             <Link
-              href={knockoutPublished ? "/predict" : "/road-to-champion"}
+              href="/road-to-champion"
               className="flex h-11 shrink-0 items-center justify-center gap-2 rounded bg-white px-4 font-black text-[#071525]"
             >
-              {knockoutPublished ? "View Next Round Status" : "Play Game 1"}{" "}
-              <CheckCircle2 size={17} />
+              Continue Prediction <CheckCircle2 size={17} />
             </Link>
           </div>
         </section>
