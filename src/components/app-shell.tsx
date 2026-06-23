@@ -9,18 +9,24 @@ import {
   UsersRound,
 } from "lucide-react";
 import clsx from "clsx";
+import {
+  LanguageProvider,
+  LanguageSwitcher,
+  T,
+} from "@/components/language-provider";
+import type { TranslationKey } from "@/i18n";
 
 const playerNav = [
-  { href: "/game", label: "Play", icon: Trophy },
-  { href: "/squad", label: "Team", icon: UsersRound },
-  { href: "/leaderboard", label: "Ranking", icon: ChartNoAxesColumnIncreasing },
-  { href: "/rules", label: "Rules", icon: BookOpenText },
-  { href: "/profile", label: "Profile", icon: UserRound },
-  { href: "/admin", label: "Admin", icon: Settings },
+  { href: "/game", labelKey: "common.play", icon: Trophy },
+  { href: "/squad", labelKey: "common.team", icon: UsersRound },
+  { href: "/leaderboard", labelKey: "common.ranking", icon: ChartNoAxesColumnIncreasing },
+  { href: "/rules", labelKey: "common.rules", icon: BookOpenText },
+  { href: "/profile", labelKey: "common.profile", icon: UserRound },
+  { href: "/admin", labelKey: "common.admin", icon: Settings },
 ];
 
 const publicNav = [
-  { href: "/rules", label: "Rules & Prizes", icon: BookOpenText },
+  { href: "/rules", labelKey: "common.rulesPrizes", icon: BookOpenText },
 ];
 
 export function TopNav({
@@ -64,7 +70,7 @@ export function TopNav({
                   )}
                 >
                   <Icon size={16} />
-                  {item.label}
+                  <T k={item.labelKey as TranslationKey} />
                 </Link>
               );
             })}
@@ -73,27 +79,36 @@ export function TopNav({
 
         {publicMode ? (
           <div className="flex shrink-0 items-center gap-2">
+            <LanguageSwitcher compact />
             <Link
               href="/rules"
               className="grid h-10 place-items-center rounded bg-white/10 px-3 text-xs font-black text-white hover:bg-white/15 lg:hidden"
             >
-              Rules
+              <T k="common.rules" />
             </Link>
             <Link
               href="/login?next=/road-to-champion&mode=login"
               className="grid h-10 place-items-center rounded bg-[#d71920] px-3 text-xs font-black text-white hover:bg-red-700 sm:h-11 sm:text-sm"
             >
-              Sign In
+              <T k="common.signIn" />
             </Link>
           </div>
         ) : (
-          <Link
-            href="/road-to-champion"
-            className="hidden h-11 shrink-0 items-center justify-center gap-2 rounded bg-[#d71920] px-4 text-sm font-black text-white hover:bg-red-700 sm:flex"
-          >
-            <ShieldCheck size={17} />
-            Play Now
-          </Link>
+          <>
+            <div className="flex shrink-0 items-center sm:hidden">
+              <LanguageSwitcher compact />
+            </div>
+            <div className="hidden shrink-0 items-center gap-2 sm:flex">
+              <LanguageSwitcher compact />
+              <Link
+                href="/road-to-champion"
+                className="flex h-11 items-center justify-center gap-2 rounded bg-[#d71920] px-4 text-sm font-black text-white hover:bg-red-700"
+              >
+                <ShieldCheck size={17} />
+                <T k="common.playNow" />
+              </Link>
+            </div>
+          </>
         )}
       </div>
     </header>
@@ -129,7 +144,7 @@ export function MobileNav({
             )}
           >
             <Icon size={18} />
-            {item.label}
+            <T k={item.labelKey as TranslationKey} />
           </Link>
         );
       })}
@@ -147,15 +162,17 @@ export function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-slate-100 pb-24 text-slate-950 md:pb-0">
-      <TopNav active={active} publicMode={publicMode} />
-      {children}
-      <footer className="px-4 py-6 text-center text-xs leading-relaxed text-slate-500">
-        <p>© 2026 Brainwave Games</p>
-        <p>Powered by Brainwave AI</p>
-      </footer>
-      <MobileNav active={active} publicMode={publicMode} />
-    </div>
+    <LanguageProvider initialLanguage="zh">
+      <div className="min-h-screen w-full overflow-x-hidden bg-slate-100 pb-24 text-slate-950 md:pb-0">
+        <TopNav active={active} publicMode={publicMode} />
+        {children}
+        <footer className="px-4 py-6 text-center text-xs leading-relaxed text-slate-500">
+          <p>© 2026 Brainwave Games</p>
+          <p>Powered by Brainwave AI</p>
+        </footer>
+        <MobileNav active={active} publicMode={publicMode} />
+      </div>
+    </LanguageProvider>
   );
 }
 
@@ -178,11 +195,14 @@ export function SectionHeader({
       <h1 className="text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
         {title}
       </h1>
-      {body ? <p className="mt-3 max-w-2xl text-slate-600">{body}</p> : null}
+      {body ? (
+        <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 md:text-lg">
+          {body}
+        </p>
+      ) : null}
     </div>
   );
 }
-
 export function StatCard({
   label,
   value,

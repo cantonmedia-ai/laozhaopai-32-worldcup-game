@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     settings: state.settings,
     variables: {
       display_name: "\u7403\u5723 1988",
+      preferred_language: body.preferred_language === "en" ? "en" : "zh",
       verification_link: "https://games.brainwaveai.my/api/email/verify?token=sample",
       game_title: "Brainwave \u4e16\u754c\u676f\u7ade\u731c\u8d5b",
       round_name: "16\u5f3a\u4e89\u9738\u6218",

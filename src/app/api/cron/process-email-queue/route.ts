@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("auth_user_id, email, display_name, nickname, email_verified, unsubscribed_from_email")
+    .select("auth_user_id, email, display_name, nickname, email_verified, preferred_language, unsubscribed_from_email")
     .not("email", "is", null);
 
   for (const stage of stages ?? []) {
@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
           scheduled_for: new Date().toISOString(),
           payload: {
             display_name: profile.nickname || profile.display_name || "Player",
+            preferred_language: profile.preferred_language || "zh",
             game_title: "Brainwave Games",
             round_name: stage.stage_name || stage.stage_key,
             due_date: new Intl.DateTimeFormat("en-MY", {
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
       to: row.recipient_email,
       template,
       settings: state.settings,
-      variables: row.payload ?? {},
+      variables: { preferred_language: "zh", ...(row.payload ?? {}) },
     });
 
     const nextStatus = result.ok ? "sent" : result.skipped ? "skipped" : "failed";

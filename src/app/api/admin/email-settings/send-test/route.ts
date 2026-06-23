@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     to: recipient,
     template,
     settings: state.settings,
-    variables: { display_name: "Admin", cta_url: "/game" },
+    variables: { display_name: "Admin", preferred_language: "zh", cta_url: "/game" },
   });
 
   if (hasSupabaseServiceEnv()) {

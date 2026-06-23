@@ -87,12 +87,21 @@ const sampleVariables: Record<string, string> = {
   cta_url: "https://games.brainwaveai.my/fifa-last-32",
 };
 
-function EmailPreview({ template }: { template: EmailTemplate }) {
+function EmailPreview({
+  template,
+  preferredLanguage = "zh",
+}: {
+  template: EmailTemplate;
+  preferredLanguage?: "zh" | "en";
+}) {
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-950 p-3">
       <iframe
         title="Email preview"
-        srcDoc={renderEmailHtml(template, sampleVariables)}
+        srcDoc={renderEmailHtml(template, {
+          ...sampleVariables,
+          preferred_language: preferredLanguage,
+        })}
         className="h-[680px] w-full rounded border-0 bg-white"
       />
     </div>
@@ -218,6 +227,7 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
         body: JSON.stringify({
           template,
           recipient_email: recipientEmail || settings.test_recipient_email,
+          preferred_language: templateLanguage,
         }),
       });
       const payload = await response.json();
@@ -554,7 +564,10 @@ export function EmailSettingsAdmin({ initialState }: { initialState: EmailState 
                   </p>
                 </div>
               ) : (
-                <EmailPreview template={activeTemplate} />
+                <EmailPreview
+                  template={activeTemplate}
+                  preferredLanguage={templateLanguage}
+                />
               )}
 
               <div className="grid gap-3 sm:grid-cols-4">

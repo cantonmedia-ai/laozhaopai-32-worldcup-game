@@ -162,7 +162,7 @@ export function SetupProfileForm() {
       ) : null}
 
       <label className="grid gap-2 font-bold">
-        Display Name
+        Display Name / 昵称
         <input
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
@@ -175,7 +175,7 @@ export function SetupProfileForm() {
       </label>
 
       <label className="grid gap-2 font-bold">
-        Mobile Number <span className="text-xs text-slate-500">(optional)</span>
+        Mobile Number / 手机号码 <span className="text-xs text-slate-500">(optional)</span>
         <input
           value={mobileNumber}
           onChange={(event) => setMobileNumber(event.target.value)}
@@ -188,14 +188,14 @@ export function SetupProfileForm() {
       </label>
 
       <label className="grid gap-2 font-bold">
-        Preferred Language
+        Language Preference / 语言偏好
         <select
           value={preferredLanguage}
           onChange={(event) => setPreferredLanguage(event.target.value as "zh" | "en")}
           className="h-12 rounded border border-slate-200 px-3 font-semibold"
           required
         >
-          <option value="zh">Chinese</option>
+          <option value="zh">中文（默认）</option>
           <option value="en">English</option>
         </select>
       </label>

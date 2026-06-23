@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   const supabase = createServiceClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("auth_user_id, email, display_name, nickname")
+    .select("auth_user_id, email, display_name, nickname, preferred_language")
     .eq("email", cleanEmail)
     .maybeSingle();
 
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     settings: state.settings,
     variables: {
       display_name: profile.nickname || profile.display_name || "Player",
+      preferred_language: profile.preferred_language || "zh",
       verification_link: verifyUrl,
       cta_url: verifyUrl,
     },

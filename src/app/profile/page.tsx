@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogOut, Share2 } from "lucide-react";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
+import { ProfileLanguageCard } from "@/components/profile-language-card";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
@@ -119,6 +120,7 @@ export default async function ProfilePage() {
               WhatsApp number is only used for prize notification.
             </p>
           </div>
+          <ProfileLanguageCard />
           <Link
             href="/profile/setup?next=/profile"
             className="flex h-12 items-center justify-center rounded bg-[#071525] font-black text-white"

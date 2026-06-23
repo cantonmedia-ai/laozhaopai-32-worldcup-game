@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { PageShell, SectionHeader } from "@/components/app-shell";
+import { useLanguage } from "@/components/language-provider";
 import { LeaderboardTable, type LeaderboardRow } from "@/components/leaderboard";
+import { t, type TranslationKey } from "@/i18n";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type LeaderboardScope = "overall" | "round" | "squad" | "invite";
@@ -22,11 +24,15 @@ type SupabaseLeaderboardRow = {
   invite_count: number;
 };
 
-const tabs: Array<{ id: LeaderboardScope; label: string; title: string }> = [
-  { id: "overall", label: "终极大奖", title: "终极大奖排行榜" },
-  { id: "round", label: "Game 1", title: "Game 1 排行榜" },
-  { id: "squad", label: "Game 2", title: "Game 2 排行榜" },
-  { id: "invite", label: "Team", title: "Team 排行榜" },
+const tabs: Array<{
+  id: LeaderboardScope;
+  labelKey: TranslationKey;
+  titleKey: TranslationKey;
+}> = [
+  { id: "overall", labelKey: "ranking.overall", titleKey: "ranking.overallTitle" },
+  { id: "round", labelKey: "ranking.game1", titleKey: "ranking.game1Title" },
+  { id: "squad", labelKey: "ranking.game2", titleKey: "ranking.game2Title" },
+  { id: "invite", labelKey: "ranking.team", titleKey: "ranking.teamTitle" },
 ];
 
 function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
@@ -45,7 +51,8 @@ function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
   };
 }
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<LeaderboardScope>("overall");
   const [rowsByScope, setRowsByScope] = useState<Record<LeaderboardScope, LeaderboardRow[]>>({
     overall: [],
@@ -103,14 +110,14 @@ export default function LeaderboardPage() {
 
   const activeMeta = tabs.find((tab) => tab.id === activeTab)!;
   const rows = rowsByScope[activeTab];
+  const activeTitle = t(activeMeta.titleKey, language);
 
   return (
-    <PageShell active="/leaderboard">
-      <main className="mx-auto max-w-7xl px-4 py-10">
-        <SectionHeader
-          eyebrow="Ranking"
-          title="排行榜"
-        />
+    <main className="mx-auto max-w-7xl px-4 py-10">
+      <SectionHeader
+        eyebrow="Ranking"
+        title={t("ranking.title", language)}
+      />
 
         {message ? (
           <div className="mb-5 rounded bg-yellow-50 p-4 text-sm font-bold text-yellow-900">
@@ -130,17 +137,24 @@ export default function LeaderboardPage() {
                   : "bg-white text-slate-700 hover:bg-slate-50",
               )}
             >
-              {tab.label}
+              {t(tab.labelKey, language)}
             </button>
           ))}
         </div>
 
         <LeaderboardTable
           players={rows}
-          title={loading ? `${activeMeta.title} - Loading...` : activeMeta.title}
-          emptyText="No ranking yet. Ranking updates after scores are confirmed."
+          title={loading ? `${activeTitle} - ${t("ranking.loading", language)}...` : activeTitle}
+          emptyText={t("ranking.empty", language)}
         />
-      </main>
+    </main>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <PageShell active="/leaderboard">
+      <LeaderboardContent />
     </PageShell>
   );
 }

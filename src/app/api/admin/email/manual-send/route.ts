@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   const supabase = createServiceClient();
   const { data: profiles, error } = await supabase
     .from("profiles")
-    .select("auth_user_id, email, display_name, nickname, email_verified, unsubscribed_from_email")
+    .select("auth_user_id, email, display_name, nickname, email_verified, preferred_language, unsubscribed_from_email")
     .not("email", "is", null)
     .limit(Number(body.limit ?? 200));
 
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     scheduled_for: new Date().toISOString(),
     payload: {
       display_name: profile.nickname || profile.display_name || "Player",
+      preferred_language: profile.preferred_language || "zh",
       round_name: body.round_name || "Sweet 16",
       game_title: "Brainwave Games",
       due_date: body.due_date || "28 Jun 2026, 11:59 pm",

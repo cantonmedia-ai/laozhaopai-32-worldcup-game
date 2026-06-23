@@ -1,4 +1,5 @@
 import type { EmailTemplate, EmailVariables } from "@/lib/email/types";
+import { normalizeLanguage, type Language } from "@/i18n";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://games.brainwaveai.my";
 const defaultGameUrl = "https://games.brainwaveai.my/fifa-last-32";
@@ -28,6 +29,43 @@ export function absoluteUrl(pathOrUrl: string | null | undefined) {
   return new URL(pathOrUrl, siteUrl).toString();
 }
 
+function splitDualLanguage(value: string) {
+  const normalized = value.replace(/\r\n/g, "\n");
+  const markers = ["\n\nHello ", "\n\nHi "];
+  const marker = markers.find((item) => normalized.includes(item));
+  if (!marker) return { zh: normalized, en: "" };
+
+  const index = normalized.indexOf(marker);
+  return {
+    zh: normalized.slice(0, index).trim(),
+    en: normalized.slice(index).trim(),
+  };
+}
+
+function orderDualLanguage(value: string, language: Language) {
+  const parts = splitDualLanguage(value);
+  if (!parts.en) return value;
+  return language === "en"
+    ? `${parts.en}\n\n${parts.zh}`
+    : `${parts.zh}\n\n${parts.en}`;
+}
+
+function splitSlashText(value: string) {
+  const parts = value.split("/").map((item) => item.trim()).filter(Boolean);
+  if (parts.length < 2) return { zh: value, en: "" };
+  return { zh: parts[0], en: parts.slice(1).join(" / ") };
+}
+
+function orderedSlashText(value: string, language: Language) {
+  const parts = splitSlashText(value);
+  if (!parts.en) return value;
+  return language === "en" ? `${parts.en} / ${parts.zh}` : `${parts.zh} / ${parts.en}`;
+}
+
+function preferredLanguage(variables: EmailVariables) {
+  return normalizeLanguage(String(variables.preferred_language ?? "zh"));
+}
+
 function bodyToHtml(body: string) {
   return body
     .split(/\n{2,}/)
@@ -54,9 +92,10 @@ export function renderEmailPlainText(
   template: EmailTemplate,
   variables: EmailVariables,
 ) {
-  const subject = renderText(template.subject, variables);
-  const body = renderText(template.body, variables);
-  const ctaText = renderText(template.cta_text, variables) || "Play Now";
+  const language = preferredLanguage(variables);
+  const subject = orderedSlashText(renderText(template.subject, variables), language);
+  const body = orderDualLanguage(renderText(template.body, variables), language);
+  const ctaText = orderedSlashText(renderText(template.cta_text, variables), language) || "Play Now";
   const ctaUrl = absoluteUrl(renderText(template.cta_url, variables) || defaultGameUrl);
 
   return [
@@ -73,10 +112,16 @@ export function renderEmailPlainText(
 }
 
 export function renderEmailHtml(template: EmailTemplate, variables: EmailVariables) {
-  const preview = escapeHtml(renderText(template.preview_text, variables));
-  const subject = escapeHtml(renderText(template.subject, variables));
-  const body = bodyToHtml(renderText(template.body, variables));
-  const ctaText = escapeHtml(renderText(template.cta_text, variables) || "立即进入游戏 / Play Now");
+  const language = preferredLanguage(variables);
+  const preview = escapeHtml(
+    orderedSlashText(renderText(template.preview_text, variables), language),
+  );
+  const subject = escapeHtml(orderedSlashText(renderText(template.subject, variables), language));
+  const body = bodyToHtml(orderDualLanguage(renderText(template.body, variables), language));
+  const ctaText = escapeHtml(
+    orderedSlashText(renderText(template.cta_text, variables), language) ||
+      "立即进入游戏 / Play Now",
+  );
   const ctaUrl = absoluteUrl(renderText(template.cta_url, variables) || defaultGameUrl);
 
   return `<!doctype html>

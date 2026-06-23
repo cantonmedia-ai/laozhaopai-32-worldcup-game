@@ -16,6 +16,10 @@ export type EmailTemplate = {
   cta_text: string | null;
   cta_url: string | null;
   enabled: boolean;
+  subject_en?: string | null;
+  preview_text_en?: string | null;
+  body_en?: string | null;
+  cta_text_en?: string | null;
 };
 
 export type EmailSettings = {
