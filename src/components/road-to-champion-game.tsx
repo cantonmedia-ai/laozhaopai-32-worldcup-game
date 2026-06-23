@@ -104,12 +104,14 @@ export function RoadToChampionGame({
   predictions,
   summary,
   groupDataAvailable,
+  teamsByStage = {},
 }: {
   stages: RoadStage[];
   teams: RoadTeam[];
   predictions: RoadPrediction[];
   summary: RoadSummary;
   groupDataAvailable: boolean;
+  teamsByStage?: Partial<Record<RoadStageKey, RoadTeam[]>>;
 }) {
   const [now, setNow] = useState(() => Date.now());
   const initialSelections = useMemo(
@@ -149,9 +151,10 @@ export function RoadToChampionGame({
 
   const activeStage =
     stages.find((stage) => stage.stage_key === activeStageKey) ?? stages[0];
+  const activeTeams = teamsByStage[activeStage.stage_key] ?? teams;
   const selected = selectedByStage[activeStage.stage_key] ?? [];
   const selectedTeams = selected
-    .map((id) => teams.find((team) => team.id === id))
+    .map((id) => activeTeams.find((team) => team.id === id) ?? teams.find((team) => team.id === id))
     .filter(Boolean) as RoadTeam[];
   const required = activeStage.required_selection_count;
   const remaining = Math.max(0, required - selected.length);
@@ -180,7 +183,7 @@ export function RoadToChampionGame({
     personalCorrectScore;
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredTeams = normalizedSearch
-    ? teams.filter((team) => {
+    ? activeTeams.filter((team) => {
         const name = team.country_name?.toLowerCase() ?? "";
         const code = team.country_code?.toLowerCase() ?? "";
         const group = team.group_name?.toLowerCase() ?? "";
@@ -190,8 +193,13 @@ export function RoadToChampionGame({
           group.includes(normalizedSearch)
         );
       })
-    : teams;
-  const showGroupedLast16 = activeStage.stage_key === "last_16";
+    : activeTeams;
+  const showGroupedPicker =
+    activeStage.stage_key === "last_16" || activeStage.stage_key === "last_8";
+  const activeGroupDataAvailable =
+    activeStage.stage_key === "last_8"
+      ? Boolean(teamsByStage.last_8?.length)
+      : groupDataAvailable;
   const groupedTeams = useMemo(() => {
     const groups = new Map<string, { groupName: string; groupKey: string; teams: RoadTeam[] }>();
 
@@ -399,7 +407,7 @@ export function RoadToChampionGame({
   );
 
   const groupedPicker =
-    !groupDataAvailable && showGroupedLast16 ? (
+    !activeGroupDataAvailable && showGroupedPicker ? (
       <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
         <p className="text-lg font-black text-slate-950">
           Team group data is not available yet.
@@ -448,7 +456,7 @@ export function RoadToChampionGame({
       </div>
     );
 
-  const picker = showGroupedLast16 ? groupedPicker : flatPicker;
+  const picker = showGroupedPicker ? groupedPicker : flatPicker;
 
   const picksPanel = (
     <aside className="rounded-lg border border-white/10 bg-[#071525] p-4 text-white shadow-xl">
@@ -686,7 +694,7 @@ export function RoadToChampionGame({
               </p>
             </div>
             <div className="rounded bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">
-              {filteredTeams.length} / {teams.length} countries
+              {filteredTeams.length} / {activeTeams.length} countries
             </div>
           </div>
 

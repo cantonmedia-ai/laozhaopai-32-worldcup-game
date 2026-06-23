@@ -9,6 +9,7 @@ import { requireCompletedProfile } from "@/lib/auth-guards";
 import { getCurrentRound } from "@/lib/demo-data";
 import {
   loadFirstRoundOf32Deadline,
+  loadRoundOf32Teams,
   loadWorldCupGroupTeams,
   type ApiGroupTeamDebug,
 } from "@/lib/football-data";
@@ -191,6 +192,7 @@ export default async function RoadToChampionPage() {
   let referralPoints = 0;
   let groupDebug: ApiGroupTeamDebug | null = null;
   let groupDataAvailable = false;
+  let teamsByStage: Partial<Record<string, RoadTeam[]>> = {};
 
   if (hasSupabaseServerEnv() && profile) {
     const supabase = await createClient();
@@ -250,6 +252,15 @@ export default async function RoadToChampionPage() {
       if (groupedTeams.length) {
         teams = groupedTeams;
         groupDataAvailable = true;
+        teamsByStage.last_16 = groupedTeams;
+      }
+    }
+
+    const roundOf32Result = await loadRoundOf32Teams();
+    if (roundOf32Result.debug.available) {
+      const roundOf32Teams = mapGroupDataToTeams(teams, roundOf32Result.teams);
+      if (roundOf32Teams.length) {
+        teamsByStage.last_8 = roundOf32Teams;
       }
     }
 
@@ -313,6 +324,7 @@ export default async function RoadToChampionPage() {
             referralPoints,
           }}
           groupDataAvailable={groupDataAvailable}
+          teamsByStage={teamsByStage}
         />
       </main>
     </PageShell>

@@ -216,3 +216,51 @@ export async function loadWorldCupGroupTeams(
     return { teams: [], debug: debugForGroupTeams([], false) };
   }
 }
+
+export async function loadRoundOf32Teams(
+  revalidate = 900,
+): Promise<ApiGroupTeamResult> {
+  try {
+    const [groupResult, matchData] = await Promise.all([
+      loadWorldCupGroupTeams(revalidate),
+      fetchFootballData<{ matches?: ProviderMatch[] }>("matches", revalidate),
+    ]);
+    const groupByCode = new Map(
+      groupResult.teams
+        .filter((team) => team.country_code)
+        .map((team) => [groupSortKey(team.country_code), team]),
+    );
+    const groupByName = new Map(
+      groupResult.teams.map((team) => [groupSortKey(team.country_name), team]),
+    );
+    const roundTeams = new Map<string, ApiGroupTeam>();
+
+    for (const match of matchData?.matches ?? []) {
+      if (!stageMatches(match, ["LAST_32", "ROUND_OF_32", "ROUND_32"])) continue;
+
+      for (const providerTeam of [match.homeTeam, match.awayTeam]) {
+        const key = teamKey(providerTeam);
+        if (!key || roundTeams.has(key)) continue;
+
+        const grouped =
+          groupByCode.get(groupSortKey(providerTeam?.tla ?? providerTeam?.shortName)) ??
+          groupByName.get(groupSortKey(providerTeam?.name));
+
+        if (grouped) {
+          roundTeams.set(key, {
+            ...grouped,
+            api_team_id: String(providerTeam?.id ?? grouped.api_team_id),
+            country_name: providerTeam?.name ?? grouped.country_name,
+            country_code: providerTeam?.tla ?? providerTeam?.shortName ?? grouped.country_code,
+            country_flag: providerTeam?.crest ?? grouped.country_flag,
+          });
+        }
+      }
+    }
+
+    const teams = [...roundTeams.values()];
+    return { teams, debug: debugForGroupTeams(teams, teams.length > 0) };
+  } catch {
+    return { teams: [], debug: debugForGroupTeams([], false) };
+  }
+}
