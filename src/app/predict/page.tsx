@@ -25,7 +25,7 @@ export default async function PredictPage() {
     const { data: rows } = await supabase
       .from("knockout_matches")
       .select(
-        "id, round_key, match_number, match_start_at, prediction_lock_at, actual_winner_team_id, status, knockout_rounds!inner(round_name), team_a:team_a_id(id, country_name, country_code, flag_url, flag_asset_path), team_b:team_b_id(id, country_name, country_code, flag_url, flag_asset_path)",
+        "id, round_key, match_number, match_start_at, prediction_lock_at, team_a_score, team_b_score, actual_winner_team_id, status, knockout_rounds!inner(round_name), team_a:team_a_id(id, country_name, country_code, flag_url, flag_asset_path), team_b:team_b_id(id, country_name, country_code, flag_url, flag_asset_path)",
       )
       .in("status", ["open", "locked", "scored", "completed"])
       .order("match_start_at", { ascending: true });
@@ -43,6 +43,8 @@ export default async function PredictPage() {
         match_number: row.match_number,
         match_start_at: row.match_start_at,
         prediction_lock_at: row.prediction_lock_at,
+        team_a_score: row.team_a_score,
+        team_b_score: row.team_b_score,
         actual_winner_team_id: row.actual_winner_team_id,
         status: row.status,
         team_a: teamA,
@@ -52,7 +54,7 @@ export default async function PredictPage() {
 
     const { data: predictionRows } = await supabase
       .from("solo_match_predictions")
-      .select("match_id, selected_winner_team_id, points_earned, is_correct, status")
+      .select("match_id, selected_winner_team_id, predicted_team_a_score, predicted_team_b_score, individual_match_score, team_accumulated_score, final_earned_score, points_earned, is_correct, status")
       .eq("user_id", profile.auth_user_id);
 
     predictions = (predictionRows ?? []) as KnockoutPrediction[];

@@ -11,10 +11,10 @@ export const knockoutWinnerAdminTitle =
   "淘汰赛赢家战管理\nKnockout Winner Challenge Admin Control";
 
 export const knockoutRoundPoints: Record<string, number> = {
-  r32: 1,
-  r16: 2,
-  qf: 4,
-  sf: 6,
+  last_32: 1,
+  last_16: 2,
+  last_8: 4,
+  last_4: 6,
   final: 10,
 };
 

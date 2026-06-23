@@ -49,6 +49,8 @@ export function KnockoutAdminControl({
   const [status, setStatus] = useState("open");
   const [selectedMatchId, setSelectedMatchId] = useState(matches[0]?.id ?? "");
   const [winnerId, setWinnerId] = useState(matches[0]?.team_a.id ?? "");
+  const [actualTeamAScore, setActualTeamAScore] = useState("");
+  const [actualTeamBScore, setActualTeamBScore] = useState("");
   const [previousRound, setPreviousRound] = useState("last_32");
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -81,6 +83,19 @@ export function KnockoutAdminControl({
 
   async function confirmWinner() {
     if (!selectedMatchId || !winnerId) return;
+    const teamAScore = Number(actualTeamAScore);
+    const teamBScore = Number(actualTeamBScore);
+    if (
+      actualTeamAScore.trim() === "" ||
+      actualTeamBScore.trim() === "" ||
+      !Number.isInteger(teamAScore) ||
+      !Number.isInteger(teamBScore) ||
+      teamAScore < 0 ||
+      teamBScore < 0
+    ) {
+      setMessage("Enter official scores for both countries before scoring.");
+      return;
+    }
     setBusy("confirm");
     setMessage("");
     try {
@@ -88,6 +103,8 @@ export function KnockoutAdminControl({
       const { error } = await supabase.rpc("admin_confirm_knockout_match_result", {
         p_match_id: selectedMatchId,
         p_actual_winner_team_id: winnerId,
+        p_team_a_score: teamAScore,
+        p_team_b_score: teamBScore,
       });
       if (error) throw new Error(error.message);
       setMessage("Winner confirmed. Solo and team scores calculated.");
@@ -206,6 +223,12 @@ export function KnockoutAdminControl({
                   const match = matches.find((item) => item.id === event.target.value);
                   setSelectedMatchId(event.target.value);
                   setWinnerId(match?.team_a.id ?? "");
+                  setActualTeamAScore(
+                    typeof match?.team_a_score === "number" ? String(match.team_a_score) : "",
+                  );
+                  setActualTeamBScore(
+                    typeof match?.team_b_score === "number" ? String(match.team_b_score) : "",
+                  );
                 }}
                 className="h-11 rounded border border-slate-200 px-3"
               >
@@ -217,6 +240,30 @@ export function KnockoutAdminControl({
                 ))}
               </select>
             </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm font-black text-slate-700">
+                {selectedMatch?.team_a.country_name ?? "Team A"} score
+                <input
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  value={actualTeamAScore}
+                  onChange={(event) => setActualTeamAScore(event.target.value)}
+                  className="h-11 rounded border border-slate-200 px-3"
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-black text-slate-700">
+                {selectedMatch?.team_b.country_name ?? "Team B"} score
+                <input
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  value={actualTeamBScore}
+                  onChange={(event) => setActualTeamBScore(event.target.value)}
+                  className="h-11 rounded border border-slate-200 px-3"
+                />
+              </label>
+            </div>
             <label className="grid gap-1 text-sm font-black text-slate-700">
               Actual winner
               <select value={winnerId} onChange={(event) => setWinnerId(event.target.value)} className="h-11 rounded border border-slate-200 px-3">
@@ -273,6 +320,7 @@ export function KnockoutAdminControl({
               <th className="p-4">Start</th>
               <th className="p-4">Due</th>
               <th className="p-4">Status</th>
+              <th className="p-4">Score</th>
               <th className="p-4">Winner</th>
             </tr>
           </thead>
@@ -286,6 +334,11 @@ export function KnockoutAdminControl({
                 <td className="p-4">{toLocalInput(match.match_start_at)}</td>
                 <td className="p-4">{toLocalInput(match.prediction_lock_at)}</td>
                 <td className="p-4 font-black text-[#0f8a4b]">{match.status}</td>
+                <td className="p-4">
+                  {typeof match.team_a_score === "number" && typeof match.team_b_score === "number"
+                    ? `${match.team_a_score} - ${match.team_b_score}`
+                    : "-"}
+                </td>
                 <td className="p-4">{match.actual_winner_team_id ?? "-"}</td>
               </tr>
             ))}

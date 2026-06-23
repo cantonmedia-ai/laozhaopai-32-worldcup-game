@@ -23,6 +23,8 @@ export type KnockoutMatch = {
   match_number: number;
   match_start_at: string;
   prediction_lock_at: string;
+  team_a_score: number | null;
+  team_b_score: number | null;
   actual_winner_team_id: string | null;
   status: "draft" | "open" | "locked" | "scored" | "completed";
   team_a: KnockoutTeam;
@@ -32,6 +34,11 @@ export type KnockoutMatch = {
 export type KnockoutPrediction = {
   match_id: string;
   selected_winner_team_id: string;
+  predicted_team_a_score: number | null;
+  predicted_team_b_score: number | null;
+  individual_match_score: number | null;
+  team_accumulated_score: number | null;
+  final_earned_score: number | null;
   points_earned: number | null;
   is_correct: boolean | null;
   status: "submitted" | "locked" | "scored";
@@ -92,6 +99,25 @@ export function KnockoutDbGame({
       ]),
     ),
   );
+  const [scoreByMatch, setScoreByMatch] = useState<
+    Record<string, { teamA: string; teamB: string }>
+  >(
+    Object.fromEntries(
+      predictions.map((prediction) => [
+        prediction.match_id,
+        {
+          teamA:
+            typeof prediction.predicted_team_a_score === "number"
+              ? String(prediction.predicted_team_a_score)
+              : "",
+          teamB:
+            typeof prediction.predicted_team_b_score === "number"
+              ? String(prediction.predicted_team_b_score)
+              : "",
+        },
+      ]),
+    ),
+  );
   const [message, setMessage] = useState("");
   const [savingMatch, setSavingMatch] = useState("");
   const [now, setNow] = useState(0);
@@ -122,7 +148,21 @@ export function KnockoutDbGame({
 
   async function save(match: KnockoutMatch) {
     const winnerId = selectedByMatch[match.id];
+    const score = scoreByMatch[match.id] ?? { teamA: "", teamB: "" };
+    const teamAScore = Number(score.teamA);
+    const teamBScore = Number(score.teamB);
     if (!winnerId || savingMatch) return;
+    if (
+      score.teamA.trim() === "" ||
+      score.teamB.trim() === "" ||
+      !Number.isInteger(teamAScore) ||
+      !Number.isInteger(teamBScore) ||
+      teamAScore < 0 ||
+      teamBScore < 0
+    ) {
+      setMessage("Please enter a valid score for both countries.");
+      return;
+    }
 
     setSavingMatch(match.id);
     setMessage("");
@@ -136,6 +176,8 @@ export function KnockoutDbGame({
       const { error } = await supabase.rpc(rpcName, {
         p_match_id: match.id,
         p_selected_winner_team_id: winnerId,
+        p_predicted_team_a_score: teamAScore,
+        p_predicted_team_b_score: teamBScore,
       });
 
       if (error) throw new Error(error.message);
@@ -195,7 +237,7 @@ export function KnockoutDbGame({
         </div>
         <div className="rounded bg-white/10 p-4">
           <p className="text-sm font-bold text-white/65">
-            {mode === "team" ? "My contribution" : "My points"}
+            {mode === "team" ? "My final earned score" : "My final earned score"}
           </p>
           <p className="mt-1 text-2xl font-black">{totalPoints}</p>
         </div>
@@ -315,8 +357,13 @@ export function KnockoutDbGame({
                   Countdown: {countdownLabel(match.prediction_lock_at, now)}
                 </p>
               </div>
-              <div className="rounded bg-slate-100 p-3 text-sm font-bold text-slate-700">
-                Points earned: {prediction?.points_earned ?? 0}
+              <div className="grid gap-2 rounded bg-slate-100 p-3 text-sm font-bold text-slate-700">
+                <p>个人本场分 / Individual Match Score: {prediction?.individual_match_score ?? 0}</p>
+                <p>团队累计分 / Team Accumulated Score: {prediction?.team_accumulated_score ?? 0}</p>
+                <p className="text-[#d71920]">
+                  最终获得分 / Final Earned Score:{" "}
+                  {prediction?.final_earned_score ?? prediction?.points_earned ?? 0}
+                </p>
               </div>
             </div>
 
@@ -326,11 +373,16 @@ export function KnockoutDbGame({
               </p>
             ) : null}
             {label === "Scored" && prediction ? (
-              <p className="mx-5 mt-4 rounded bg-slate-100 p-3 text-sm font-bold text-slate-700">
-                {prediction.is_correct
-                  ? `You guessed correctly and earned ${prediction.points_earned ?? 0} points.`
-                  : "Your prediction was incorrect. Better luck next round."}
-              </p>
+              <div className="mx-5 mt-4 grid gap-2 rounded bg-slate-100 p-3 text-sm font-bold text-slate-700">
+                <p>
+                  Official result: {match.team_a.country_code} {match.team_a_score ?? "-"} -{" "}
+                  {match.team_b_score ?? "-"} {match.team_b.country_code}
+                </p>
+                <p>
+                  Your final earned score = your individual match score + your team's accumulated score.
+                </p>
+                <p>你的最终获得分 = 你的个人本场分 + 你所在团队的累计分。</p>
+              </div>
             ) : null}
 
             <div className="grid grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] gap-2 p-5 sm:grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)]">
@@ -338,19 +390,28 @@ export function KnockoutDbGame({
                 const flag = flagPath(team);
                 const picked = selected === team.id;
                 return (
-                  <button
+                  <div
                     key={team.id}
-                    type="button"
-                    disabled={locked}
-                    onClick={() =>
+                    role="button"
+                    tabIndex={locked ? -1 : 0}
+                    onClick={() => {
+                      if (locked) return;
                       setSelectedByMatch((current) => ({
                         ...current,
                         [match.id]: team.id,
-                      }))
-                    }
+                      }));
+                    }}
+                    onKeyDown={(event) => {
+                      if (locked || (event.key !== "Enter" && event.key !== " ")) return;
+                      event.preventDefault();
+                      setSelectedByMatch((current) => ({
+                        ...current,
+                        [match.id]: team.id,
+                      }));
+                    }}
                     className={clsx(
                       index === 0 ? "col-start-1" : "col-start-3",
-                      "row-start-1 rounded-lg border-2 bg-white p-3 text-center shadow-sm",
+                      "row-start-1 rounded-lg border-2 bg-white p-3 text-center shadow-sm transition",
                       picked
                         ? "border-[#d71920] bg-red-50"
                         : "border-slate-100 hover:border-[#0f8a4b]",
@@ -384,7 +445,36 @@ export function KnockoutDbGame({
                     >
                       {picked ? "Selected winner" : "Pick winner"}
                     </span>
-                  </button>
+                    <label className="mt-3 grid gap-1 text-left text-xs font-black text-slate-600">
+                      Guess score
+                      <input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        disabled={locked}
+                        value={
+                          index === 0
+                            ? scoreByMatch[match.id]?.teamA ?? ""
+                            : scoreByMatch[match.id]?.teamB ?? ""
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setScoreByMatch((current) => {
+                            const existing = current[match.id] ?? { teamA: "", teamB: "" };
+                            return {
+                              ...current,
+                              [match.id]:
+                                index === 0
+                                  ? { ...existing, teamA: value }
+                                  : { ...existing, teamB: value },
+                            };
+                          });
+                        }}
+                        className="h-10 rounded border border-slate-200 px-3 text-center text-base font-black text-slate-950 disabled:bg-slate-100"
+                      />
+                    </label>
+                  </div>
                 );
               })}
               <div className="col-start-2 row-start-1 flex items-center justify-center">
@@ -408,6 +498,10 @@ export function KnockoutDbGame({
                 )}
                 Submit Winner
               </button>
+              <p className="mt-3 text-xs font-bold text-slate-500">
+                Winner pick and score guess are scored separately. Score accuracy gives +0,
+                +1, or +3 only once per match.
+              </p>
             </div>
           </section>
         );
