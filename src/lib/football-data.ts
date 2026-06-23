@@ -96,6 +96,32 @@ export function loadFirstRoundOf32Deadline() {
   return loadFirstFixtureDeadline(["LAST_32", "ROUND_OF_32", "ROUND_32"]);
 }
 
+export function loadFirstRoundOf16Deadline() {
+  return loadFirstFixtureDeadline(["LAST_16", "ROUND_OF_16", "ROUND_16"]);
+}
+
+export function loadFirstQuarterFinalDeadline() {
+  return loadFirstFixtureDeadline([
+    "QUARTER_FINALS",
+    "QUARTER_FINAL",
+    "LAST_8",
+    "ROUND_OF_8",
+  ]);
+}
+
+export function loadFirstSemiFinalDeadline() {
+  return loadFirstFixtureDeadline([
+    "SEMI_FINALS",
+    "SEMI_FINAL",
+    "LAST_4",
+    "ROUND_OF_4",
+  ]);
+}
+
+export function loadFirstFinalDeadline() {
+  return loadFirstFixtureDeadline(["FINAL"]);
+}
+
 function cleanGroupName(value?: string | null) {
   const group = String(value ?? "").trim().replace(/^GROUP[_\s-]*/i, "Group ");
   return group || null;

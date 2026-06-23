@@ -8,13 +8,18 @@ import {
 import { requireCompletedProfile } from "@/lib/auth-guards";
 import { getCurrentRound } from "@/lib/demo-data";
 import {
+  loadFirstFinalDeadline,
+  loadFirstQuarterFinalDeadline,
   loadFirstRoundOf32Deadline,
+  loadFirstRoundOf16Deadline,
+  loadFirstSemiFinalDeadline,
   loadFinalTeams,
   loadQuarterFinalTeams,
-  loadRoundOf32Teams,
   loadRoundOf16Teams,
+  loadSemiFinalTeams,
   type ApiGroupTeam,
 } from "@/lib/football-data";
+import type { RoadStageKey } from "@/lib/road-to-champion";
 import { sortRoadStages } from "@/lib/road-to-champion";
 import { stageInlineName } from "@/lib/stage-labels";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
@@ -30,6 +35,12 @@ type RankingRow = {
 type PointRow = {
   source_type: string;
   points: number | null;
+};
+
+type StageAvailability = {
+  available: boolean;
+  sourceCount: number;
+  requiredPoolCount: number;
 };
 
 function normalizeTeamKey(value?: string | null) {
@@ -71,6 +82,50 @@ function mapGroupDataToTeams(
       };
     })
     .filter(Boolean) as RoadTeam[];
+}
+
+function apiGroupDataToTeamRows(groupTeams: ApiGroupTeam[]) {
+  return groupTeams
+    .map((team) => ({
+      country_name: team.country_name,
+      country_code: team.country_code ?? team.api_team_id,
+      name: team.country_name,
+      short_name: team.country_code ?? team.api_team_id,
+      flag_url: team.country_flag,
+      flag_asset_path: team.country_flag,
+      group_name: team.group_name,
+      is_active: true,
+    }))
+    .filter((team) => team.country_name && team.country_code);
+}
+
+async function ensureApiTeams(
+  dataClient: ReturnType<typeof createServiceClient> | Awaited<ReturnType<typeof createClient>>,
+  currentTeams: RoadTeam[],
+  groupTeams: ApiGroupTeam[],
+) {
+  const mapped = mapGroupDataToTeams(currentTeams, groupTeams);
+  if (mapped.length >= groupTeams.length) return { teams: currentTeams, mapped };
+
+  const missing = groupTeams.filter(
+    (apiTeam) =>
+      !mapped.some(
+        (team) =>
+          normalizeTeamKey(team.country_code) === normalizeTeamKey(apiTeam.country_code) ||
+          normalizeTeamKey(team.country_name) === normalizeTeamKey(apiTeam.country_name),
+      ),
+  );
+
+  if (missing.length) {
+    await dataClient.from("teams").insert(apiGroupDataToTeamRows(missing));
+  }
+
+  const { data: refreshedRows } = await dataClient
+    .from("teams")
+    .select("id, country_name, country_code, flag_url, flag_asset_path, group_name")
+    .order("country_name");
+  const nextTeams = (refreshedRows ?? currentTeams) as RoadTeam[];
+  return { teams: nextTeams, mapped: mapGroupDataToTeams(nextTeams, groupTeams) };
 }
 
 function fixedGroupDetailsToRoadTeams(teams: RoadTeam[]) {
@@ -232,29 +287,44 @@ export default async function RoadToChampionPage() {
   let referralPoints = 0;
   let groupDataAvailable = false;
   let teamsByStage: Partial<Record<string, RoadTeam[]>> = {};
+  let stageAvailability: Partial<Record<RoadStageKey, StageAvailability>> = {};
 
   if (hasSupabaseServerEnv() && profile) {
     const supabase = await createClient();
     const serviceSupabase = hasSupabaseServiceEnv() ? createServiceClient() : null;
     const dataClient = serviceSupabase ?? supabase;
 
-    const game1Deadline = await loadFirstRoundOf32Deadline();
-    if (game1Deadline && serviceSupabase) {
-      await serviceSupabase
-        .from("prediction_stages")
-        .update({
-          due_at: game1Deadline.dueAt,
-          kickoff_at: game1Deadline.kickoffAt,
-          deadline_confirmed: true,
-          deadline_source: "first_round_of_32_kickoff_minus_15m",
-          status:
-            new Date(game1Deadline.dueAt).getTime() <= Date.now()
-              ? "locked"
-              : "open",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("stage_key", "last_16")
-        .neq("status", "scored");
+    const stageDeadlineLoaders = [
+      ["last_16", loadFirstRoundOf32Deadline, "first_round_of_32_kickoff_minus_15m"],
+      ["last_8", loadFirstRoundOf16Deadline, "first_round_of_16_kickoff_minus_15m"],
+      ["last_4", loadFirstQuarterFinalDeadline, "first_quarter_final_kickoff_minus_15m"],
+      ["finalists", loadFirstSemiFinalDeadline, "first_semi_final_kickoff_minus_15m"],
+      ["champion", loadFirstFinalDeadline, "final_kickoff_minus_15m"],
+    ] as const;
+    const confirmedDeadlines = new Map<RoadStageKey, { dueAt: string; kickoffAt: string }>();
+
+    for (const [stageKey, deadlineLoader, deadlineSource] of stageDeadlineLoaders) {
+      const deadline = await deadlineLoader();
+      if (deadline) {
+        confirmedDeadlines.set(stageKey, deadline);
+      }
+      if (deadline && serviceSupabase) {
+        await serviceSupabase
+          .from("prediction_stages")
+          .update({
+            due_at: deadline.dueAt,
+            kickoff_at: deadline.kickoffAt,
+            deadline_confirmed: true,
+            deadline_source: deadlineSource,
+            status:
+              new Date(deadline.dueAt).getTime() <= Date.now()
+                ? "locked"
+                : "open",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("stage_key", stageKey)
+          .neq("status", "scored");
+      }
     }
 
     const { data: stageRows } = await dataClient
@@ -267,13 +337,20 @@ export default async function RoadToChampionPage() {
       stages = sortRoadStages(stageRows as RoadStage[]);
     }
 
-    if (!game1Deadline) {
-      stages = stages.map((stage) =>
-        stage.stage_key === "last_16"
-          ? { ...stage, deadline_confirmed: Boolean(stage.deadline_confirmed) }
-          : stage,
-      );
-    }
+    stages = stages.map((stage) => {
+      const confirmed = confirmedDeadlines.get(stage.stage_key);
+      if (!confirmed) return stage;
+      return {
+        ...stage,
+        due_at: confirmed.dueAt,
+        kickoff_at: confirmed.kickoffAt,
+        deadline_confirmed: true,
+        status:
+          new Date(confirmed.dueAt).getTime() <= Date.now()
+            ? "locked"
+            : "open",
+      };
+    });
 
     const { data: teamRows } = await dataClient
       .from("teams")
@@ -289,22 +366,64 @@ export default async function RoadToChampionPage() {
       teams = fixedSweet16Teams;
       groupDataAvailable = true;
       teamsByStage.last_16 = fixedSweet16Teams;
+      stageAvailability.last_16 = {
+        available: true,
+        sourceCount: fixedSweet16Teams.length,
+        requiredPoolCount: 48,
+      };
     }
 
     const stagePoolLoaders = [
-      ["last_8", loadRoundOf32Teams],
-      ["last_4", loadRoundOf16Teams],
-      ["finalists", loadQuarterFinalTeams],
-      ["champion", loadFinalTeams],
+      ["last_8", loadRoundOf16Teams, 16],
+      ["last_4", loadQuarterFinalTeams, 8],
+      ["finalists", loadSemiFinalTeams, 4],
+      ["champion", loadFinalTeams, 2],
     ] as const;
 
-    for (const [stageKey, loader] of stagePoolLoaders) {
+    for (const [stageKey, loader, requiredPoolCount] of stagePoolLoaders) {
       const poolResult = await loader();
-      if (poolResult.debug.available) {
-        const poolTeams = mapGroupDataToTeams(teams, poolResult.teams);
-        if (poolTeams.length) teamsByStage[stageKey] = poolTeams;
+      const ensured = serviceSupabase
+        ? await ensureApiTeams(dataClient, teams, poolResult.teams)
+        : { teams, mapped: mapGroupDataToTeams(teams, poolResult.teams) };
+      teams = ensured.teams;
+      const poolTeams = ensured.mapped;
+      const available = poolResult.debug.available && poolTeams.length >= requiredPoolCount;
+      stageAvailability[stageKey] = {
+        available,
+        sourceCount: poolTeams.length,
+        requiredPoolCount,
+      };
+      if (poolTeams.length) {
+        teamsByStage[stageKey] = poolTeams;
+      }
+      if (available && serviceSupabase) {
+        const stage = stages.find((item) => item.stage_key === stageKey);
+        if (stage && stage.status !== "scored") {
+          await serviceSupabase
+            .from("prediction_stages")
+            .update({
+              status:
+                new Date(stage.due_at).getTime() <= Date.now()
+                  ? "locked"
+                  : "open",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("stage_key", stageKey);
+        }
       }
     }
+
+    stages = stages.map((stage) => {
+      const availability = stageAvailability[stage.stage_key];
+      if (!availability?.available || stage.status === "scored") return stage;
+      return {
+        ...stage,
+        status:
+          new Date(stage.due_at).getTime() <= Date.now()
+            ? "locked"
+            : "open",
+      };
+    });
 
     const { data: predictionRows } = await dataClient
       .from("user_stage_predictions")
@@ -367,6 +486,7 @@ export default async function RoadToChampionPage() {
           }}
           groupDataAvailable={groupDataAvailable}
           teamsByStage={teamsByStage}
+          stageAvailability={stageAvailability}
         />
       </main>
     </PageShell>

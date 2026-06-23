@@ -66,6 +66,12 @@ export type RoadSummary = {
   referralPoints: number;
 };
 
+export type RoadStageAvailability = {
+  available: boolean;
+  sourceCount: number;
+  requiredPoolCount: number;
+};
+
 function timeLeft(dueAt: string, now: number) {
   const diff = new Date(dueAt).getTime() - now;
   if (diff <= 0) return "Closed";
@@ -111,6 +117,7 @@ export function RoadToChampionGame({
   summary,
   groupDataAvailable,
   teamsByStage = {},
+  stageAvailability = {},
 }: {
   stages: RoadStage[];
   teams: RoadTeam[];
@@ -118,6 +125,7 @@ export function RoadToChampionGame({
   summary: RoadSummary;
   groupDataAvailable: boolean;
   teamsByStage?: Partial<Record<RoadStageKey, RoadTeam[]>>;
+  stageAvailability?: Partial<Record<RoadStageKey, RoadStageAvailability>>;
 }) {
   const [now, setNow] = useState(() => Date.now());
   const initialSelections = useMemo(
@@ -228,6 +236,31 @@ export function RoadToChampionGame({
     activeStage.stage_key === "last_16"
       ? groupDataAvailable
       : Boolean(teamsByStage[activeStage.stage_key]?.length);
+  const activeAvailability =
+    stageAvailability[activeStage.stage_key] ?? {
+      available: activeGroupDataAvailable,
+      sourceCount: activeTeams.length,
+      requiredPoolCount: activeStage.stage_key === "last_16" ? 48 : required,
+    };
+  const activeStageReady = activeAvailability.available;
+  const waitingResults = !activeStageReady;
+  const interactionLocked = locked || waitingResults;
+  const activeStageName = roadStageCopy[activeStage.stage_key].shortName;
+  const activeStageTitle = stageTitle(activeStage);
+  const activeStageDescription = roadStageCopy[activeStage.stage_key].body;
+  const activePredictionLabel = `${activeStageName} Prediction`;
+  const deadlineRuleText: Record<RoadStageKey, string> = {
+    last_16:
+      "Game 1 Sweet 16 prediction closes 15 minutes before the first Round of 32 match starts.",
+    last_8:
+      "Game 1 Elite 8 prediction closes 15 minutes before the first Sweet 16 match starts.",
+    last_4:
+      "Game 1 Final 4 prediction closes 15 minutes before the first Elite 8 match starts.",
+    finalists:
+      "Game 1 Finalist prediction closes 15 minutes before the first Final 4 match starts.",
+    champion:
+      "Game 1 Champion prediction closes 15 minutes before the Grand Final starts.",
+  };
   const groupedTeams = useMemo(() => {
     const groups = new Map<string, { groupName: string; groupKey: string; teams: RoadTeam[] }>();
 
@@ -285,7 +318,7 @@ export function RoadToChampionGame({
   }, [last16SelectedTeams]);
 
   function toggle(teamId: string) {
-    if (locked) return;
+    if (interactionLocked) return;
 
     setMessageByStage((current) => ({
       ...current,
@@ -325,6 +358,15 @@ export function RoadToChampionGame({
         ...current,
         [activeStage.stage_key]:
           "Prediction closed. Answers cannot be submitted or edited after the deadline.",
+      }));
+      return;
+    }
+
+    if (waitingResults) {
+      setMessageByStage((current) => ({
+        ...current,
+        [activeStage.stage_key]:
+          "This stage is waiting for official results. The team list will open automatically once qualifiers are confirmed.",
       }));
       return;
     }
@@ -492,14 +534,14 @@ export function RoadToChampionGame({
       <button
         key={`${activeStage.stage_key}-${team.id}`}
         type="button"
-        disabled={locked || (!selectedTeam && selected.length >= required)}
+        disabled={interactionLocked || (!selectedTeam && selected.length >= required)}
         onClick={() => toggle(team.id)}
         className={clsx(
           "group flex min-h-14 items-center gap-3 rounded-lg border bg-white px-3 py-2 text-left shadow-sm transition duration-200 active:scale-[0.99]",
           selectedTeam
             ? "border-[#d6a728] bg-[#fff8df] ring-1 ring-[#d6a728]/35 shadow-[#d6a728]/20"
             : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
-          (locked || (!selectedTeam && selected.length >= required)) &&
+          (interactionLocked || (!selectedTeam && selected.length >= required)) &&
             "cursor-not-allowed opacity-60",
         )}
       >
@@ -601,14 +643,14 @@ export function RoadToChampionGame({
                   <button
                     key={`${activeStage.stage_key}-table-${team.id}`}
                     type="button"
-                    disabled={locked || (!selectedTeam && selected.length >= required)}
+                    disabled={interactionLocked || (!selectedTeam && selected.length >= required)}
                     onClick={() => toggle(team.id)}
                     className={clsx(
                       "grid min-h-16 w-full grid-cols-[52px_1fr_48px] items-center gap-3 px-4 py-2 text-left transition active:scale-[0.99]",
                       selectedTeam
                         ? "bg-[#fff8df] text-slate-950 ring-1 ring-inset ring-[#d6a728]/45"
                         : "bg-white hover:bg-slate-50",
-                      (locked || (!selectedTeam && selected.length >= required)) &&
+                      (interactionLocked || (!selectedTeam && selected.length >= required)) &&
                         "cursor-not-allowed opacity-60",
                     )}
                   >
@@ -737,8 +779,49 @@ export function RoadToChampionGame({
       </div>
     );
 
+  const waitingStageText: Record<RoadStageKey, string> = {
+    last_16: "Sweet 16 is available now.",
+    last_8: "Team list will appear after Sweet 16 qualifiers are confirmed.",
+    last_4: "Team list will appear after Elite 8 qualifiers are confirmed.",
+    finalists: "Team list will appear after Final 4 qualifiers are confirmed.",
+    champion: "Champion selection will open after finalists are confirmed.",
+  };
+  const waitingPanel = (
+    <div className="grid gap-4 pb-28 lg:pb-0">
+      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-700">
+          Waiting Results
+        </p>
+        <h3 className="mt-1 text-xl font-black text-slate-950">
+          Team list not available yet.
+        </h3>
+        <p className="mt-2 text-sm font-bold text-slate-600">
+          This stage will open automatically once the official qualifiers are confirmed.
+        </p>
+        <p className="mt-1 text-sm font-bold text-slate-600">
+          {waitingStageText[activeStage.stage_key]}
+        </p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: required }).map((_, index) => (
+          <div
+            key={`waiting-slot-${activeStage.stage_key}-${index}`}
+            className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
+              Slot {index + 1}
+            </p>
+            <p className="mt-1 font-black text-slate-600">Waiting result</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const picker =
-    activeStage.stage_key === "last_16"
+    waitingResults
+      ? waitingPanel
+      : activeStage.stage_key === "last_16"
       ? activeGroupDataAvailable
         ? groupTablePicker
         : groupedPicker
@@ -793,7 +876,7 @@ export function RoadToChampionGame({
               <span className="min-w-0 flex-1 truncate text-sm font-black">
                 {team.country_name}
               </span>
-              {!locked ? (
+              {!interactionLocked ? (
                 <button
                   type="button"
                   onClick={() => toggle(team.id)}
@@ -825,6 +908,79 @@ export function RoadToChampionGame({
     setEditMode(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  const stagePicksPanel = (
+    <aside className="rounded-lg border border-white/10 bg-[#071525] p-4 text-white shadow-xl">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f4c542]">
+            My Picks
+          </p>
+          <h2 className="mt-1 text-xl font-black">
+            Selected {selected.length} / {required}
+          </h2>
+        </div>
+        <span
+          className={clsx(
+            "rounded px-2 py-1 text-xs font-black",
+            complete ? "bg-green-100 text-green-800" : "bg-white/10 text-white",
+          )}
+        >
+          {complete ? "Ready" : `${remaining} left`}
+        </span>
+      </div>
+      <p className="mt-2 text-sm font-semibold text-white/70">
+        {complete
+          ? `${activeStageName} prediction completed`
+          : `Select ${remaining} more teams`}
+      </p>
+
+      <div className="mt-4 grid max-h-[48vh] gap-2 overflow-y-auto pr-1">
+        {Array.from({ length: required }).map((_, index) => {
+          const team = selectedTeams[index];
+          return team ? (
+            <div
+              key={`stage-panel-${team.id}`}
+              className="flex animate-[fadeIn_180ms_ease-out] items-center gap-2 rounded bg-white/10 p-2"
+            >
+              <span className="grid h-8 w-11 shrink-0 place-items-center overflow-hidden rounded bg-white/10 text-[10px] font-black">
+                {flagPath(team) ? (
+                  <img
+                    src={flagPath(team)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  team.country_code
+                )}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm font-black">
+                {team.country_name}
+              </span>
+              {!interactionLocked ? (
+                <button
+                  type="button"
+                  onClick={() => toggle(team.id)}
+                  className="grid size-7 place-items-center rounded bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+                  aria-label={`Remove ${team.country_name}`}
+                >
+                  <X size={14} />
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            <div
+              key={`stage-empty-${activeStage.stage_key}-${index}`}
+              className="rounded border border-dashed border-white/15 px-3 py-2 text-sm font-bold text-white/35"
+            >
+              Slot {index + 1}
+            </div>
+          );
+        })}
+      </div>
+    </aside>
+  );
 
   const submissionSummary = showSubmissionSummary ? (
     <section
@@ -972,6 +1128,97 @@ export function RoadToChampionGame({
     </section>
   ) : null;
 
+  function openStage(stageKey: RoadStageKey) {
+    setActiveStageKey(stageKey);
+    setSearchTerm("");
+    setEditMode(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const stageHub = (
+    <section className="grid gap-3 rounded-lg bg-white p-4 shadow-sm">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
+          Game 1 Journey
+        </p>
+        <h2 className="mt-1 text-2xl font-black text-slate-950">
+          Ultimate Predictor 最强预测家
+        </h2>
+      </div>
+      <div className="grid gap-3 md:grid-cols-5">
+        {roadStageOrder.map((stageKey) => {
+          const stage = stages.find((item) => item.stage_key === stageKey);
+          if (!stage) return null;
+
+          const availability =
+            stageAvailability[stageKey] ?? {
+              available: stageKey === "last_16" ? groupDataAvailable : false,
+              sourceCount: (teamsByStage[stageKey] ?? []).length,
+              requiredPoolCount: stageKey === "last_16" ? 48 : stage.required_selection_count,
+            };
+          const stageSelectionCount = (selectedByStage[stageKey] ?? []).length;
+          const stageSubmitted = submittedByStage[stageKey] ?? false;
+          const stageLocked = visualStatus(stage, now) === "Prediction closed";
+          const stageScored = stage.status === "scored";
+          const stageWaiting = !availability.available;
+          const statusText = stageScored
+            ? "Scored"
+            : stageSubmitted
+              ? "Submitted"
+              : stageWaiting
+                ? "Waiting Results"
+                : stageLocked
+                  ? "Locked"
+                  : "Open";
+          const ctaText = stageSubmitted
+            ? "View Prediction"
+            : stageWaiting
+              ? "Waiting Results"
+              : "Start Prediction";
+
+          return (
+            <button
+              key={`stage-card-${stageKey}`}
+              type="button"
+              onClick={() => openStage(stageKey)}
+              className={clsx(
+                "rounded-lg border p-3 text-left transition active:scale-[0.99]",
+                activeStageKey === stageKey && !cleanSubmittedView
+                  ? "border-[#d71920] bg-red-50"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300",
+              )}
+            >
+              <p className="whitespace-pre-line text-sm font-black text-slate-950">
+                {roadStageCopy[stageKey].shortName}
+              </p>
+              <p
+                className={clsx(
+                  "mt-2 inline-flex rounded px-2 py-1 text-[11px] font-black",
+                  statusText === "Waiting Results"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : statusText === "Submitted"
+                      ? "bg-green-100 text-green-800"
+                      : statusText === "Open"
+                        ? "bg-[#f4c542] text-[#071525]"
+                        : "bg-slate-200 text-slate-600",
+                )}
+              >
+                {statusText}
+              </p>
+              <p className="mt-3 text-xs font-bold text-slate-500">
+                Selected {stageSelectionCount} / {stage.required_selection_count}
+              </p>
+              <p className="mt-1 text-xs font-bold text-slate-500">
+                Pool {availability.sourceCount} / {availability.requiredPoolCount}
+              </p>
+              <p className="mt-2 text-xs font-black text-[#d71920]">{ctaText}</p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+
   return (
     <div className="grid gap-5">
       <style jsx global>{`
@@ -988,19 +1235,25 @@ export function RoadToChampionGame({
       `}</style>
 
       {cleanSubmittedView ? (
-        submissionSummary
+        <>
+          {stageHub}
+          {submissionSummary}
+        </>
       ) : (
         <>
       <section className="overflow-hidden rounded-lg bg-[#071525] text-white shadow-sm">
         <div className="bg-[url('/assets/backgrounds/bg_hero_stadium.png')] bg-cover bg-center p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#f4c542]">
+              <p className="hidden text-xs font-black uppercase tracking-[0.24em] text-[#f4c542]">
                 16强争霸战 / Sweet 16
               </p>
               <h2 className="mt-2 text-2xl font-black">
-                Pick 16 teams and keep your picks visible.
+                Pick {required} teams and keep your picks visible.
               </h2>
+              <p className="mt-2 max-w-2xl text-sm font-semibold text-white/70">
+                {activeStageName}
+              </p>
             </div>
           <div className="flex flex-wrap gap-2 text-xs font-black">
               <span className="rounded bg-green-100 px-3 py-1 text-green-800">
@@ -1073,14 +1326,14 @@ export function RoadToChampionGame({
               <>
                 截止时间等待赛程确认。32强生死战 / Round of 32 第一场比赛时间确认后，系统将自动更新截止时间。
                 <span className="block">
-                  Deadline pending fixture confirmation. Once the first Round of 32 match time is confirmed, the system will automatically update the deadline.
+                  Deadline pending fixture confirmation. The system will update this stage automatically when the fixture time is confirmed.
                 </span>
               </>
             ) : (
               <>
                 Game 1 Last 16 预测将在 32强生死战 / Round of 32 第一场比赛开始前 15 分钟截止。截止后不能提交或修改答案。
                 <span className="block">
-                  Game 1 Last 16 prediction closes 15 minutes before the first Round of 32 match starts. After the deadline, answers cannot be submitted or edited.
+                  {deadlineRuleText[activeStage.stage_key]} After the deadline, answers cannot be submitted or edited.
                 </span>
               </>
             )}
@@ -1088,43 +1341,29 @@ export function RoadToChampionGame({
         </div>
       </section>
 
-      {!last16Submitted ? (
-        <div className="flex items-center gap-2 overflow-x-auto rounded-lg bg-white p-3 shadow-sm">
-          {roadStageOrder.map((stageKey) => {
-            const stage = stages.find((item) => item.stage_key === stageKey);
-            if (!stage) return null;
-            return (
-              <button
-                key={stageKey}
-                type="button"
-                onClick={() => setActiveStageKey(stageKey)}
-                className={clsx(
-                  "shrink-0 rounded px-3 py-2 text-xs font-black",
-                  activeStageKey === stageKey
-                    ? "bg-[#d71920] text-white"
-                    : "bg-slate-100 text-slate-700",
-                )}
-              >
-                {roadStageCopy[stageKey].shortName}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {stageHub}
 
+      {!waitingResults ? (
       <div className="sticky top-14 z-20 lg:hidden">
         <details className="rounded-lg border border-slate-200 bg-white shadow-lg">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&>span:nth-child(2)]:hidden">
+            <span className="font-black text-slate-950">My Picks</span>
             <span className="font-black text-slate-950">我的 Sweet 16 预测</span>
             <span className="rounded bg-[#f4c542] px-2 py-1 text-xs font-black text-[#071525]">
               Selected {selected.length} / {required}
             </span>
           </summary>
-          <div className="border-t border-slate-100 p-3">{picksPanel}</div>
+          <div className="border-t border-slate-100 p-3">{stagePicksPanel}</div>
         </details>
       </div>
+      ) : null}
 
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <section
+        className={clsx(
+          "grid gap-5",
+          !waitingResults && "lg:grid-cols-[minmax(0,1fr)_340px]",
+        )}
+      >
         <div className="min-w-0 rounded-lg bg-white p-4 shadow-sm">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -1132,7 +1371,7 @@ export function RoadToChampionGame({
                 Available Teams
               </p>
               <h2 className="mt-1 text-2xl font-black text-slate-950">
-                {stageTitle(activeStage).split("\n").map((line) => (
+                {activeStageTitle.split("\n").map((line) => (
                   <span key={line} className="block">
                     {line}
                   </span>
@@ -1177,13 +1416,14 @@ export function RoadToChampionGame({
           {picker}
         </div>
 
+        {!waitingResults ? (
         <div className="hidden lg:block">
           <div className="sticky top-20 grid gap-3">
-            {picksPanel}
+            {stagePicksPanel}
             <div className="rounded-lg bg-white p-4 shadow-sm">
               <button
                 type="button"
-              disabled={locked || Boolean(savingStage)}
+              disabled={interactionLocked || Boolean(savingStage)}
                 onClick={() => save("draft")}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded bg-slate-100 px-4 font-black text-slate-800 disabled:opacity-60"
               >
@@ -1201,7 +1441,7 @@ export function RoadToChampionGame({
               </p>
               <button
                 type="button"
-              disabled={locked || !complete || Boolean(savingStage)}
+              disabled={interactionLocked || !complete || Boolean(savingStage)}
                 onClick={() => setConfirmStage(activeStage)}
                 className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-4 font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
               >
@@ -1209,19 +1449,21 @@ export function RoadToChampionGame({
                 {complete
                   ? submitted
                     ? "Update Prediction"
-                    : "Submit Sweet 16 Prediction"
+                    : `Submit ${activePredictionLabel}`
                   : `Select ${remaining} more to submit`}
               </button>
             </div>
           </div>
         </div>
+        ) : null}
       </section>
 
+      {!waitingResults ? (
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-slate-200 bg-white p-3 shadow-2xl lg:hidden">
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-2">
           <button
             type="button"
-            disabled={locked || Boolean(savingStage)}
+            disabled={interactionLocked || Boolean(savingStage)}
             onClick={() => save("draft")}
             className="flex h-12 items-center justify-center gap-2 rounded bg-slate-100 px-3 text-sm font-black text-slate-800 disabled:opacity-60"
           >
@@ -1230,7 +1472,7 @@ export function RoadToChampionGame({
           </button>
           <button
             type="button"
-            disabled={locked || !complete || Boolean(savingStage)}
+            disabled={interactionLocked || !complete || Boolean(savingStage)}
             onClick={() => setConfirmStage(activeStage)}
             className="flex h-12 items-center justify-center gap-2 rounded bg-[#d71920] px-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
           >
@@ -1241,6 +1483,7 @@ export function RoadToChampionGame({
           Save your picks and continue later.
         </p>
       </div>
+      ) : null}
         </>
       )}
 

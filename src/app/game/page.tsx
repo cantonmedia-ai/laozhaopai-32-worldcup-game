@@ -26,6 +26,7 @@ type DashboardData = {
   topRows: RankingRow[];
   game1DueAt: string | null;
   game1DeadlineConfirmed: boolean;
+  game1Sweet16Submitted: boolean;
   predictionDueAt: string | null;
   openMatchCount: number;
   submittedPredictionCount: number;
@@ -136,6 +137,7 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
     topRows: [],
     game1DueAt: null,
     game1DeadlineConfirmed: false,
+    game1Sweet16Submitted: false,
     predictionDueAt: null,
     openMatchCount: 0,
     submittedPredictionCount: 0,
@@ -178,6 +180,15 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
           .eq("user_id", authUserId)
           .in("match_id", openMatchIds)
       : { data: [] };
+  const { data: game1Prediction } = authUserId
+    ? await supabase
+        .from("user_stage_predictions")
+        .select("status")
+        .eq("user_id", authUserId)
+        .eq("stage_key", "last_16")
+        .in("status", ["submitted", "locked", "scored"])
+        .maybeSingle()
+    : { data: null };
 
   return {
     topRows: allRows.slice(0, 3),
@@ -185,6 +196,7 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
     game1DeadlineConfirmed: Boolean(
       game1Deadline?.dueAt || game1Stage?.deadline_confirmed,
     ),
+    game1Sweet16Submitted: Boolean(game1Prediction),
     predictionDueAt,
     openMatchCount: openMatchIds.length,
     submittedPredictionCount: predictionRows?.length ?? 0,
@@ -198,6 +210,7 @@ export default async function GamePage() {
     topRows,
     game1DueAt,
     game1DeadlineConfirmed,
+    game1Sweet16Submitted,
     predictionDueAt,
     openMatchCount,
     submittedPredictionCount,
@@ -297,7 +310,9 @@ export default async function GamePage() {
                   </p>
                   <p className="mt-3 text-sm font-bold text-[#0f8a4b]">
                     {card.id === "game1"
-                      ? "Can play during Group Stage."
+                      ? game1Sweet16Submitted
+                        ? "Sweet 16 submitted. Next: Elite 8 waiting results."
+                        : "Current Game 1 stage: Sweet 16 open."
                       : knockoutPublished
                         ? `Current active round: ${currentStage}`
                         : "Waiting for Round of 32 fixtures."}
@@ -322,7 +337,8 @@ export default async function GamePage() {
                       href={card.href}
                       className="mt-5 flex h-11 items-center justify-center gap-2 rounded bg-[#071525] px-4 font-black text-white hover:bg-slate-800"
                     >
-                      {card.cta} <ArrowRight size={16} />
+                      {card.id === "game1" ? "Continue Game 1" : card.cta}{" "}
+                      <ArrowRight size={16} />
                     </Link>
                   )}
                 </div>
