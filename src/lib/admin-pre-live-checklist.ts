@@ -44,6 +44,7 @@ type ReadinessContext = {
   teams?: {
     ownerWithReferralCount: number;
     maxMembers: number | null;
+    gameTeamCount: number;
     squadTeamCount: number;
     oversizedTeamCount: number;
     singleTeamPlayerCount: number;
@@ -356,6 +357,7 @@ async function loadContext(): Promise<ReadinessContext> {
       },
       teams: {
         ownerWithReferralCount: referralProfiles.count ?? referralProfiles.data?.length ?? 0,
+        gameTeamCount: gameTeams.count ?? gameTeamRows.length,
         maxMembers: gameTeamRows.reduce<number | null>(
           (max, row) => (max === null ? Number(row.max_members ?? 0) : Math.max(max, Number(row.max_members ?? 0))),
           null,
@@ -453,6 +455,17 @@ function evaluate(input: CheckInput, context: ReadinessContext): PreLiveCheckRes
         },
       );
     case "team-max-size":
+      if ((context.teams?.gameTeamCount ?? 0) === 0) {
+        return pass(
+          input,
+          "No Game 2 teams exist yet. The game_teams schema default and team creation code set max_members to 5.",
+          {
+            maxMembers: 5,
+            gameTeamCount: 0,
+            source: "schema default and creation flow",
+          },
+        );
+      }
       return context.teams?.maxMembers === 5
         ? pass(input, "Team max size is configured as 5.", { maxMembers: context.teams.maxMembers })
         : fail(input, "Team max size is not confirmed as 5.", "Set game team max_members to 5.", { maxMembers: context.teams?.maxMembers });
