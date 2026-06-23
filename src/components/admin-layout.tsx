@@ -10,6 +10,7 @@ import {
   Medal,
   Network,
   Route,
+  ShieldAlert,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -29,6 +30,7 @@ const adminNav = [
   { href: "/admin/referrals", label: "Referrals", icon: Network },
   { href: "/admin/rewards", label: "Rewards", icon: Gift },
   { href: "/admin/email-settings", label: "Email Settings", icon: Mail },
+  { href: "/admin/pre-live-checklist", label: "Pre-Live Checklist", icon: ShieldAlert },
   { href: "/admin/audit", label: "Audit", icon: FileClock },
 ];
 
