@@ -9,7 +9,10 @@ import { requireCompletedProfile } from "@/lib/auth-guards";
 import { getCurrentRound } from "@/lib/demo-data";
 import {
   loadFirstRoundOf32Deadline,
+  loadFinalTeams,
+  loadQuarterFinalTeams,
   loadRoundOf32Teams,
+  loadRoundOf16Teams,
   loadWorldCupGroupTeams,
   type ApiGroupTeamDebug,
 } from "@/lib/football-data";
@@ -256,11 +259,18 @@ export default async function RoadToChampionPage() {
       }
     }
 
-    const roundOf32Result = await loadRoundOf32Teams();
-    if (roundOf32Result.debug.available) {
-      const roundOf32Teams = mapGroupDataToTeams(teams, roundOf32Result.teams);
-      if (roundOf32Teams.length) {
-        teamsByStage.last_8 = roundOf32Teams;
+    const stagePoolLoaders = [
+      ["last_8", loadRoundOf32Teams],
+      ["last_4", loadRoundOf16Teams],
+      ["finalists", loadQuarterFinalTeams],
+      ["champion", loadFinalTeams],
+    ] as const;
+
+    for (const [stageKey, loader] of stagePoolLoaders) {
+      const poolResult = await loader();
+      if (poolResult.debug.available) {
+        const poolTeams = mapGroupDataToTeams(teams, poolResult.teams);
+        if (poolTeams.length) teamsByStage[stageKey] = poolTeams;
       }
     }
 

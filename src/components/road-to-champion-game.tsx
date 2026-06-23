@@ -194,12 +194,11 @@ export function RoadToChampionGame({
         );
       })
     : activeTeams;
-  const showGroupedPicker =
-    activeStage.stage_key === "last_16" || activeStage.stage_key === "last_8";
+  const showGroupedPicker = roadStageOrder.includes(activeStage.stage_key);
   const activeGroupDataAvailable =
-    activeStage.stage_key === "last_8"
-      ? Boolean(teamsByStage.last_8?.length)
-      : groupDataAvailable;
+    activeStage.stage_key === "last_16"
+      ? groupDataAvailable
+      : Boolean(teamsByStage[activeStage.stage_key]?.length);
   const groupedTeams = useMemo(() => {
     const groups = new Map<string, { groupName: string; groupKey: string; teams: RoadTeam[] }>();
 

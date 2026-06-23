@@ -220,6 +220,43 @@ export async function loadWorldCupGroupTeams(
 export async function loadRoundOf32Teams(
   revalidate = 900,
 ): Promise<ApiGroupTeamResult> {
+  return loadKnockoutFixtureTeams(["LAST_32", "ROUND_OF_32", "ROUND_32"], revalidate);
+}
+
+export async function loadRoundOf16Teams(
+  revalidate = 900,
+): Promise<ApiGroupTeamResult> {
+  return loadKnockoutFixtureTeams(["LAST_16", "ROUND_OF_16", "ROUND_16"], revalidate);
+}
+
+export async function loadQuarterFinalTeams(
+  revalidate = 900,
+): Promise<ApiGroupTeamResult> {
+  return loadKnockoutFixtureTeams(
+    ["QUARTER_FINALS", "QUARTER_FINAL", "LAST_8", "ROUND_OF_8"],
+    revalidate,
+  );
+}
+
+export async function loadSemiFinalTeams(
+  revalidate = 900,
+): Promise<ApiGroupTeamResult> {
+  return loadKnockoutFixtureTeams(
+    ["SEMI_FINALS", "SEMI_FINAL", "LAST_4", "ROUND_OF_4"],
+    revalidate,
+  );
+}
+
+export async function loadFinalTeams(
+  revalidate = 900,
+): Promise<ApiGroupTeamResult> {
+  return loadKnockoutFixtureTeams(["FINAL"], revalidate);
+}
+
+async function loadKnockoutFixtureTeams(
+  aliases: string[],
+  revalidate = 900,
+): Promise<ApiGroupTeamResult> {
   try {
     const [groupResult, matchData] = await Promise.all([
       loadWorldCupGroupTeams(revalidate),
@@ -236,7 +273,7 @@ export async function loadRoundOf32Teams(
     const roundTeams = new Map<string, ApiGroupTeam>();
 
     for (const match of matchData?.matches ?? []) {
-      if (!stageMatches(match, ["LAST_32", "ROUND_OF_32", "ROUND_32"])) continue;
+      if (!stageMatches(match, aliases)) continue;
 
       for (const providerTeam of [match.homeTeam, match.awayTeam]) {
         const key = teamKey(providerTeam);
