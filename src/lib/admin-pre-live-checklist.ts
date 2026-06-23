@@ -44,6 +44,7 @@ type ReadinessContext = {
   teams?: {
     ownerWithReferralCount: number;
     maxMembers: number | null;
+    squadTeamCount: number;
     oversizedTeamCount: number;
     singleTeamPlayerCount: number;
   };
@@ -54,7 +55,6 @@ type ReadinessContext = {
   };
   leaderboard?: {
     publicRowCount: number;
-    simulationRowCount: number;
   };
 };
 
@@ -270,8 +270,9 @@ async function loadContext(): Promise<ReadinessContext> {
       game2Predictions,
       game2Members,
       gameTeams,
+      squadTeams,
+      squadMembers,
       referralProfiles,
-      leaderboardScores,
       publicLeaderboardScores,
     ] = await Promise.all([
       supabase.from("profiles").select("id, auth_user_id", { count: "exact" }).eq("is_simulation", true),
@@ -282,10 +283,11 @@ async function loadContext(): Promise<ReadinessContext> {
       supabase.from("knockout_matches").select("id, prediction_lock_at, match_start_at, status", { count: "exact" }).eq("is_simulation", true),
       supabase.from("solo_match_predictions").select("user_id, match_id, individual_match_score, team_accumulated_score, final_earned_score", { count: "exact" }).eq("is_simulation", true),
       supabase.from("game_team_members").select("team_id, user_id", { count: "exact" }).eq("is_simulation", true),
-      supabase.from("game_teams").select("id, owner_profile_id, max_members, team_no", { count: "exact" }),
+      supabase.from("game_teams").select("id, created_by_user_id, max_members", { count: "exact" }),
+      supabase.from("squad_teams").select("id, owner_profile_id, team_no", { count: "exact" }),
+      supabase.from("squad_team_members").select("team_id, profile_id", { count: "exact" }),
       supabase.from("profiles").select("id, referral_code", { count: "exact" }).not("referral_code", "is", null).limit(20),
-      supabase.from("leaderboard_scores").select("id, source", { count: "exact" }).limit(50),
-      supabase.from("leaderboard_scores").select("id", { count: "exact" }).or("is_simulation.is.null,is_simulation.eq.false").limit(50),
+      supabase.from("leaderboard_scores").select("id", { count: "exact" }).limit(50),
     ]);
 
     const error =
@@ -298,8 +300,9 @@ async function loadContext(): Promise<ReadinessContext> {
       game2Predictions.error ??
       game2Members.error ??
       gameTeams.error ??
+      squadTeams.error ??
+      squadMembers.error ??
       referralProfiles.error ??
-      leaderboardScores.error ??
       publicLeaderboardScores.error;
 
     if (error) {
@@ -310,9 +313,14 @@ async function loadContext(): Promise<ReadinessContext> {
     const game2PredictionRows = game2Predictions.data ?? [];
     const game2MemberRows = game2Members.data ?? [];
     const gameTeamRows = gameTeams.data ?? [];
+    const squadMemberRows = squadMembers.data ?? [];
     const teamMemberCounts = new Map<string, number>();
     for (const member of game2MemberRows) {
       teamMemberCounts.set(member.team_id, (teamMemberCounts.get(member.team_id) ?? 0) + 1);
+    }
+    const squadMemberCounts = new Map<string, number>();
+    for (const member of squadMemberRows) {
+      squadMemberCounts.set(member.team_id, (squadMemberCounts.get(member.team_id) ?? 0) + 1);
     }
     const userPredictionCounts = new Map<string, number>();
     for (const prediction of game2PredictionRows) {
@@ -352,7 +360,10 @@ async function loadContext(): Promise<ReadinessContext> {
           (max, row) => (max === null ? Number(row.max_members ?? 0) : Math.max(max, Number(row.max_members ?? 0))),
           null,
         ),
-        oversizedTeamCount: Array.from(teamMemberCounts.values()).filter((count) => count > 5).length,
+        squadTeamCount: squadTeams.count ?? squadTeams.data?.length ?? 0,
+        oversizedTeamCount:
+          Array.from(teamMemberCounts.values()).filter((count) => count > 5).length +
+          Array.from(squadMemberCounts.values()).filter((count) => count > 5).length,
         singleTeamPlayerCount: 0,
       },
       fixtures: {
@@ -364,7 +375,6 @@ async function loadContext(): Promise<ReadinessContext> {
       },
       leaderboard: {
         publicRowCount: publicLeaderboardScores.count ?? publicLeaderboardScores.data?.length ?? 0,
-        simulationRowCount: (leaderboardScores.data ?? []).filter((row) => row.source === "simulation").length,
       },
     };
   } catch (error) {
