@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Send } from "lucide-react";
 import {
   knockoutWinnerCta,
@@ -8,6 +8,7 @@ import {
   knockoutWinnerNameEn,
   knockoutWinnerSubtitle,
 } from "@/lib/knockout-winner";
+import { logClientAction, logClientError } from "@/lib/monitoring-client";
 import { getTeam, predictions, rounds } from "@/lib/demo-data";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { stageDisplayName } from "@/lib/stage-labels";
@@ -65,12 +66,31 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
   ).length;
   const complete = completedCount === matches.length;
 
+  useEffect(() => {
+    void logClientAction({
+      actionType: "game2_page_view",
+      actionStatus: "info",
+      pagePath: "/predict",
+      gameKey: "game2",
+      message: "Game 2 page viewed.",
+      metadata: { matchCount: matches.length },
+    });
+  }, [matches.length]);
+
   async function submitPredictions() {
     if (!complete || saving) return;
 
     setSaving(true);
     setSaved(false);
     setErrorMessage("");
+    void logClientAction({
+      actionType: "game2_match_submit_attempt",
+      actionStatus: "info",
+      pagePath: "/predict",
+      gameKey: "game2",
+      message: "Game 2 prediction submit attempted.",
+      metadata: { matchCount: matches.length },
+    });
 
     try {
       if (!isSupabaseConfigured()) {
@@ -106,9 +126,41 @@ export function PredictionBoard({ matches }: { matches: Match[] }) {
       }
 
       setSaved(true);
+      void logClientAction({
+        actionType: "game2_match_submit_success",
+        actionStatus: "success",
+        pagePath: "/predict",
+        gameKey: "game2",
+        message: "Game 2 predictions submitted.",
+        metadata: { matchCount: matches.length },
+      });
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Submit failed. Please try again.";
+      const referenceId = await logClientError({
+        errorType: message.toLowerCase().includes("deadline")
+          ? "deadline_error"
+          : "database_error",
+        errorMessage: message,
+        functionName: "PredictionBoard.submitPredictions",
+        pagePath: "/predict",
+        gameKey: "game2",
+        metadata: { matchCount: matches.length },
+      });
+      void logClientAction({
+        actionType: message.toLowerCase().includes("deadline")
+          ? "game2_match_blocked_by_deadline"
+          : "game2_match_submit_failed",
+        actionStatus: "failed",
+        pagePath: "/predict",
+        gameKey: "game2",
+        message,
+        metadata: { errorReferenceId: referenceId },
+      });
       setErrorMessage(
-        error instanceof Error ? error.message : "Submit failed. Please try again.",
+        referenceId
+          ? `${message} Please screenshot this code and send to admin: ${referenceId}`
+          : message,
       );
     } finally {
       setSaving(false);

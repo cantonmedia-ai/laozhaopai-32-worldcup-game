@@ -19,6 +19,7 @@ import {
   roadStageOrder,
   type RoadStageKey,
 } from "@/lib/road-to-champion";
+import { logClientAction, logClientError } from "@/lib/monitoring-client";
 import { createClient } from "@/lib/supabase/client";
 
 export type RoadTeam = {
@@ -149,6 +150,16 @@ export function RoadToChampionGame({
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    void logClientAction({
+      actionType: "game1_page_view",
+      actionStatus: "info",
+      pagePath: "/road-to-champion",
+      gameKey: "game1",
+      message: "Game 1 page viewed.",
+    });
+  }, []);
+
   const activeStage =
     stages.find((stage) => stage.stage_key === activeStageKey) ?? stages[0];
   const activeTeams = teamsByStage[activeStage.stage_key] ?? teams;
@@ -251,6 +262,14 @@ export function RoadToChampionGame({
 
   async function save(statusToSave: "draft" | "submitted") {
     if (locked) {
+      void logClientAction({
+        actionType: "game1_blocked_by_deadline",
+        actionStatus: "warning",
+        pagePath: "/road-to-champion",
+        gameKey: "game1",
+        message: "Game 1 save blocked by deadline.",
+        metadata: { stageKey: activeStage.stage_key, statusToSave },
+      });
       setMessageByStage((current) => ({
         ...current,
         [activeStage.stage_key]:
@@ -260,6 +279,23 @@ export function RoadToChampionGame({
     }
 
     setSavingStage(`${activeStage.stage_key}:${statusToSave}`);
+    void logClientAction({
+      actionType:
+        statusToSave === "submitted"
+          ? submitted
+            ? "game1_edit_attempt"
+            : "game1_submit_attempt"
+          : "game1_edit_attempt",
+      actionStatus: "info",
+      pagePath: "/road-to-champion",
+      gameKey: "game1",
+      message: "Game 1 prediction save attempted.",
+      metadata: {
+        stageKey: activeStage.stage_key,
+        statusToSave,
+        selectedCount: selected.length,
+      },
+    });
     setMessageByStage((current) => ({
       ...current,
       [activeStage.stage_key]: "",
@@ -289,12 +325,60 @@ export function RoadToChampionGame({
             ? "Draft saved. You can continue later."
             : "Prediction submitted. You can still edit before the deadline.",
       }));
+      void logClientAction({
+        actionType:
+          statusToSave === "submitted"
+            ? submitted
+              ? "game1_edit_success"
+              : "game1_submit_success"
+            : "game1_edit_success",
+        actionStatus: "success",
+        pagePath: "/road-to-champion",
+        gameKey: "game1",
+        message: "Game 1 prediction saved.",
+        metadata: {
+          stageKey: activeStage.stage_key,
+          statusToSave,
+          selectedCount: selected.length,
+        },
+      });
       setConfirmStage(null);
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to save prediction.";
+      const referenceId = await logClientError({
+        errorType: message.toLowerCase().includes("deadline")
+          ? "deadline_error"
+          : "database_error",
+        errorMessage: message,
+        functionName: "RoadToChampionGame.save",
+        pagePath: "/road-to-champion",
+        gameKey: "game1",
+        metadata: {
+          stageKey: activeStage.stage_key,
+          statusToSave,
+          selectedCount: selected.length,
+        },
+      });
+      void logClientAction({
+        actionType:
+          statusToSave === "submitted"
+            ? submitted
+              ? "game1_edit_failed"
+              : "game1_submit_failed"
+            : "game1_edit_failed",
+        actionStatus: "failed",
+        pagePath: "/road-to-champion",
+        gameKey: "game1",
+        message,
+        metadata: { errorReferenceId: referenceId, stageKey: activeStage.stage_key },
+      });
       setMessageByStage((current) => ({
         ...current,
         [activeStage.stage_key]:
-          error instanceof Error ? error.message : "Unable to save prediction.",
+          referenceId
+            ? `${message} Please screenshot this code and send to admin: ${referenceId}`
+            : message,
       }));
     } finally {
       setSavingStage("");

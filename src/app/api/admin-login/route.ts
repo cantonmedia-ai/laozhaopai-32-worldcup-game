@@ -4,6 +4,7 @@ import {
   ADMIN_ACCESS_VALUE,
   getAdminPassword,
 } from "@/lib/admin-password";
+import { logUserAction } from "@/lib/monitoring";
 
 function safeNextPath(value: unknown) {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
@@ -20,8 +21,24 @@ export async function POST(request: NextRequest) {
   } | null;
 
   if (String(body?.password ?? "") !== getAdminPassword()) {
+    await logUserAction({
+      actionType: "admin_login",
+      actionStatus: "failed",
+      pagePath: "/admin-login",
+      gameKey: "admin",
+      message: "Admin login failed.",
+    });
     return NextResponse.json({ error: "Wrong admin password." }, { status: 401 });
   }
+
+  await logUserAction({
+    userEmail: process.env.ADMIN_EMAIL || "deric@cantonkitchen.com.my",
+    actionType: "admin_login",
+    actionStatus: "success",
+    pagePath: "/admin-login",
+    gameKey: "admin",
+    message: "Admin password login succeeded.",
+  });
 
   const response = NextResponse.json({ ok: true, next: safeNextPath(body?.next) });
   response.cookies.set(ADMIN_ACCESS_COOKIE, ADMIN_ACCESS_VALUE, {

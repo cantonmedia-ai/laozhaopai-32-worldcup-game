@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { logClientAction, logClientError } from "@/lib/monitoring-client";
 import { applyStoredReferralCode, getStoredReferralCode } from "@/lib/referrals";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -58,6 +59,13 @@ export function SetupProfileForm() {
 
     setSaving(true);
     setMessage("");
+    void logClientAction({
+      actionType: "profile_save_attempt",
+      actionStatus: "info",
+      pagePath: "/profile/setup",
+      referralCode: storedReferralCode || null,
+      message: "Profile setup save attempted.",
+    });
 
     try {
       if (!isSupabaseConfigured()) {
@@ -88,10 +96,58 @@ export function SetupProfileForm() {
 
       if (saveError) throw new Error(saveError.message);
 
-      await applyStoredReferralCode();
+      if (storedReferralCode) {
+        void logClientAction({
+          actionType: "team_join_attempt",
+          actionStatus: "info",
+          pagePath: "/profile/setup",
+          referralCode: storedReferralCode,
+          message: "Referral team join attempted during profile setup.",
+        });
+      }
+
+      const joinedTeam = await applyStoredReferralCode();
+      if (joinedTeam) {
+        void logClientAction({
+          actionType: "team_join_success",
+          actionStatus: "success",
+          pagePath: "/profile/setup",
+          referralCode: storedReferralCode,
+          message: "Referral team join completed.",
+        });
+      }
+
+      void logClientAction({
+        actionType: "profile_save_success",
+        actionStatus: "success",
+        pagePath: "/profile/setup",
+        referralCode: storedReferralCode || null,
+        message: "Player profile saved.",
+        metadata: { preferredLanguage },
+      });
       window.location.assign(nextPath);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save profile. Please try again.");
+      const message = error instanceof Error ? error.message : "Unable to save profile. Please try again.";
+      const referenceId = await logClientError({
+        errorType: storedReferralCode ? "referral_error" : "database_error",
+        errorMessage: message,
+        functionName: "SetupProfileForm.handleSubmit",
+        pagePath: "/profile/setup",
+        metadata: { hasReferralCode: Boolean(storedReferralCode) },
+      });
+      void logClientAction({
+        actionType: storedReferralCode ? "team_join_failed" : "profile_save_failed",
+        actionStatus: "failed",
+        pagePath: "/profile/setup",
+        referralCode: storedReferralCode || null,
+        message,
+        metadata: { errorReferenceId: referenceId },
+      });
+      setMessage(
+        referenceId
+          ? `${message} Please screenshot this code and send to admin: ${referenceId}`
+          : message,
+      );
     } finally {
       setSaving(false);
     }

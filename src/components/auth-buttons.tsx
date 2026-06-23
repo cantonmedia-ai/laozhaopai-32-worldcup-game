@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CircleUserRound, Loader2, Mail } from "lucide-react";
+import { logClientAction, logClientError } from "@/lib/monitoring-client";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type AuthMode = "signup" | "login";
@@ -143,6 +144,13 @@ export function AuthButtons({
   async function signInWithGoogle() {
     setLoading("google");
     setErrorMessage("");
+    void logClientAction({
+      actionType: "signup_started",
+      actionStatus: "info",
+      pagePath: "/login",
+      message: "Google login started.",
+      metadata: { provider: "google", mode },
+    });
 
     try {
       if (!isSupabaseConfigured()) {
@@ -163,6 +171,20 @@ export function AuthButtons({
 
       if (error) throw new Error(error.message);
     } catch (error) {
+      void logClientAction({
+        actionType: "login_failed",
+        actionStatus: "failed",
+        pagePath: "/login",
+        message: error instanceof Error ? error.message : "Google login failed.",
+        metadata: { provider: "google", mode },
+      });
+      void logClientError({
+        errorType: "auth_error",
+        errorMessage: error instanceof Error ? error.message : "Google login failed.",
+        functionName: "signInWithGoogle",
+        pagePath: "/login",
+        metadata: { provider: "google", mode },
+      });
       setLoading("");
       setErrorMessage(
         error instanceof Error ? error.message : "Google login failed.",
@@ -192,6 +214,13 @@ export function AuthButtons({
     }
 
     setLoading("signup");
+    void logClientAction({
+      actionType: "signup_started",
+      actionStatus: "info",
+      pagePath: "/login",
+      message: "Email signup started.",
+      metadata: { provider: "email" },
+    });
 
     try {
       if (!isSupabaseConfigured()) {
@@ -214,13 +243,41 @@ export function AuthButtons({
       }).catch(() => null);
 
       if (!data.session) {
+        void logClientAction({
+          actionType: "signup_completed",
+          actionStatus: "success",
+          pagePath: "/login",
+          message: "Email signup created pending verification.",
+          metadata: { provider: "email" },
+        });
         setErrorMessage("Account created. Please check your email to verify your account.");
         return;
       }
 
       await ensurePlayerProfile("email");
+      void logClientAction({
+        actionType: "signup_completed",
+        actionStatus: "success",
+        pagePath: "/login",
+        message: "Email signup completed.",
+        metadata: { provider: "email" },
+      });
       goToVerifyEmail();
     } catch (error) {
+      void logClientAction({
+        actionType: "login_failed",
+        actionStatus: "failed",
+        pagePath: "/login",
+        message: error instanceof Error ? error.message : "Email signup failed.",
+        metadata: { provider: "email", mode: "signup" },
+      });
+      void logClientError({
+        errorType: "auth_error",
+        errorMessage: error instanceof Error ? error.message : "Email signup failed.",
+        functionName: "createAccount",
+        pagePath: "/login",
+        metadata: { provider: "email" },
+      });
       setErrorMessage(
         error instanceof Error
           ? friendlyAuthError(error.message, "signup")
@@ -248,6 +305,13 @@ export function AuthButtons({
     }
 
     setLoading("login");
+    void logClientAction({
+      actionType: "signup_started",
+      actionStatus: "info",
+      pagePath: "/login",
+      message: "Email login started.",
+      metadata: { provider: "email", mode: "login" },
+    });
 
     try {
       if (!isSupabaseConfigured()) {
@@ -265,17 +329,52 @@ export function AuthButtons({
 
       const profile = await ensurePlayerProfile("email");
       if (profile.provider === "email" && !profile.emailVerified) {
+        void logClientAction({
+          actionType: "login_success",
+          actionStatus: "warning",
+          pagePath: "/login",
+          message: "Email login succeeded but verification is pending.",
+          metadata: { provider: "email" },
+        });
         goToVerifyEmail();
         return;
       }
 
       if (profile.completed) {
+        void logClientAction({
+          actionType: "login_success",
+          actionStatus: "success",
+          pagePath: "/login",
+          message: "Email login completed.",
+          metadata: { provider: "email", profileCompleted: true },
+        });
         goToNext();
         return;
       }
 
+      void logClientAction({
+        actionType: "login_success",
+        actionStatus: "success",
+        pagePath: "/login",
+        message: "Email login completed. Profile setup required.",
+        metadata: { provider: "email", profileCompleted: false },
+      });
       goToProfileSetup();
     } catch (error) {
+      void logClientAction({
+        actionType: "login_failed",
+        actionStatus: "failed",
+        pagePath: "/login",
+        message: error instanceof Error ? error.message : "Email login failed.",
+        metadata: { provider: "email", mode: "login" },
+      });
+      void logClientError({
+        errorType: "auth_error",
+        errorMessage: error instanceof Error ? error.message : "Email login failed.",
+        functionName: "login",
+        pagePath: "/login",
+        metadata: { provider: "email" },
+      });
       setErrorMessage(
         error instanceof Error
           ? friendlyAuthError(error.message, "login")
