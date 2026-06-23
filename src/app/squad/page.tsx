@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Pencil, Save, Share2, UserPlus, UsersRound } from "lucide-react";
+import { Copy, Pencil, Save, Share2, UserPlus } from "lucide-react";
 import { PageShell, SectionHeader } from "@/components/app-shell";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -61,12 +61,17 @@ function playerName(profile: PlayerProfile | null) {
   return profile?.display_name || profile?.nickname || "Player";
 }
 
+function whatsappInviteUrl(inviteLink: string) {
+  return `https://wa.me/?text=${encodeURIComponent(
+    `Join my Brainwave Games team and predict the World Cup together! ${inviteLink}`,
+  )}`;
+}
+
 export default function SquadPage() {
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [members, setMembers] = useState<SquadMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [shareTeamId, setShareTeamId] = useState("");
   const [editingTeamId, setEditingTeamId] = useState("");
   const [teamNameDrafts, setTeamNameDrafts] = useState<Record<string, string>>({});
 
@@ -303,8 +308,13 @@ export default function SquadPage() {
                         <Copy size={17} /> Copy Link
                       </button>
                       <a
-                        href={`https://wa.me/?text=${encodeURIComponent(`加入我的 Brainwave Games 团队，一起预测世界杯！ ${inviteLink}`)}`}
-                        className="flex h-11 items-center justify-center gap-2 rounded bg-[#0f8a4b] px-4 font-black text-white"
+                        href={inviteLink ? whatsappInviteUrl(inviteLink) : undefined}
+                        aria-disabled={!inviteLink}
+                        className={`flex h-11 items-center justify-center gap-2 rounded px-4 font-black ${
+                          inviteLink
+                            ? "bg-[#0f8a4b] text-white"
+                            : "pointer-events-none bg-slate-300 text-slate-600"
+                        }`}
                       >
                         <Share2 size={17} /> WhatsApp
                       </a>
@@ -364,13 +374,17 @@ export default function SquadPage() {
                             Empty Slot
                           </p>
                         </div>
-                        <button
-                          disabled={teamFull || !inviteLink}
-                          onClick={() => setShareTeamId(team.team_id)}
-                          className="flex h-11 items-center justify-center gap-2 rounded bg-[#d71920] px-4 font-black text-white disabled:bg-slate-300 disabled:text-slate-600"
+                        <a
+                          href={teamFull || !inviteLink ? undefined : whatsappInviteUrl(inviteLink)}
+                          aria-disabled={teamFull || !inviteLink}
+                          className={`flex h-11 items-center justify-center gap-2 rounded px-4 font-black ${
+                            teamFull || !inviteLink
+                              ? "pointer-events-none bg-slate-300 text-slate-600"
+                              : "bg-[#d71920] text-white"
+                          }`}
                         >
                           <UserPlus size={17} /> Add Teammate
-                        </button>
+                        </a>
                       </div>
                     );
                   })}
@@ -379,40 +393,6 @@ export default function SquadPage() {
                 {teamFull ? (
                   <div className="border-t border-slate-100 bg-slate-50 px-5 py-3 text-sm font-black text-slate-700">
                     Team is full
-                  </div>
-                ) : null}
-
-                {shareTeamId === team.team_id ? (
-                  <div className="border-t border-slate-100 bg-slate-50 px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <UsersRound className="text-[#d71920]" size={18} />
-                      <h3 className="font-black text-slate-950">
-                        Share invite link
-                      </h3>
-                    </div>
-                    <p className="mt-2 break-all rounded bg-white p-3 text-sm font-semibold text-slate-600">
-                      {inviteLink}
-                    </p>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                      <button
-                        onClick={() => copyInvite(inviteLink)}
-                        className="h-11 rounded bg-[#071525] px-4 font-black text-white"
-                      >
-                        Copy Link
-                      </button>
-                      <a
-                        href={`https://wa.me/?text=${encodeURIComponent(`加入我的 Brainwave Games 团队，一起预测世界杯！ ${inviteLink}`)}`}
-                        className="flex h-11 items-center justify-center rounded bg-[#0f8a4b] px-4 font-black text-white"
-                      >
-                        WhatsApp Share
-                      </a>
-                      <button
-                        onClick={() => setShareTeamId("")}
-                        className="h-11 rounded bg-white px-4 font-black text-slate-700"
-                      >
-                        Close
-                      </button>
-                    </div>
                   </div>
                 ) : null}
               </div>

@@ -158,10 +158,6 @@ export function AuthButtons({
         provider: "google",
         options: {
           redirectTo: redirectTo.toString(),
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
         },
       });
 

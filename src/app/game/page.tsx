@@ -3,6 +3,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock,
+  ShieldCheck,
   Trophy,
   UsersRound,
 } from "lucide-react";
@@ -39,6 +40,28 @@ const gameCards = [
     cta: "Start Prediction",
     icon: Trophy,
     lockedWhenWaiting: false,
+  },
+  {
+    id: "game2",
+    href: "/predict",
+    title: "Game 2: Knockout Winner Challenge",
+    english: "淘汰赛赢家战",
+    badge: "Opens after Round of 32",
+    body: "Predict the winner for each knockout match once Round of 32 fixtures are published.",
+    cta: "View Game 2",
+    icon: ShieldCheck,
+    lockedWhenWaiting: true,
+  },
+  {
+    id: "game3",
+    href: "/team-knockout",
+    title: "Game 3: Team Knockout Winner Challenge",
+    english: "团队淘汰赛赢家战",
+    badge: "Team Formation Open",
+    body: "Form your team now. Team winner predictions open after Round of 32 fixtures are published.",
+    cta: "View Game 3",
+    icon: UsersRound,
+    lockedWhenWaiting: true,
   },
 ];
 
@@ -268,7 +291,11 @@ export default async function GamePage() {
                     {card.body}
                   </p>
                   <p className="mt-3 text-sm font-bold text-[#0f8a4b]">
-                    Can play during Group Stage.
+                    {card.id === "game1"
+                      ? "Can play during Group Stage."
+                      : knockoutPublished
+                        ? `Current active round: ${currentStage}`
+                        : "Waiting for Round of 32 fixtures."}
                   </p>
                   {locked ? (
                     <button
