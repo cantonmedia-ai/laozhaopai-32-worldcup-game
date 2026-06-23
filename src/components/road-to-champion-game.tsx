@@ -489,6 +489,116 @@ export function RoadToChampionGame({
     </div>
   );
 
+  const groupTablePicker = (
+    <div className="grid gap-3 pb-48 lg:grid-cols-2 lg:pb-0">
+      <div className="rounded-lg border border-[#f4c542]/40 bg-[#fff8df] p-3 text-sm font-bold text-[#071525] lg:col-span-2">
+        <span className="font-black">Sweet 16 source:</span>{" "}
+        12 groups from the live API. Each group table should contain 4 countries.
+      </div>
+      {groupedTeams.map((group) => {
+        const groupSelected = group.teams.filter((team) =>
+          selected.includes(team.id),
+        ).length;
+
+        return (
+          <section
+            key={group.groupName}
+            className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+          >
+            <div className="flex items-center justify-between gap-3 bg-[#071525] px-3 py-3 text-white">
+              <div>
+                <h3 className="text-base font-black">{group.groupName}</h3>
+                <p className="text-xs font-bold text-white/65">
+                  {group.teams.length} countries
+                </p>
+              </div>
+              <span
+                className={clsx(
+                  "rounded px-2 py-1 text-xs font-black",
+                  groupSelected > 0
+                    ? "bg-[#f4c542] text-[#071525]"
+                    : "bg-white/10 text-white",
+                )}
+              >
+                Selected {groupSelected}
+              </span>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {group.teams.map((team) => {
+                const selectedTeam = selected.includes(team.id);
+                const flag = flagPath(team);
+                return (
+                  <button
+                    key={`${activeStage.stage_key}-table-${team.id}`}
+                    type="button"
+                    disabled={locked || (!selectedTeam && selected.length >= required)}
+                    onClick={() => toggle(team.id)}
+                    className={clsx(
+                      "grid min-h-14 w-full grid-cols-[52px_1fr_48px] items-center gap-3 px-3 py-2 text-left transition active:scale-[0.99]",
+                      selectedTeam
+                        ? "bg-[#fff8df] text-slate-950"
+                        : "bg-white hover:bg-slate-50",
+                      (locked || (!selectedTeam && selected.length >= required)) &&
+                        "cursor-not-allowed opacity-60",
+                    )}
+                  >
+                    <span className="grid h-9 w-12 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
+                      {flag ? (
+                        <img
+                          src={flag}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        team.country_code
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-black text-slate-950">
+                        {team.country_name}
+                      </span>
+                      <span className="mt-0.5 block text-xs font-bold uppercase text-slate-500">
+                        {team.country_code}
+                      </span>
+                    </span>
+                    <span className="flex justify-end">
+                      <span
+                        className={clsx(
+                          "grid size-8 place-items-center rounded-full border text-xs font-black",
+                          selectedTeam
+                            ? "border-[#d6a728] bg-[#f4c542] text-[#071525]"
+                            : "border-slate-300 text-slate-400",
+                        )}
+                      >
+                        {selectedTeam ? <Check size={16} /> : null}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+              {group.teams.length < 4 ? (
+                <div className="bg-yellow-50 px-3 py-2 text-xs font-black text-yellow-900">
+                  API currently shows only {group.teams.length}/4 countries for this group.
+                </div>
+              ) : null}
+            </div>
+          </section>
+        );
+      })}
+      {groupedTeams.length !== 12 ? (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm font-black text-yellow-900 lg:col-span-2">
+          API currently shows {groupedTeams.length}/12 groups. Sweet 16 should have 12 groups when the full World Cup group data is published.
+        </div>
+      ) : null}
+      {groupedTeams.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-500 lg:col-span-2">
+          No groups found. Try another name, code, or group.
+        </div>
+      ) : null}
+    </div>
+  );
+
   const groupedPicker =
     !activeGroupDataAvailable && showGroupedPicker ? (
       <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
@@ -539,7 +649,14 @@ export function RoadToChampionGame({
       </div>
     );
 
-  const picker = showGroupedPicker ? groupedPicker : flatPicker;
+  const picker =
+    activeStage.stage_key === "last_16"
+      ? activeGroupDataAvailable
+        ? groupTablePicker
+        : groupedPicker
+      : showGroupedPicker
+        ? groupedPicker
+        : flatPicker;
 
   const picksPanel = (
     <aside className="rounded-lg border border-white/10 bg-[#071525] p-4 text-white shadow-xl">
