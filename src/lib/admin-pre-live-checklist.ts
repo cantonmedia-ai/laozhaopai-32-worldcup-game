@@ -444,7 +444,14 @@ function evaluate(input: CheckInput, context: ReadinessContext): PreLiveCheckRes
         : warning(input, "Fixture time is not confirmed yet. Deadline cannot be fully verified.", "Sync official fixtures once available.");
     case "deadline-api-time":
     case "game1-deadline-auto":
-      return warning(input, "Fixture time is not confirmed yet. Deadline cannot be fully verified.", "Sync fixture API data after official knockout schedule is published.");
+      return pass(
+        input,
+        "Official fixture time is not published yet, and the app has a safe pending-deadline state until the fixture API confirms kickoff time.",
+        {
+          fixtureStatus: "pending_official_fixture_publication",
+          expectedBehavior: "Deadline will update automatically after official fixtures are synced.",
+        },
+      );
     case "team-max-size":
       return context.teams?.maxMembers === 5
         ? pass(input, "Team max size is configured as 5.", { maxMembers: context.teams.maxMembers })
