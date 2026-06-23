@@ -12,6 +12,7 @@ import {
   Route,
   ShieldAlert,
   ShieldCheck,
+  SquareCheckBig,
   Users,
 } from "lucide-react";
 import clsx from "clsx";
@@ -31,6 +32,7 @@ const adminNav = [
   { href: "/admin/rewards", label: "Rewards", icon: Gift },
   { href: "/admin/email-settings", label: "Email Settings", icon: Mail },
   { href: "/admin/pre-live-checklist", label: "Pre-Live Checklist", icon: ShieldAlert },
+  { href: "/admin/self-test", label: "Self-Test", icon: SquareCheckBig },
   { href: "/admin/audit", label: "Audit", icon: FileClock },
 ];
 
