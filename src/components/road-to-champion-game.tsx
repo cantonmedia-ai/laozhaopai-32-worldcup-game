@@ -490,8 +490,8 @@ export function RoadToChampionGame({
   );
 
   const groupTablePicker = (
-    <div className="grid gap-3 pb-48 lg:grid-cols-2 lg:pb-0">
-      <div className="rounded-lg border border-[#f4c542]/40 bg-[#fff8df] p-3 text-sm font-bold text-[#071525] lg:col-span-2">
+    <div className="grid gap-5 pb-48 lg:grid-cols-2 lg:pb-0">
+      <div className="rounded-lg border border-[#f4c542]/40 bg-[#fff8df] p-3 text-sm font-bold text-[#071525] shadow-sm lg:col-span-2">
         <span className="font-black">Sweet 16 source:</span>{" "}
         12 groups from the live API. Each group table should contain 4 countries.
       </div>
@@ -503,13 +503,13 @@ export function RoadToChampionGame({
         return (
           <section
             key={group.groupName}
-            className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            className="overflow-hidden rounded-lg border-2 border-slate-300 bg-white shadow-lg shadow-slate-200/70 ring-1 ring-white"
           >
-            <div className="flex items-center justify-between gap-3 bg-[#071525] px-3 py-3 text-white">
+            <div className="flex items-center justify-between gap-3 border-b-4 border-[#f4c542] bg-[#071525] px-4 py-3 text-white">
               <div>
-                <h3 className="text-base font-black">{group.groupName}</h3>
+                <h3 className="text-lg font-black">{group.groupName}</h3>
                 <p className="text-xs font-bold text-white/65">
-                  {group.teams.length} countries
+                  Group box · {group.teams.length}/4 countries
                 </p>
               </div>
               <span
@@ -523,7 +523,14 @@ export function RoadToChampionGame({
                 Selected {groupSelected}
               </span>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="bg-slate-50 px-4 py-2">
+              <div className="grid grid-cols-[52px_1fr_48px] gap-3 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">
+                <span>Flag</span>
+                <span>Country</span>
+                <span className="text-right">Pick</span>
+              </div>
+            </div>
+            <div className="divide-y divide-slate-200">
               {group.teams.map((team) => {
                 const selectedTeam = selected.includes(team.id);
                 const flag = flagPath(team);
@@ -534,9 +541,9 @@ export function RoadToChampionGame({
                     disabled={locked || (!selectedTeam && selected.length >= required)}
                     onClick={() => toggle(team.id)}
                     className={clsx(
-                      "grid min-h-14 w-full grid-cols-[52px_1fr_48px] items-center gap-3 px-3 py-2 text-left transition active:scale-[0.99]",
+                      "grid min-h-16 w-full grid-cols-[52px_1fr_48px] items-center gap-3 px-4 py-2 text-left transition active:scale-[0.99]",
                       selectedTeam
-                        ? "bg-[#fff8df] text-slate-950"
+                        ? "bg-[#fff8df] text-slate-950 ring-1 ring-inset ring-[#d6a728]/45"
                         : "bg-white hover:bg-slate-50",
                       (locked || (!selectedTeam && selected.length >= required)) &&
                         "cursor-not-allowed opacity-60",
