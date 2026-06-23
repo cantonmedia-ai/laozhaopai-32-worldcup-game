@@ -17,74 +17,74 @@ export const fallbackSettings: EmailSettings = {
 export const fallbackTemplates: EmailTemplate[] = [
   {
     type: "verify_email",
-    subject: "Verify Your Brainwave Games Account",
-    preview_text: "Verify your email to start playing.",
-    body: "Welcome to Brainwave Games.\n\nVerify your email to submit predictions, join teams, earn points and claim rewards.",
-    cta_text: "Verify Email",
-    cta_url: "/api/email/verify",
+    subject: "【Brainwave Games】请验证您的邮箱 / Verify Your Email Address",
+    preview_text: "请先完成邮箱验证，开始参与世界杯竞猜赛。",
+    body: "欢迎加入 Brainwave Games！\n您好 {{display_name}}，感谢您注册 Brainwave Games 世界杯竞猜赛。\n在开始参与预测、加入团队和赢取奖品之前，请先完成邮箱验证。\n\nHello {{display_name}}, welcome to Brainwave Games.\nPlease verify your email before submitting predictions, joining teams, earning points and claiming prizes.",
+    cta_text: "立即验证邮箱 / Verify Email",
+    cta_url: "{{verification_link}}",
     enabled: true,
   },
   {
     type: "welcome",
-    subject: "Welcome to Brainwave Games",
-    preview_text: "Start making your predictions and climb the leaderboard.",
-    body: "Welcome to Brainwave Games.\n\nStart making your predictions and climb the leaderboard.",
-    cta_text: "Start Playing",
-    cta_url: "/game",
+    subject: "欢迎加入 Brainwave Games 世界杯竞猜赛！ / Welcome to Brainwave Games!",
+    preview_text: "您的账户已准备好，马上开始预测冲榜。",
+    body: "您好 {{display_name}}，您的账户已经成功启用。\n\n当前赛事状态：\n- 世界杯小组赛进行中\n- Game 1 已开放\n- 团队功能已开放\n- 排行榜已开放\n\nHi {{display_name}}, your account is ready.\nStart making predictions, form your team, and climb the leaderboard.",
+    cta_text: "开始游戏 / Start Playing",
+    cta_url: "https://games.brainwaveai.my/fifa-last-32",
     enabled: true,
   },
   {
     type: "incomplete_prediction_3day",
-    subject: "Your Prediction Is Not Complete",
-    preview_text: "Complete before the deadline.",
-    body: "You have not completed your current round prediction.\n\nComplete before the deadline.",
-    cta_text: "Continue Prediction",
-    cta_url: "/road-to-champion",
+    subject: "您尚未完成预测 / Complete Your Prediction",
+    preview_text: "请在截止时间前完成当前预测。",
+    body: "您好 {{display_name}}，您尚未完成当前预测。\n当前轮次：{{round_name}}\n已选择：{{selected_count}} / {{required_count}}\n截止时间：{{due_date}}\n请在截止时间前完成提交。\n\nHi {{display_name}}, your current prediction is not complete yet.\nRound: {{round_name}}\nSelected: {{selected_count}} / {{required_count}}\nDeadline: {{due_date}}\nPlease submit before the deadline.",
+    cta_text: "继续预测 / Continue Prediction",
+    cta_url: "{{cta_url}}",
     enabled: true,
   },
   {
     type: "incomplete_prediction_24hour",
-    subject: "24 Hours Left To Submit",
-    preview_text: "Submit before the deadline.",
-    body: "Your prediction is still incomplete.\n\nSubmit before the deadline.",
-    cta_text: "Submit Prediction",
-    cta_url: "/road-to-champion",
+    subject: "24小时倒计时 / 24 Hours Remaining",
+    preview_text: "距离预测截止还有24小时。",
+    body: "您好 {{display_name}}，距离 {{round_name}} 预测截止还有24小时。\n截止时间：{{due_date}}\n请尽快完成提交。\n\nHi {{display_name}}, only 24 hours remain before prediction closes for {{round_name}}.\nDeadline: {{due_date}}\nSubmit your prediction before time runs out.",
+    cta_text: "立即提交 / Submit Prediction",
+    cta_url: "{{cta_url}}",
     enabled: true,
   },
   {
     type: "incomplete_prediction_2hour",
-    subject: "Final Reminder Before Deadline",
-    preview_text: "Prediction closes soon.",
-    body: "Prediction closes soon.\n\nSubmit now.",
-    cta_text: "Submit Now",
-    cta_url: "/road-to-champion",
+    subject: "最后提醒：2小时后截止 / Final Reminder: 2 Hours Left",
+    preview_text: "预测即将截止，请立即提交。",
+    body: "您好 {{display_name}}，预测将在2小时后截止。\n当前轮次：{{round_name}}\n截止时间：{{due_date}}\n请立即提交，避免错过积分机会。\n\nHi {{display_name}}, prediction closes in 2 hours.\nRound: {{round_name}}\nDeadline: {{due_date}}\nSubmit now before the round locks.",
+    cta_text: "马上提交 / Submit Now",
+    cta_url: "{{cta_url}}",
     enabled: true,
   },
   {
     type: "new_round_open",
-    subject: "New Prediction Round Open",
-    preview_text: "A new prediction round is now available.",
-    body: "A new prediction round is now available.",
-    cta_text: "Predict Now",
-    cta_url: "/road-to-champion",
+    subject: "新一轮预测已开放 / New Prediction Round Open",
+    preview_text: "{{round_name}} 预测已经开放。",
+    body: "您好 {{display_name}}，新一轮预测现已开放。\n当前轮次：{{round_name}}\n请立即进入游戏参与预测，抢先冲排行榜。\n\nHi {{display_name}}, a new prediction round is now open.\nRound: {{round_name}}\nEnter the game now and make your picks.",
+    cta_text: "进入新轮次 / Predict Now",
+    cta_url: "{{cta_url}}",
     enabled: true,
   },
   {
     type: "ranking_update",
-    subject: "Your Ranking Has Been Updated",
-    preview_text: "See your new ranking after the result.",
-    body: "Your ranking summary is ready. Check your points and leaderboard position.",
-    cta_text: "View Ranking",
-    cta_url: "/leaderboard",
+    subject: "排行榜更新 / Ranking Update",
+    preview_text: "查看您的最新排名和积分。",
+    body: "您好 {{display_name}}，您的最新排名已经更新。\n排名：{{ranking}}\n积分：{{points}}\n继续预测，冲上更高名次。\n\nHi {{display_name}}, your ranking has been updated.\nRanking: {{ranking}}\nPoints: {{points}}\nKeep playing and climb the leaderboard.",
+    cta_text: "查看排行榜 / View Ranking",
+    cta_url: "{{cta_url}}",
     enabled: true,
   },
   {
     type: "winner",
-    subject: "Congratulations! You Won",
-    preview_text: "You have won a prize in Brainwave Games.",
-    body: "Congratulations! You have won a prize in Brainwave Games.",
-    cta_text: "View Results",
-    cta_url: "/results",
+    subject: "恭喜获奖！ / Congratulations Winner!",
+    preview_text: "恭喜您获得 Brainwave Games 奖项。",
+    body: "您好 {{display_name}}，恭喜您获得 Brainwave Games 世界杯竞猜赛奖项！\n您的最新排名：{{ranking}}\n积分：{{points}}\n请登录查看领奖详情，我们也会通过您提供的联系方式通知您。\n\nHi {{display_name}}, congratulations! You have won a Brainwave Games prize.\nRanking: {{ranking}}\nPoints: {{points}}\nLog in to view your prize details.",
+    cta_text: "查看领奖详情 / View Prize",
+    cta_url: "{{cta_url}}",
     enabled: true,
   },
 ];
@@ -94,6 +94,16 @@ export const fallbackRules = [
   { reminder_type: "incomplete_prediction_24hour", hours_before_deadline: 24, enabled: true },
   { reminder_type: "incomplete_prediction_2hour", hours_before_deadline: 2, enabled: true },
 ];
+
+function shouldUpgradeTemplate(template: EmailTemplate) {
+  const body = String(template.body ?? "");
+  const subject = String(template.subject ?? "");
+  return (
+    !body.includes("您好 {{display_name}}") ||
+    !body.includes("Hi {{display_name}}") ||
+    !subject.includes("/")
+  );
+}
 
 export async function getEmailState() {
   if (!hasSupabaseServiceEnv()) {
@@ -147,17 +157,22 @@ export async function getEmailState() {
   const missingTemplates = fallbackTemplates.filter(
     (fallback) => !dbTemplates.some((template) => template.type === fallback.type),
   );
+  const outdatedTemplates = fallbackTemplates.filter((fallback) => {
+    const dbTemplate = dbTemplates.find((template) => template.type === fallback.type);
+    return dbTemplate ? shouldUpgradeTemplate(dbTemplate) : false;
+  });
 
-  if (missingTemplates.length) {
-    await supabase.from("email_templates").upsert(missingTemplates, {
+  if (missingTemplates.length || outdatedTemplates.length) {
+    await supabase.from("email_templates").upsert([...missingTemplates, ...outdatedTemplates], {
       onConflict: "type",
-      ignoreDuplicates: true,
     });
   }
 
   const templates = fallbackTemplates.map(
     (fallback) =>
-      dbTemplates.find((template) => template.type === fallback.type) ?? fallback,
+      outdatedTemplates.some((template) => template.type === fallback.type)
+        ? fallback
+        : dbTemplates.find((template) => template.type === fallback.type) ?? fallback,
   );
   const extraTemplates = dbTemplates.filter(
     (template) => !fallbackTemplates.some((fallback) => fallback.type === template.type),

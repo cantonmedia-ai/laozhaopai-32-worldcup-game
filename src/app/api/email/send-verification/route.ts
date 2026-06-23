@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     settings: state.settings,
     variables: {
       display_name: profile.nickname || profile.display_name || "Player",
+      verification_link: verifyUrl,
       cta_url: verifyUrl,
     },
   });

@@ -24,15 +24,16 @@ export async function POST(request: NextRequest) {
     template,
     settings: state.settings,
     variables: {
-      display_name: "球圣 1988",
-      game_title: "Brainwave 世界杯竞猜赛",
-      round_name: "16强争霸战",
+      display_name: "\u7403\u5723 1988",
+      verification_link: "https://games.brainwaveai.my/api/email/verify?token=sample",
+      game_title: "Brainwave \u4e16\u754c\u676f\u7ade\u731c\u8d5b",
+      round_name: "16\u5f3a\u4e89\u9738\u6218",
       due_date: "28 Jun 2026, 11:59 PM",
       selected_count: "8",
       required_count: 16,
       ranking: "18",
       points: "85",
-      cta_url: template.cta_url || "/game",
+      cta_url: template.cta_url || "https://games.brainwaveai.my/fifa-last-32",
     },
   });
 

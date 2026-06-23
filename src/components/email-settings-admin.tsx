@@ -15,6 +15,7 @@ import {
   ToggleRight,
   X,
 } from "lucide-react";
+import { renderEmailHtml } from "@/lib/email/render";
 import type { EmailSettings, EmailTemplate } from "@/lib/email/types";
 
 type EmailRule = {
@@ -74,54 +75,26 @@ const emailTypeLabels: Record<string, string> = {
 };
 
 const sampleVariables: Record<string, string> = {
-  display_name: "球圣 1988",
-  game_title: "Brainwave 世界杯竞猜赛",
-  round_name: "16强争霸战",
+  display_name: "\u7403\u5723 1988",
+  verification_link: "https://games.brainwaveai.my/api/email/verify?token=sample",
+  game_title: "Brainwave \u4e16\u754c\u676f\u7ade\u731c\u8d5b",
+  round_name: "16\u5f3a\u4e89\u9738\u6218",
   due_date: "28 Jun 2026, 11:59 PM",
   selected_count: "8",
   required_count: "16",
   ranking: "18",
   points: "85",
+  cta_url: "https://games.brainwaveai.my/fifa-last-32",
 };
-
-function fillVariables(value: string | null | undefined) {
-  return String(value ?? "").replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
-    sampleVariables[key] ?? "",
-  );
-}
 
 function EmailPreview({ template }: { template: EmailTemplate }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <div className="bg-[#071525] p-5 text-white">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f4c542]">
-          Brainwave Games
-        </p>
-        <h3 className="mt-2 text-2xl font-black">
-          {fillVariables(template.subject)}
-        </h3>
-      </div>
-      <div className="p-5 text-sm font-semibold leading-6 text-slate-700">
-        {fillVariables(template.body)
-          .split("\n")
-          .map((line, index) => (
-            <p key={`${line}-${index}`} className={index ? "mt-2" : ""}>
-              {line || "\u00a0"}
-            </p>
-          ))}
-        {template.cta_text ? (
-          <div className="mt-5">
-            <span className="inline-flex rounded bg-[#d71920] px-4 py-3 font-black text-white">
-              {fillVariables(template.cta_text)}
-            </span>
-          </div>
-        ) : null}
-      </div>
-      <div className="border-t border-slate-200 p-4 text-center text-xs font-semibold text-slate-500">
-        © 2026 Brainwave Games
-        <br />
-        Powered by Brainwave AI
-      </div>
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-950 p-3">
+      <iframe
+        title="Email preview"
+        srcDoc={renderEmailHtml(template, sampleVariables)}
+        className="h-[680px] w-full rounded border-0 bg-white"
+      />
     </div>
   );
 }

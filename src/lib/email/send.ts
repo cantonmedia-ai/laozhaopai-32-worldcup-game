@@ -1,4 +1,4 @@
-import { renderEmailHtml, renderText } from "@/lib/email/render";
+import { renderEmailHtml, renderEmailPlainText, renderText } from "@/lib/email/render";
 import type { EmailSettings, EmailTemplate, EmailVariables } from "@/lib/email/types";
 
 type SendEmailInput = {
@@ -43,6 +43,7 @@ export async function sendEmail({ to, template, settings, variables = {} }: Send
       reply_to: settings.reply_to_email,
       subject,
       html: renderEmailHtml(template, variables),
+      text: renderEmailPlainText(template, variables),
     }),
   });
 
