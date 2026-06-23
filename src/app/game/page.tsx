@@ -253,10 +253,10 @@ export default async function GamePage() {
             </div>
             <div className="grid gap-3">
               <Link
-                href={knockoutPublished ? "/predict" : "/road-to-champion"}
+                href="/road-to-champion"
                 className="flex h-14 items-center justify-center gap-2 rounded bg-[#d71920] px-5 text-center font-black text-white shadow-lg shadow-red-950/30 hover:bg-red-700"
               >
-                {knockoutPublished ? "Submit Prediction Now" : "Start Game 1 Now"}{" "}
+                Start Game 1 Now{" "}
                 <ArrowRight size={18} />
               </Link>
               <Link

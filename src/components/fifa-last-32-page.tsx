@@ -95,7 +95,7 @@ export async function FifaLast32Page() {
             </p>
             <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row md:mt-8">
               <Link
-                href="/login?next=/game"
+                href="/login?next=/road-to-champion"
                 className="inline-flex h-13 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-5 text-center font-black text-white shadow-lg shadow-red-950/30 hover:bg-red-700 sm:w-auto md:px-6"
               >
                 {knockoutWinnerCta} <ArrowRight size={18} />

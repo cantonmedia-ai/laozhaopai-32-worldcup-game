@@ -80,7 +80,7 @@ export function TopNav({
               Rules
             </Link>
             <Link
-              href="/login?next=/game&mode=login"
+              href="/login?next=/road-to-champion&mode=login"
               className="grid h-10 place-items-center rounded bg-[#d71920] px-3 text-xs font-black text-white hover:bg-red-700 sm:h-11 sm:text-sm"
             >
               Sign In
@@ -88,7 +88,7 @@ export function TopNav({
           </div>
         ) : (
           <Link
-            href="/game"
+            href="/road-to-champion"
             className="hidden h-11 shrink-0 items-center justify-center gap-2 rounded bg-[#d71920] px-4 text-sm font-black text-white hover:bg-red-700 sm:flex"
           >
             <ShieldCheck size={17} />

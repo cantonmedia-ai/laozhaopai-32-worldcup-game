@@ -157,7 +157,9 @@ export default async function RulesPage() {
     isSignedIn = Boolean(user);
   }
 
-  const playHref = isSignedIn ? "/game" : "/login?next=/game&mode=signup";
+  const playHref = isSignedIn
+    ? "/road-to-champion"
+    : "/login?next=/road-to-champion&mode=signup";
 
   return (
     <PageShell active="/rules" publicMode={!isSignedIn}>
