@@ -93,9 +93,9 @@ const sections: Array<{
       {
         id: "game1-lock-deadline",
         section: "Deadline Lock",
-        item_name: "Game 1 locks fully after Last 16 first match minus 15 minutes",
-        instruction: "Confirm Game 1 deadline is calculated as first Last 16 match kickoff time minus 15 minutes.",
-        expected_result: "Game 1 fully locks after the calculated deadline.",
+        item_name: "Game 1 locks before first Round of 32 match",
+        instruction: "Confirm Game 1 deadline is calculated as first Round of 32 kickoff time minus 15 minutes.",
+        expected_result: "Game 1 fully locks before Round of 32 results are known.",
       },
       {
         id: "game2-match-lock",

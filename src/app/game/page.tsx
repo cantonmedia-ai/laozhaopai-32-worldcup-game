@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { PageShell, SectionHeader } from "@/components/app-shell";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
-import { loadFirstLast16Deadline } from "@/lib/football-data";
+import { loadFirstRoundOf32Deadline } from "@/lib/football-data";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { stageInlineName } from "@/lib/stage-labels";
 
@@ -145,7 +145,7 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
   if (!hasSupabaseServerEnv()) return emptyData;
 
   const supabase = await createClient();
-  const game1Deadline = await loadFirstLast16Deadline();
+  const game1Deadline = await loadFirstRoundOf32Deadline();
   const { data: game1Stage } = await supabase
     .from("prediction_stages")
     .select("due_at, deadline_confirmed")
@@ -308,7 +308,7 @@ export default async function GamePage() {
                     <p className="mt-2 rounded bg-slate-100 p-3 text-sm font-bold text-slate-600">
                       {game1DeadlineConfirmed && game1DueAt
                         ? `Deadline: ${formatDeadline(game1DueAt)}`
-                        : "Deadline pending fixture confirmation. It will update automatically once the first Last 16 match time is confirmed."}
+                        : "Deadline pending fixture confirmation. It will update automatically once the first Round of 32 match time is confirmed."}
                     </p>
                   ) : null}
                   {locked ? (

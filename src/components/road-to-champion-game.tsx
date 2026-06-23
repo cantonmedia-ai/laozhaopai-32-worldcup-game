@@ -529,14 +529,14 @@ export function RoadToChampionGame({
               <>
                 截止时间等待赛程确认。Last 16 第一场比赛时间确认后，系统将自动更新截止时间。
                 <span className="block">
-                  Deadline pending fixture confirmation. Once the first Last 16 match time is confirmed, the system will automatically update the deadline.
+                  Deadline pending fixture confirmation. Once the first Round of 32 match time is confirmed, the system will automatically update the deadline.
                 </span>
               </>
             ) : (
               <>
                 Game 1 将在 Last 16 第一场比赛开始前 15 分钟截止。截止后不能提交或修改答案。
                 <span className="block">
-                  Game 1 will close 15 minutes before the first Last 16 match starts. After the deadline, answers cannot be submitted or edited.
+                  Game 1 will close 15 minutes before the first Round of 32 match starts. After the deadline, answers cannot be submitted or edited.
                 </span>
               </>
             )}

@@ -7,7 +7,7 @@ import {
 } from "@/components/road-to-champion-game";
 import { requireCompletedProfile } from "@/lib/auth-guards";
 import { getCurrentRound } from "@/lib/demo-data";
-import { loadFirstLast16Deadline } from "@/lib/football-data";
+import { loadFirstRoundOf32Deadline } from "@/lib/football-data";
 import { sortRoadStages } from "@/lib/road-to-champion";
 import { stageInlineName } from "@/lib/stage-labels";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
@@ -150,7 +150,7 @@ export default async function RoadToChampionPage() {
     const serviceSupabase = hasSupabaseServiceEnv() ? createServiceClient() : null;
     const dataClient = serviceSupabase ?? supabase;
 
-    const game1Deadline = await loadFirstLast16Deadline();
+    const game1Deadline = await loadFirstRoundOf32Deadline();
     if (game1Deadline && serviceSupabase) {
       await serviceSupabase
         .from("prediction_stages")
