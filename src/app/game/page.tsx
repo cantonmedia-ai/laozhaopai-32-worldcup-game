@@ -289,7 +289,8 @@ export default async function GamePage() {
                         : "bg-[#f4c542] text-[#071525]"
                     }`}
                   >
-                    <Icon size={14} /> {card.badge}
+                    <Icon size={14} />{" "}
+                    {card.id === "game2" && knockoutPublished ? "Open Now" : card.badge}
                   </span>
                   <h3 className="text-xl font-black text-slate-950">{card.title}</h3>
                   <p className="font-black text-[#d71920]">{card.english}</p>
