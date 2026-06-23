@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FlaskConical, Loader2, Trash2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 type PlayerScore = {
   nickname: string;
@@ -50,18 +49,40 @@ export function Game1SimulationAdmin() {
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<SimulationResult | null>(null);
 
+  async function loadCurrentSimulation() {
+    try {
+      const response = await fetch("/api/admin/game1-simulation/current", {
+        cache: "no-store",
+      });
+      const data = (await response.json()) as SimulationResult & { error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Unable to load simulation.");
+      if (data.player_scores?.length) {
+        setResult(data);
+        setMessage(data.message ?? "");
+      }
+    } catch {
+      // Empty state is fine before the first simulation run.
+    }
+  }
+
+  useEffect(() => {
+    loadCurrentSimulation();
+  }, []);
+
   async function runSimulation() {
     setBusy("run");
     setMessage("");
 
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.rpc("admin_run_game1_simulation");
-      if (error) throw new Error(error.message);
+      const response = await fetch("/api/admin/game1-simulation/run", {
+        method: "POST",
+      });
+      const data = (await response.json()) as SimulationResult & { error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Unable to run simulation.");
 
-      setResult(data as SimulationResult);
+      await loadCurrentSimulation();
       setMessage(
-        (data as SimulationResult)?.message ??
+        data.message ??
           "游戏一模拟测试完成。分数已由真实游戏一计分逻辑自动生成。",
       );
     } catch (error) {
@@ -76,9 +97,11 @@ export function Game1SimulationAdmin() {
     setMessage("");
 
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.rpc("admin_clear_game1_simulation_data");
-      if (error) throw new Error(error.message);
+      const response = await fetch("/api/admin/game1-simulation/clear", {
+        method: "POST",
+      });
+      const data = (await response.json()) as { message?: string; error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Unable to clear simulation.");
 
       setResult(null);
       setMessage(
