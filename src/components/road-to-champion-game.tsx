@@ -27,6 +27,9 @@ export type RoadTeam = {
   country_code: string | null;
   flag_url: string | null;
   flag_asset_path: string | null;
+  group_name?: string | null;
+  group_key?: string | null;
+  api_source?: string | null;
 };
 
 export type RoadStage = {
@@ -100,11 +103,13 @@ export function RoadToChampionGame({
   teams,
   predictions,
   summary,
+  groupDataAvailable,
 }: {
   stages: RoadStage[];
   teams: RoadTeam[];
   predictions: RoadPrediction[];
   summary: RoadSummary;
+  groupDataAvailable: boolean;
 }) {
   const [now, setNow] = useState(() => Date.now());
   const initialSelections = useMemo(
@@ -178,9 +183,37 @@ export function RoadToChampionGame({
     ? teams.filter((team) => {
         const name = team.country_name?.toLowerCase() ?? "";
         const code = team.country_code?.toLowerCase() ?? "";
-        return name.includes(normalizedSearch) || code.includes(normalizedSearch);
+        const group = team.group_name?.toLowerCase() ?? "";
+        return (
+          name.includes(normalizedSearch) ||
+          code.includes(normalizedSearch) ||
+          group.includes(normalizedSearch)
+        );
       })
     : teams;
+  const showGroupedLast16 = activeStage.stage_key === "last_16";
+  const groupedTeams = useMemo(() => {
+    const groups = new Map<string, { groupName: string; groupKey: string; teams: RoadTeam[] }>();
+
+    for (const team of filteredTeams) {
+      const groupName = team.group_name ?? "Group not available";
+      const groupKey = team.group_key ?? groupName;
+      const current = groups.get(groupName) ?? { groupName, groupKey, teams: [] };
+      current.teams.push(team);
+      groups.set(groupName, current);
+    }
+
+    return [...groups.values()]
+      .map((group) => ({
+        ...group,
+        teams: group.teams.sort((a, b) =>
+          String(a.country_name ?? "").localeCompare(String(b.country_name ?? "")),
+        ),
+      }))
+      .sort((a, b) =>
+        a.groupKey.localeCompare(b.groupKey, undefined, { numeric: true }),
+      );
+  }, [filteredTeams]);
 
   function toggle(teamId: string) {
     if (locked) return;
@@ -299,59 +332,63 @@ export function RoadToChampionGame({
     </div>
   ) : null;
 
-  const picker = (
+  const teamRow = (team: RoadTeam, selectedTeam: boolean) => {
+    const flag = flagPath(team);
+
+    return (
+      <button
+        key={`${activeStage.stage_key}-${team.id}`}
+        type="button"
+        disabled={locked || (!selectedTeam && selected.length >= required)}
+        onClick={() => toggle(team.id)}
+        className={clsx(
+          "group flex min-h-14 items-center gap-3 rounded-lg border bg-white px-3 py-2 text-left shadow-sm transition duration-200 active:scale-[0.99]",
+          selectedTeam
+            ? "border-[#d6a728] bg-[#fff8df] ring-1 ring-[#d6a728]/35 shadow-[#d6a728]/20"
+            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
+          (locked || (!selectedTeam && selected.length >= required)) &&
+            "cursor-not-allowed opacity-60",
+        )}
+      >
+        <span className="grid h-9 w-12 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500 sm:h-10 sm:w-14">
+          {flag ? (
+            <img
+              src={flag}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            team.country_code
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-black leading-tight text-slate-950 sm:text-base">
+            {team.country_name}
+          </span>
+          <span className="mt-0.5 block text-xs font-bold uppercase leading-tight text-slate-500">
+            {team.country_code}
+          </span>
+        </span>
+        <span
+          className={clsx(
+            "grid size-7 shrink-0 place-items-center rounded-full border text-xs font-black transition",
+            selectedTeam
+              ? "border-[#d6a728] bg-[#f4c542] text-[#071525]"
+              : "border-slate-300 text-slate-400 group-hover:border-slate-400",
+          )}
+        >
+          {selectedTeam ? <Check size={15} /> : null}
+        </span>
+      </button>
+    );
+  };
+
+  const flatPicker = (
     <div className="grid gap-2 pb-48 lg:grid-cols-2 lg:pb-0 xl:grid-cols-3">
       {filteredTeams.map((team) => {
         const selectedTeam = selected.includes(team.id);
-        const flag = flagPath(team);
-
-        return (
-          <button
-            key={`${activeStage.stage_key}-${team.id}`}
-            type="button"
-            disabled={locked || (!selectedTeam && selected.length >= required)}
-            onClick={() => toggle(team.id)}
-            className={clsx(
-              "group flex min-h-14 items-center gap-3 rounded-lg border bg-white px-3 py-2 text-left shadow-sm transition duration-200 active:scale-[0.99]",
-              selectedTeam
-                ? "border-[#d6a728] bg-[#fff8df] ring-1 ring-[#d6a728]/35 shadow-[#d6a728]/20"
-                : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
-              (locked || (!selectedTeam && selected.length >= required)) &&
-                "cursor-not-allowed opacity-60",
-            )}
-          >
-            <span className="grid h-9 w-12 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500 sm:h-10 sm:w-14">
-              {flag ? (
-                <img
-                  src={flag}
-                  alt=""
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                team.country_code
-              )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-black leading-tight text-slate-950 sm:text-base">
-                {team.country_name}
-              </span>
-              <span className="mt-0.5 block text-xs font-bold uppercase leading-tight text-slate-500">
-                {team.country_code}
-              </span>
-            </span>
-            <span
-              className={clsx(
-                "grid size-7 shrink-0 place-items-center rounded-full border text-xs font-black transition",
-                selectedTeam
-                  ? "border-[#d6a728] bg-[#f4c542] text-[#071525]"
-                  : "border-slate-300 text-slate-400 group-hover:border-slate-400",
-              )}
-            >
-              {selectedTeam ? <Check size={15} /> : null}
-            </span>
-          </button>
-        );
+        return teamRow(team, selectedTeam);
       })}
       {filteredTeams.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-500 lg:col-span-2 xl:col-span-3">
@@ -360,6 +397,58 @@ export function RoadToChampionGame({
       ) : null}
     </div>
   );
+
+  const groupedPicker =
+    !groupDataAvailable && showGroupedLast16 ? (
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+        <p className="text-lg font-black text-slate-950">
+          Team group data is not available yet.
+        </p>
+        <p className="mt-2 text-sm font-bold text-slate-500">
+          Please try again later.
+        </p>
+      </div>
+    ) : (
+      <div className="grid gap-3 pb-48 lg:pb-0">
+        {groupedTeams.map((group) => {
+          const groupSelected = group.teams.filter((team) =>
+            selected.includes(team.id),
+          ).length;
+
+          return (
+            <details
+              key={group.groupName}
+              open
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-slate-50 px-3 py-3">
+                <span>
+                  <span className="block text-base font-black text-slate-950">
+                    {group.groupName}
+                  </span>
+                  <span className="text-xs font-bold text-slate-500">
+                    Selected: {groupSelected}
+                  </span>
+                </span>
+                <span className="rounded bg-[#071525] px-2 py-1 text-xs font-black text-white">
+                  {group.teams.length} teams
+                </span>
+              </summary>
+              <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-4">
+                {group.teams.map((team) => teamRow(team, selected.includes(team.id)))}
+              </div>
+            </details>
+          );
+        })}
+        {groupedTeams.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-500">
+            No countries found. Try another name, code, or group.
+          </div>
+        ) : null}
+      </div>
+    );
+
+  const picker = showGroupedLast16 ? groupedPicker : flatPicker;
 
   const picksPanel = (
     <aside className="rounded-lg border border-white/10 bg-[#071525] p-4 text-white shadow-xl">

@@ -7,7 +7,11 @@ import {
 } from "@/components/road-to-champion-game";
 import { requireCompletedProfile } from "@/lib/auth-guards";
 import { getCurrentRound } from "@/lib/demo-data";
-import { loadFirstRoundOf32Deadline } from "@/lib/football-data";
+import {
+  loadFirstRoundOf32Deadline,
+  loadWorldCupGroupTeams,
+  type ApiGroupTeamDebug,
+} from "@/lib/football-data";
 import { sortRoadStages } from "@/lib/road-to-champion";
 import { stageInlineName } from "@/lib/stage-labels";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
@@ -23,6 +27,47 @@ type PointRow = {
   source_type: string;
   points: number | null;
 };
+
+function normalizeTeamKey(value?: string | null) {
+  return String(value ?? "")
+    .toUpperCase()
+    .replace(/&/g, "AND")
+    .replace(/[^A-Z0-9]+/g, "");
+}
+
+function mapGroupDataToTeams(
+  teams: RoadTeam[],
+  groupTeams: Awaited<ReturnType<typeof loadWorldCupGroupTeams>>["teams"],
+) {
+  const byCode = new Map(
+    groupTeams
+      .filter((team) => team.country_code)
+      .map((team) => [normalizeTeamKey(team.country_code), team]),
+  );
+  const byName = new Map(
+    groupTeams.map((team) => [normalizeTeamKey(team.country_name), team]),
+  );
+
+  return teams
+    .map((team) => {
+      const apiTeam =
+        byCode.get(normalizeTeamKey(team.country_code)) ??
+        byName.get(normalizeTeamKey(team.country_name));
+
+      if (!apiTeam) return null;
+
+      return {
+        ...team,
+        country_name: team.country_name ?? apiTeam.country_name,
+        country_code: team.country_code ?? apiTeam.country_code,
+        flag_url: team.flag_url ?? apiTeam.country_flag,
+        group_name: apiTeam.group_name,
+        group_key: apiTeam.group_key,
+        api_source: apiTeam.api_source,
+      };
+    })
+    .filter(Boolean) as RoadTeam[];
+}
 
 function demoStages(): RoadStage[] {
   return sortRoadStages([
@@ -144,6 +189,8 @@ export default async function RoadToChampionPage() {
   let rank: number | null = null;
   let referralCount = 0;
   let referralPoints = 0;
+  let groupDebug: ApiGroupTeamDebug | null = null;
+  let groupDataAvailable = false;
 
   if (hasSupabaseServerEnv() && profile) {
     const supabase = await createClient();
@@ -194,6 +241,16 @@ export default async function RoadToChampionPage() {
 
     if (teamRows?.length) {
       teams = teamRows as RoadTeam[];
+    }
+
+    const groupResult = await loadWorldCupGroupTeams();
+    groupDebug = groupResult.debug;
+    if (groupResult.debug.available) {
+      const groupedTeams = mapGroupDataToTeams(teams, groupResult.teams);
+      if (groupedTeams.length) {
+        teams = groupedTeams;
+        groupDataAvailable = true;
+      }
     }
 
     const { data: predictionRows } = await dataClient
@@ -255,6 +312,7 @@ export default async function RoadToChampionPage() {
             referralCount,
             referralPoints,
           }}
+          groupDataAvailable={groupDataAvailable}
         />
       </main>
     </PageShell>

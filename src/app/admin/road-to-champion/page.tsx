@@ -4,6 +4,7 @@ import { Game1SimulationAdmin } from "@/components/game1-simulation-admin";
 import { RoadToChampionAdmin } from "@/components/road-to-champion-admin";
 import type { RoadStage, RoadTeam } from "@/components/road-to-champion-game";
 import { teams as demoTeams } from "@/lib/demo-data";
+import { loadWorldCupGroupTeams, type ApiGroupTeamDebug } from "@/lib/football-data";
 import { sortRoadStages, type RoadStageKey } from "@/lib/road-to-champion";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
@@ -26,6 +27,7 @@ export default async function AdminRoadToChampionPage() {
   let stages: RoadStage[] = [];
   let teams = fallbackTeams();
   let results: StageResult[] = [];
+  let groupDebug: ApiGroupTeamDebug | null = null;
 
   if (hasSupabaseServerEnv()) {
     const supabase = await createClient();
@@ -68,6 +70,8 @@ export default async function AdminRoadToChampionPage() {
       stage_key: row.stage_key as RoadStageKey,
       official_team_ids: (row.official_team_ids ?? []) as string[],
     }));
+
+    groupDebug = (await loadWorldCupGroupTeams()).debug;
   }
 
   return (
@@ -80,6 +84,63 @@ export default async function AdminRoadToChampionPage() {
       {stages.length ? (
         <div className="grid gap-6">
           <Game1SimulationAdmin />
+          {groupDebug ? (
+            <section className="card p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
+                    Game 1 API Group Data
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black text-slate-950">
+                    Last 16 selection grouping debug
+                  </h2>
+                  <p className="mt-1 text-sm font-semibold text-slate-500">
+                    Last API sync: {groupDebug.lastApiSyncAt ?? "Not available"}
+                  </p>
+                </div>
+                {!groupDebug.available || groupDebug.missingGroupCount > 0 ? (
+                  <div className="rounded bg-yellow-50 px-4 py-3 text-sm font-black text-yellow-900">
+                    Some teams are missing group data.
+                  </div>
+                ) : (
+                  <div className="rounded bg-green-50 px-4 py-3 text-sm font-black text-green-800">
+                    Group data ready
+                  </div>
+                )}
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-4">
+                <div className="rounded bg-slate-100 p-4">
+                  <p className="text-sm font-bold text-slate-500">Countries loaded</p>
+                  <p className="mt-1 text-2xl font-black">{groupDebug.totalCountries}</p>
+                </div>
+                <div className="rounded bg-slate-100 p-4">
+                  <p className="text-sm font-bold text-slate-500">Groups loaded</p>
+                  <p className="mt-1 text-2xl font-black">{groupDebug.totalGroups}</p>
+                </div>
+                <div className="rounded bg-slate-100 p-4">
+                  <p className="text-sm font-bold text-slate-500">Missing group</p>
+                  <p className="mt-1 text-2xl font-black">{groupDebug.missingGroupCount}</p>
+                </div>
+                <div className="rounded bg-slate-100 p-4">
+                  <p className="text-sm font-bold text-slate-500">Missing flag</p>
+                  <p className="mt-1 text-2xl font-black">{groupDebug.missingFlagCount}</p>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {groupDebug.countriesPerGroup.map((group) => (
+                  <div
+                    key={group.groupName}
+                    className="flex items-center justify-between rounded border border-slate-200 px-3 py-2 text-sm font-bold"
+                  >
+                    <span>{group.groupName}</span>
+                    <span className="rounded bg-[#071525] px-2 py-1 text-xs text-white">
+                      {group.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <RoadToChampionAdmin stages={stages} teams={teams} results={results} />
         </div>
       ) : (
