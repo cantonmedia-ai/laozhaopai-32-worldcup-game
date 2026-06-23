@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import {
+  GlobalClickFeedback,
+  ImportantRoutePrefetcher,
+  PageTransition,
+} from "@/components/instant-interactions";
 import { ReferralCapture } from "@/components/referral-capture";
 import "./globals.css";
 
@@ -31,7 +36,9 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-[#071525] text-slate-950">
         <ReferralCapture />
-        {children}
+        <GlobalClickFeedback />
+        <ImportantRoutePrefetcher />
+        <PageTransition>{children}</PageTransition>
       </body>
     </html>
   );

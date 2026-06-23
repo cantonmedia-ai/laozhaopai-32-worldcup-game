@@ -26,6 +26,52 @@ textarea {
   outline-color: #f4c542;
 }
 
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a[href] {
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease,
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+button:active,
+a[href]:active,
+.button-instant-feedback:active,
+.is-click-loading {
+  transform: scale(0.98);
+}
+
+.is-click-loading {
+  pointer-events: none;
+  opacity: 0.82;
+}
+
+.is-click-loading:not(:has(svg.animate-spin))::after {
+  content: "";
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 0.45rem;
+  display: inline-block;
+  vertical-align: -0.1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: button-spin 0.7s linear infinite;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .stadium-hero {
   background-image:
     linear-gradient(90deg, rgba(7, 21, 37, 0.96), rgba(7, 21, 37, 0.6), rgba(9, 47, 39, 0.92)),
