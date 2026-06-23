@@ -224,9 +224,6 @@ export default async function RulesPage() {
                 <p>
                   游戏一截止时间为十六强第一场比赛正式开始前十五分钟。系统会通过赛程接口自动读取开赛时间并计算截止时间。
                 </p>
-                <p className="mt-3 rounded bg-white p-3 font-black text-slate-950">
-                  截止时间等待赛程确认
-                </p>
               </div>
             </div>
 
@@ -338,10 +335,6 @@ export default async function RulesPage() {
                 <p className="mt-2">如果当前团队已满，同一个邀请码会自动创建下一支队伍，队长先加入新队，再加入新成员。</p>
               </div>
             </div>
-
-            <FormulaBox>
-              团队最终总分 = 游戏一团队累计分 + 游戏二团队累计分
-            </FormulaBox>
 
             <div className="grid gap-4 rounded-lg bg-white/10 p-4">
               <div>
