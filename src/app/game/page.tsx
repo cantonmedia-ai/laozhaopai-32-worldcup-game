@@ -207,8 +207,6 @@ export default async function GamePage() {
   const currentStage = knockoutPublished
     ? stageInlineName(activeRoundKey)
     : "\u5c0f\u7ec4\u8d5b\u8fdb\u884c\u4e2d / Group Stage in Progress";
-  const stagePrimary = knockoutPublished ? "32\u5f3a\u751f\u6b7b\u6218" : "\u5c0f\u7ec4\u8d5b\u8fdb\u884c\u4e2d";
-  const stageSecondary = knockoutPublished ? "Round of 32" : "Group Stage in Progress";
   const predictionComplete =
     openMatchCount > 0 && submittedPredictionCount >= openMatchCount;
   const predictionStatus = predictionComplete
@@ -231,12 +229,12 @@ export default async function GamePage() {
           <div className="grid gap-5 p-5 md:grid-cols-[1.2fr_0.8fr] md:items-center">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.24em] text-[#f4c542]">
-                {knockoutPublished ? "Current Active Round" : "Current Tournament Stage"}
+                Game 1
               </p>
               <h2 className="mt-3 text-3xl font-black leading-tight md:text-5xl">
-                {stagePrimary}
+                Ultimate Predictor
                 <span className="block text-xl text-white/80 md:text-3xl">
-                  {stageSecondary}
+                  最强预测家
                 </span>
               </h2>
             </div>
