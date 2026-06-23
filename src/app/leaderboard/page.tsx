@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
+import { PageShell, SectionHeader } from "@/components/app-shell";
 import { LeaderboardTable, type LeaderboardRow } from "@/components/leaderboard";
-import { knockoutWinnerRankingTitle } from "@/lib/knockout-winner";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type LeaderboardScope = "overall" | "round" | "squad" | "invite";
@@ -24,10 +23,10 @@ type SupabaseLeaderboardRow = {
 };
 
 const tabs: Array<{ id: LeaderboardScope; label: string; title: string }> = [
-  { id: "overall", label: "总榜", title: knockoutWinnerRankingTitle },
-  { id: "round", label: "本轮", title: "本轮淘汰赛赢家战排行榜" },
-  { id: "squad", label: "好友战区", title: "好友战区排行榜" },
-  { id: "invite", label: "人气榜", title: "邀请人气榜" },
+  { id: "overall", label: "终极大奖", title: "终极大奖排行榜" },
+  { id: "round", label: "Game 1", title: "Game 1 排行榜" },
+  { id: "squad", label: "Game 2", title: "Game 2 排行榜" },
+  { id: "invite", label: "Game 3", title: "Game 3 排行榜" },
 ];
 
 function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
@@ -67,7 +66,12 @@ export default function LeaderboardPage() {
       try {
         const supabase = createClient();
         const scopes: LeaderboardScope[] = ["overall", "round", "squad", "invite"];
-        const nextRows = { ...rowsByScope };
+        const nextRows: Record<LeaderboardScope, LeaderboardRow[]> = {
+          overall: [],
+          round: [],
+          squad: [],
+          invite: [],
+        };
 
         for (const scope of scopes) {
           const { data, error } = await supabase.rpc("get_leaderboard", {
@@ -95,21 +99,18 @@ export default function LeaderboardPage() {
     }
 
     loadLeaderboards();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeMeta = tabs.find((tab) => tab.id === activeTab)!;
   const rows = rowsByScope[activeTab];
-  const topScore = Math.max(0, ...rows.map((row) => row.roundScore ?? row.totalScore));
-  const topInvite = Math.max(0, ...rowsByScope.invite.map((row) => row.inviteCount ?? 0));
 
   return (
     <PageShell active="/leaderboard">
       <main className="mx-auto max-w-7xl px-4 py-10">
         <SectionHeader
-          eyebrow="Knockout Winner Challenge"
-          title={knockoutWinnerRankingTitle}
-          body="淘汰赛赢家战排行榜会在管理员确认实际赢家后自动更新。邀请人气只用于人气榜，不会直接加到赢家战分数。"
+          eyebrow="Ranking"
+          title="排行榜"
+          body="终极大奖显示全部游戏总排行。Game 1、Game 2、Game 3 可分别查看各游戏排行。"
         />
 
         {message ? (
@@ -117,13 +118,6 @@ export default function LeaderboardPage() {
             {message}
           </div>
         ) : null}
-
-        <div className="mb-5 grid gap-4 md:grid-cols-4">
-          <StatCard label="Ranking Source" value="Live Users" tone="green" />
-          <StatCard label="Current Board" value={activeMeta.label} tone="gold" />
-          <StatCard label="Top Score" value={topScore} />
-          <StatCard label="Top Invite" value={topInvite} tone="navy" />
-        </div>
 
         <div className="mb-6 flex gap-2 overflow-x-auto scrollbar-clean">
           {tabs.map((tab) => (
@@ -145,7 +139,7 @@ export default function LeaderboardPage() {
         <LeaderboardTable
           players={rows}
           title={loading ? `${activeMeta.title} · Loading...` : activeMeta.title}
-          emptyText="No ranking yet. Ranking updates after admin confirms winners."
+          emptyText="No ranking yet. Ranking updates after scores are confirmed."
         />
       </main>
     </PageShell>

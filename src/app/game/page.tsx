@@ -6,7 +6,7 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
-import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
+import { PageShell, SectionHeader } from "@/components/app-shell";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { stageInlineName } from "@/lib/stage-labels";
@@ -20,36 +20,12 @@ type RankingRow = {
   rank_position: number;
 };
 
-type TeamSummary = {
-  name: string;
-  code: string;
-  totalPoints: number;
-  members: number;
-} | null;
-
-type SquadMember = {
-  relationship:
-    | "my_team_owner"
-    | "invited_by_me"
-    | "team_i_joined"
-    | "same_team_member";
-  team_id: string;
-  team_no: number;
-  team_name: string;
-  team_member_count: number;
-  referral_code: string;
-  total_score: number;
-};
-
 type DashboardData = {
-  myPoints: number;
-  myRank: number | null;
   topRows: RankingRow[];
   predictionDueAt: string | null;
   openMatchCount: number;
   submittedPredictionCount: number;
   activeRoundKey: string | null;
-  team: TeamSummary;
 };
 
 const gameCards = [
@@ -143,38 +119,22 @@ function formatCountdown(value: string | null) {
 
 async function loadDashboardData(authUserId: string | null): Promise<DashboardData> {
   const emptyData: DashboardData = {
-    myPoints: 0,
-    myRank: null,
     topRows: [],
     predictionDueAt: null,
     openMatchCount: 0,
     submittedPredictionCount: 0,
     activeRoundKey: null,
-    team: null,
   };
 
   if (!hasSupabaseServerEnv()) return emptyData;
 
   const supabase = await createClient();
-  const { data: pointRows } = authUserId
-    ? await supabase
-        .from("point_transactions")
-        .select("points")
-        .eq("user_id", authUserId)
-    : { data: [] };
-  const myPoints = (pointRows ?? []).reduce(
-    (sum, row) => sum + Number(row.points ?? 0),
-    0,
-  );
-
   const { data: leaderboardRows } = await supabase.rpc("get_leaderboard", {
     p_game_id: null,
     p_round_id: null,
     p_scope: "overall",
   });
   const allRows = (leaderboardRows ?? []) as RankingRow[];
-  const myRank =
-    allRows.find((row) => row.profile_id === authUserId)?.rank_position ?? null;
 
   const { data: openMatches } = await supabase
     .from("knockout_matches")
@@ -196,66 +156,23 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
           .in("match_id", openMatchIds)
       : { data: [] };
 
-  let team: TeamSummary = null;
-  if (authUserId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_user_id", authUserId)
-      .maybeSingle();
-
-    if (profile?.id) {
-      await supabase.rpc("get_or_create_open_squad_team", {
-        p_owner_profile_id: profile.id,
-      });
-    }
-
-    const { data: squadRows } = await supabase.rpc("get_my_squad");
-    const squadMembers = (squadRows ?? []) as SquadMember[];
-    const primaryMember =
-      squadMembers.find((item) => item.relationship === "my_team_owner") ??
-      squadMembers.find((item) => item.relationship === "team_i_joined") ??
-      squadMembers[0];
-    const sameTeam = primaryMember
-      ? squadMembers.filter((item) => item.team_id === primaryMember.team_id)
-      : [];
-
-    if (primaryMember) {
-      team = {
-        name: primaryMember.team_name ?? `Team ${primaryMember.team_no}`,
-        code: primaryMember.referral_code ?? "",
-        totalPoints: sameTeam.reduce(
-          (sum, item) => sum + Number(item.total_score ?? 0),
-          0,
-        ),
-        members: Number(primaryMember.team_member_count ?? sameTeam.length),
-      };
-    }
-  }
-
   return {
-    myPoints,
-    myRank,
     topRows: allRows.slice(0, 3),
     predictionDueAt,
     openMatchCount: openMatchIds.length,
     submittedPredictionCount: predictionRows?.length ?? 0,
     activeRoundKey,
-    team,
   };
 }
 
 export default async function GamePage() {
   const profile = await requireCompletedProfile("/game");
   const {
-    myPoints,
-    myRank,
     topRows,
     predictionDueAt,
     openMatchCount,
     submittedPredictionCount,
     activeRoundKey,
-    team,
   } = await loadDashboardData(profile?.auth_user_id ?? null);
   const knockoutPublished = openMatchCount > 0 && Boolean(activeRoundKey);
   const currentStage = knockoutPublished
@@ -311,36 +228,6 @@ export default async function GamePage() {
             </div>
           </div>
         </section>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-5">
-          <StatCard
-            label={knockoutPublished ? "Current Active Round" : "Current Tournament Stage"}
-            value={stagePrimary}
-            detail={stageSecondary}
-            tone="green"
-          />
-          <StatCard
-            label="My Ranking"
-            value={myRank ? `#${myRank}` : "Enter ranking"}
-            detail={myRank ? "Live ranking" : "Complete prediction first"}
-            tone="gold"
-          />
-          <StatCard
-            label="My Team"
-            value={team ? team.name : "No team yet"}
-            detail={team ? `${team.members} members` : "Create / join team"}
-          />
-          <StatCard label="Total Points" value={myPoints} tone="navy" />
-          <StatCard
-            label="Next Due"
-            value={predictionDueAt ? formatDeadline(predictionDueAt) : "To be confirmed"}
-            detail={
-              predictionDueAt
-                ? "15 minutes before Round of 32"
-                : "Fixtures not published"
-            }
-          />
-        </div>
 
         <section className="mt-8">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -402,61 +289,6 @@ export default async function GamePage() {
                 </div>
               );
             })}
-          </div>
-        </section>
-
-        <section className="mt-8 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="card p-5">
-            <h2 className="text-2xl font-black text-slate-950">
-              {team ? "Your Team" : "Form Your Team"}
-            </h2>
-            {team ? (
-              <div className="mt-4 grid gap-3 text-sm font-bold text-slate-700">
-                <p className="rounded bg-slate-100 p-3">Team name: {team.name}</p>
-                <p className="rounded bg-slate-100 p-3">
-                  Members: {team.members} · Team points: {team.totalPoints}
-                </p>
-                <p className="rounded bg-slate-100 p-3">Invite code: {team.code}</p>
-              </div>
-            ) : (
-              <p className="mt-3 text-sm font-semibold text-slate-600">
-                Create a team or join your friend&apos;s team. Team points help
-                you compete on the team leaderboard.
-              </p>
-            )}
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <Link
-                href="/squad"
-                className="flex h-11 items-center justify-center rounded bg-[#d71920] px-4 font-black text-white"
-              >
-                Invite Friends
-              </Link>
-              <Link
-                href="/squad"
-                className="flex h-11 items-center justify-center rounded bg-[#071525] px-4 font-black text-white"
-              >
-                My Team
-              </Link>
-            </div>
-          </div>
-
-          <div className="card p-5">
-            <h2 className="text-2xl font-black text-slate-950">My Progress</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {[
-                ["Prediction status", predictionStatus],
-                ["Team status", team ? "Joined" : "Not joined"],
-                ["Total points", `${myPoints}`],
-                ["Ranking", myRank ? `#${myRank}` : "Complete prediction to enter ranking"],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded bg-slate-100 p-3">
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                    {label}
-                  </p>
-                  <p className="mt-1 font-black text-slate-950">{value}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
