@@ -148,6 +148,7 @@ export function RoadToChampionGame({
   const [savingStage, setSavingStage] = useState("");
   const [messageByStage, setMessageByStage] = useState<Record<string, string>>({});
   const [confirmStage, setConfirmStage] = useState<RoadStage | null>(null);
+  const [successStageKey, setSuccessStageKey] = useState<RoadStageKey | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -172,6 +173,14 @@ export function RoadToChampionGame({
   const selectedTeams = selected
     .map((id) => activeTeams.find((team) => team.id === id) ?? teams.find((team) => team.id === id))
     .filter(Boolean) as RoadTeam[];
+  const teamsForStage = (stageKey: RoadStageKey) => teamsByStage[stageKey] ?? teams;
+  const selectedTeamsForStage = (stageKey: RoadStageKey) => {
+    const stageTeams = teamsForStage(stageKey);
+    return (selectedByStage[stageKey] ?? [])
+      .map((id) => stageTeams.find((team) => team.id === id) ?? teams.find((team) => team.id === id))
+      .filter(Boolean) as RoadTeam[];
+  };
+  const last16SelectedTeams = selectedTeamsForStage("last_16");
   const required = activeStage.required_selection_count;
   const remaining = Math.max(0, required - selected.length);
   const submitted = submittedByStage[activeStage.stage_key] ?? false;
@@ -259,9 +268,21 @@ export function RoadToChampionGame({
       };
     });
   }, [groupedTeams]);
+  const last16SummaryGroups = useMemo(() => {
+    const groups = new Map<string, RoadTeam[]>();
+    for (const team of last16SelectedTeams) {
+      const groupName = team.group_name ?? "Group not available";
+      groups.set(groupName, [...(groups.get(groupName) ?? []), team]);
+    }
+
+    return [...groups.entries()].sort(([a], [b]) =>
+      a.localeCompare(b, undefined, { numeric: true }),
+    );
+  }, [last16SelectedTeams]);
 
   function toggle(teamId: string) {
     if (locked) return;
+    setSuccessStageKey(null);
 
     setMessageByStage((current) => ({
       ...current,
@@ -305,6 +326,14 @@ export function RoadToChampionGame({
       return;
     }
 
+    if (statusToSave === "submitted" && selected.length !== required) {
+      setMessageByStage((current) => ({
+        ...current,
+        [activeStage.stage_key]: `Please select exactly ${required} countries before submitting.`,
+      }));
+      return;
+    }
+
     setSavingStage(`${activeStage.stage_key}:${statusToSave}`);
     void logClientAction({
       actionType:
@@ -343,6 +372,7 @@ export function RoadToChampionGame({
           ...current,
           [activeStage.stage_key]: true,
         }));
+        setSuccessStageKey(activeStage.stage_key);
       }
 
       setMessageByStage((current) => ({
@@ -350,14 +380,12 @@ export function RoadToChampionGame({
         [activeStage.stage_key]:
           statusToSave === "draft"
             ? "Draft saved. You can continue later."
-            : "Prediction submitted. You can still edit before the deadline.",
+            : "Prediction Submitted Successfully!",
       }));
       void logClientAction({
         actionType:
           statusToSave === "submitted"
-            ? submitted
-              ? "game1_edit_success"
-              : "game1_submit_success"
+            ? "game1_submit_success"
             : "game1_edit_success",
         actionStatus: "success",
         pagePath: "/road-to-champion",
@@ -390,9 +418,7 @@ export function RoadToChampionGame({
       void logClientAction({
         actionType:
           statusToSave === "submitted"
-            ? submitted
-              ? "game1_edit_failed"
-              : "game1_submit_failed"
+            ? "game1_submit_failed"
             : "game1_edit_failed",
         actionStatus: "failed",
         pagePath: "/road-to-champion",
@@ -403,9 +429,13 @@ export function RoadToChampionGame({
       setMessageByStage((current) => ({
         ...current,
         [activeStage.stage_key]:
-          referenceId
-            ? `${message} Please screenshot this code and send to admin: ${referenceId}`
-            : message,
+          statusToSave === "submitted"
+            ? referenceId
+              ? `Submission failed. Please try again. Error Code: ${referenceId}`
+              : "Submission failed. Please try again."
+            : referenceId
+              ? `${message} Please screenshot this code and send to admin: ${referenceId}`
+              : message,
       }));
     } finally {
       setSavingStage("");
@@ -782,6 +812,240 @@ export function RoadToChampionGame({
     </aside>
   );
 
+  const showSubmissionSummary = Boolean(successStageKey) || submitted;
+  const canEditSubmittedPrediction = showSubmissionSummary && !locked;
+  const summaryStageKeys = roadStageOrder.filter((stageKey) =>
+    stages.some((stage) => stage.stage_key === stageKey),
+  );
+  const compactTeamList = (stageKey: RoadStageKey, emptyText: string) => {
+    const stageTeams = selectedTeamsForStage(stageKey);
+
+    if (!stageTeams.length) {
+      return (
+        <p className="rounded bg-slate-50 px-3 py-2 text-sm font-bold text-slate-500">
+          {emptyText}
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid gap-2 sm:grid-cols-2">
+        {stageTeams.map((team) => (
+          <div
+            key={`summary-${stageKey}-${team.id}`}
+            className="flex min-w-0 items-center gap-2 rounded border border-slate-200 bg-white px-3 py-2"
+          >
+            <span className="grid h-8 w-11 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
+              {flagPath(team) ? (
+                <img
+                  src={flagPath(team)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                team.country_code
+              )}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-black text-slate-950">
+              {team.country_name}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  const submissionSummary = showSubmissionSummary ? (
+    <section
+      id="my-game1-prediction"
+      className="overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm"
+    >
+      <div className="bg-green-50 p-5">
+        <div className="flex items-start gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-green-600 text-white">
+            <Check size={24} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-green-700">
+              Submitted
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-slate-950">
+              Prediction Submitted Successfully!
+            </h2>
+            <p className="mt-2 text-sm font-bold leading-6 text-slate-700">
+              Your Game 1 prediction has been submitted. Good luck! May your champion pick go all the way.
+              <span className="block">You can view your submitted prediction below.</span>
+              <span className="block text-green-700">
+                {canEditSubmittedPrediction
+                  ? "You can still edit your prediction before the deadline."
+                  : "Prediction is locked and can no longer be edited."}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 p-4 sm:p-5">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-xl font-black text-slate-950">
+              Your Last 16 Picks
+            </h3>
+            <span className="rounded bg-[#071525] px-2 py-1 text-xs font-black text-white">
+              {last16SelectedTeams.length} / 16
+            </span>
+          </div>
+
+          {groupDataAvailable && last16SummaryGroups.length ? (
+            <div className="grid gap-3">
+              {last16SummaryGroups.map(([groupName, groupTeams]) => (
+                <div key={`last16-summary-${groupName}`} className="rounded bg-white p-3">
+                  <p className="mb-2 text-sm font-black text-[#0f8a4b]">
+                    {groupName}
+                  </p>
+                  <div className="grid gap-2">
+                    {groupTeams.map((team) => (
+                      <div
+                        key={`last16-summary-${team.id}`}
+                        className="flex items-center gap-2"
+                      >
+                        <span className="grid h-8 w-11 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
+                          {flagPath(team) ? (
+                            <img
+                              src={flagPath(team)}
+                              alt=""
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            team.country_code
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-black text-slate-950">
+                          {team.country_name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ol className="grid gap-2">
+              {last16SelectedTeams.slice(0, 16).map((team, index) => (
+                <li
+                  key={`last16-numbered-${team.id}`}
+                  className="flex items-center gap-3 rounded bg-white px-3 py-2"
+                >
+                  <span className="w-5 shrink-0 text-right text-sm font-black text-slate-400">
+                    {index + 1}.
+                  </span>
+                  <span className="grid h-8 w-11 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
+                    {flagPath(team) ? (
+                      <img
+                        src={flagPath(team)}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      team.country_code
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-black text-slate-950">
+                    {team.country_name}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-slate-200 p-4">
+          <h3 className="text-xl font-black text-slate-950">
+            Your Game 1 Prediction Summary
+          </h3>
+          <div className="mt-4 grid gap-4">
+            {summaryStageKeys.map((stageKey) => {
+              const stage = stages.find((item) => item.stage_key === stageKey);
+              if (!stage) return null;
+              const isChampion = stageKey === "champion";
+              return (
+                <div
+                  key={`full-summary-${stageKey}`}
+                  className={clsx(
+                    "rounded-lg border p-3",
+                    isChampion
+                      ? "border-[#f4c542] bg-[#fff8df]"
+                      : "border-slate-200 bg-slate-50",
+                  )}
+                >
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="whitespace-pre-line text-sm font-black text-slate-950">
+                      {roadStageCopy[stageKey].shortName}
+                    </p>
+                    <span className="rounded bg-white px-2 py-1 text-xs font-black text-slate-500">
+                      {(selectedByStage[stageKey] ?? []).length} / {stage.required_selection_count}
+                    </span>
+                  </div>
+                  {compactTeamList(
+                    stageKey,
+                    stageKey === "last_16"
+                      ? "No Last 16 picks submitted yet."
+                      : "Not selected yet.",
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-lg bg-[#071525] p-4 text-center text-white">
+          <p className="text-lg font-black">
+            Good luck! Your road to champion has started.
+          </p>
+          <p className="mt-1 text-sm font-semibold text-white/65">
+            Check the leaderboard after match results are updated.
+          </p>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <a
+            href="#my-game1-prediction"
+            className="flex h-12 items-center justify-center rounded bg-[#071525] px-4 text-center text-sm font-black text-white"
+          >
+            View My Prediction
+          </a>
+          <a
+            href="/leaderboard"
+            className="flex h-12 items-center justify-center rounded bg-[#f4c542] px-4 text-center text-sm font-black text-[#071525]"
+          >
+            Go to Leaderboard
+          </a>
+          <a
+            href="/team"
+            className="flex h-12 items-center justify-center rounded bg-[#0f8a4b] px-4 text-center text-sm font-black text-white"
+          >
+            Invite Friends / Join Team
+          </a>
+          {canEditSubmittedPrediction ? (
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="h-12 rounded bg-[#d71920] px-4 text-sm font-black text-white"
+            >
+              Edit Prediction
+            </button>
+          ) : (
+            <span className="flex h-12 items-center justify-center rounded bg-slate-200 px-4 text-sm font-black text-slate-500">
+              Prediction Locked
+            </span>
+          )}
+        </div>
+      </div>
+    </section>
+  ) : null;
+
   return (
     <div className="grid gap-5">
       <style jsx global>{`
@@ -915,6 +1179,8 @@ export function RoadToChampionGame({
           );
         })}
       </div>
+
+      {submissionSummary}
 
       <div className="sticky top-14 z-20 lg:hidden">
         <details className="rounded-lg border border-slate-200 bg-white shadow-lg">
