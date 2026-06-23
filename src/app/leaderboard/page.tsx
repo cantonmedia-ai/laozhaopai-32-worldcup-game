@@ -110,7 +110,6 @@ export default function LeaderboardPage() {
         <SectionHeader
           eyebrow="Ranking"
           title="\u6392\u884c\u699c"
-          body="\u7ec8\u6781\u5927\u5956\u663e\u793a\u5168\u90e8\u6e38\u620f\u603b\u6392\u884c\u3002Game 1\u3001Game 2\u3001Team \u53ef\u5206\u522b\u67e5\u770b\u5404\u6392\u884c\u3002"
         />
 
         {message ? (
