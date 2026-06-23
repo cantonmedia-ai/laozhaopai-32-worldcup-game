@@ -3,7 +3,7 @@ import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
-import { stageInlineName } from "@/lib/stage-labels";
+import { teamInviteUrl, whatsappTeamInviteUrl } from "@/lib/team-invite";
 
 type InviteRow = {
   id: string;
@@ -24,7 +24,7 @@ type RawInviteRow = Omit<InviteRow, "profiles"> & {
 export default async function ReferralPage() {
   const profile = await requireCompletedProfile("/referral");
   const referralCode = profile?.referral_code ?? "";
-  const referralLink = `https://games.brainwaveai.my/fifa-last-32?ref=${encodeURIComponent(referralCode)}`;
+  const referralLink = teamInviteUrl(referralCode);
   let invitedPlayers: InviteRow[] = [];
 
   if (hasSupabaseServerEnv() && profile) {
@@ -69,10 +69,10 @@ export default async function ReferralPage() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <CopyLinkButton value={referralLink} />
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Join my FIFA ${stageInlineName("last_32")} game: ${referralLink}`)}`}
+              href={whatsappTeamInviteUrl(referralLink)}
               className="flex h-12 items-center justify-center gap-2 rounded bg-[#0f8a4b] font-black text-white"
             >
-              <Share2 size={18} /> Share to WhatsApp
+              <Share2 size={18} /> Invite Teammate
             </a>
           </div>
         </section>

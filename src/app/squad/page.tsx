@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Copy, Pencil, Save, Share2, UserPlus } from "lucide-react";
 import { PageShell, SectionHeader } from "@/components/app-shell";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { teamInviteUrl, whatsappTeamInviteUrl } from "@/lib/team-invite";
 
 type SquadMember = {
   relationship:
@@ -63,17 +64,11 @@ function inviteUrl(referralCode: string) {
       ? "https://games.brainwaveai.my"
       : window.location.origin;
 
-  return `${origin}/join?ref=${encodeURIComponent(referralCode)}`;
+  return teamInviteUrl(referralCode, origin);
 }
 
 function playerName(profile: PlayerProfile | null) {
   return profile?.display_name || profile?.nickname || "Player";
-}
-
-function whatsappInviteUrl(inviteLink: string) {
-  return `https://wa.me/?text=${encodeURIComponent(
-    `Join my Brainwave Games team and predict the World Cup together! ${inviteLink}`,
-  )}`;
 }
 
 export default function SquadPage() {
@@ -185,7 +180,7 @@ export default function SquadPage() {
 
   async function copyInvite(link: string) {
     await navigator.clipboard.writeText(link);
-    setMessage("Invite link copied.");
+    setMessage("Team invite link copied.");
   }
 
   async function renameTeam(teamId: string) {
@@ -387,7 +382,7 @@ export default function SquadPage() {
                         <Copy size={17} /> Copy Link
                       </button>
                       <a
-                        href={inviteLink ? whatsappInviteUrl(inviteLink) : undefined}
+                        href={inviteLink ? whatsappTeamInviteUrl(inviteLink) : undefined}
                         aria-disabled={!inviteLink}
                         className={`flex h-11 items-center justify-center gap-2 rounded px-4 font-black ${
                           inviteLink
@@ -395,7 +390,7 @@ export default function SquadPage() {
                             : "pointer-events-none bg-slate-300 text-slate-600"
                         }`}
                       >
-                        <Share2 size={17} /> WhatsApp
+                        <Share2 size={17} /> Invite Teammate
                       </a>
                     </div>
                   </div>
@@ -454,7 +449,7 @@ export default function SquadPage() {
                           </p>
                         </div>
                         <a
-                          href={teamFull || !inviteLink ? undefined : whatsappInviteUrl(inviteLink)}
+                          href={teamFull || !inviteLink ? undefined : whatsappTeamInviteUrl(inviteLink)}
                           aria-disabled={teamFull || !inviteLink}
                           className={`flex h-11 items-center justify-center gap-2 rounded px-4 font-black ${
                             teamFull || !inviteLink
@@ -462,7 +457,7 @@ export default function SquadPage() {
                               : "bg-[#d71920] text-white"
                           }`}
                         >
-                          <UserPlus size={17} /> Add Teammate
+                          <UserPlus size={17} /> Invite Teammate
                         </a>
                       </div>
                     );
