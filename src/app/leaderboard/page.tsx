@@ -23,10 +23,10 @@ type SupabaseLeaderboardRow = {
 };
 
 const tabs: Array<{ id: LeaderboardScope; label: string; title: string }> = [
-  { id: "overall", label: "\u7ec8\u6781\u5927\u5956", title: "\u7ec8\u6781\u5927\u5956\u6392\u884c\u699c" },
-  { id: "round", label: "Game 1", title: "Game 1 \u6392\u884c\u699c" },
-  { id: "squad", label: "Game 2", title: "Game 2 \u6392\u884c\u699c" },
-  { id: "invite", label: "Team", title: "Team \u6392\u884c\u699c" },
+  { id: "overall", label: "终极大奖", title: "终极大奖排行榜" },
+  { id: "round", label: "Game 1", title: "Game 1 排行榜" },
+  { id: "squad", label: "Game 2", title: "Game 2 排行榜" },
+  { id: "invite", label: "Team", title: "Team 排行榜" },
 ];
 
 function supabaseRowToRow(row: SupabaseLeaderboardRow): LeaderboardRow {
@@ -109,7 +109,7 @@ export default function LeaderboardPage() {
       <main className="mx-auto max-w-7xl px-4 py-10">
         <SectionHeader
           eyebrow="Ranking"
-          title="\u6392\u884c\u699c"
+          title="排行榜"
         />
 
         {message ? (
@@ -137,7 +137,7 @@ export default function LeaderboardPage() {
 
         <LeaderboardTable
           players={rows}
-          title={loading ? `${activeMeta.title} · Loading...` : activeMeta.title}
+          title={loading ? `${activeMeta.title} - Loading...` : activeMeta.title}
           emptyText="No ranking yet. Ranking updates after scores are confirmed."
         />
       </main>
