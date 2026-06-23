@@ -2,12 +2,67 @@ import Link from "next/link";
 import { LogOut, Share2 } from "lucide-react";
 import { PageShell, SectionHeader, StatCard } from "@/components/app-shell";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
+
+type PlayerScoreSummary = {
+  game1_individual_score: number;
+  game1_team_accumulated_score: number;
+  game1_final_earned_score: number;
+  game2_individual_score: number;
+  game2_team_accumulated_score: number;
+  game2_final_earned_score: number;
+  individual_final_score: number;
+};
+
+const emptyScoreSummary: PlayerScoreSummary = {
+  game1_individual_score: 0,
+  game1_team_accumulated_score: 0,
+  game1_final_earned_score: 0,
+  game2_individual_score: 0,
+  game2_team_accumulated_score: 0,
+  game2_final_earned_score: 0,
+  individual_final_score: 0,
+};
+
+function ScoreLine({
+  label,
+  value,
+  strong = false,
+}: {
+  label: string;
+  value: number;
+  strong?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded bg-slate-100 px-3 py-2">
+      <span className="text-sm font-black text-slate-600">{label}</span>
+      <span className={strong ? "text-xl font-black text-[#d71920]" : "font-black text-slate-950"}>
+        {value}
+      </span>
+    </div>
+  );
+}
 
 export default async function ProfilePage() {
   const profile = await requireCompletedProfile("/profile");
   const whatsapp =
     profile?.whatsapp_number || profile?.phone_number || profile?.phone || "";
   const isAdmin = profile ? ["admin", "owner"].includes(profile.role) : false;
+  let scoreSummary = emptyScoreSummary;
+
+  if (hasSupabaseServerEnv() && profile?.id) {
+    const supabase = await createClient();
+    await supabase.rpc("rebuild_final_score_summaries");
+    const { data } = await supabase
+      .from("player_score_summaries")
+      .select(
+        "game1_individual_score, game1_team_accumulated_score, game1_final_earned_score, game2_individual_score, game2_team_accumulated_score, game2_final_earned_score, individual_final_score",
+      )
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+
+    scoreSummary = (data as PlayerScoreSummary | null) ?? emptyScoreSummary;
+  }
 
   return (
     <PageShell active="/profile">
@@ -21,6 +76,22 @@ export default async function ProfilePage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <StatCard label="Player Name" value={profile ? displayName(profile) : "Player"} tone="gold" />
           <StatCard label="Referral Code" value={profile?.referral_code ?? "-"} tone="green" />
+        </div>
+
+        <div className="card mt-6 grid gap-3 p-5">
+          <div>
+            <h2 className="text-xl font-black text-slate-950">Score Summary</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">
+              Your Individual Final Score = Game 1 Final Earned Score + Game 2 Final Earned Score.
+            </p>
+          </div>
+          <ScoreLine label="Game 1 个人分 / Game 1 Individual Score" value={scoreSummary.game1_individual_score} />
+          <ScoreLine label="Game 1 团队累计分 / Game 1 Team Accumulated Score" value={scoreSummary.game1_team_accumulated_score} />
+          <ScoreLine label="Game 1 最终获得分 / Game 1 Final Earned Score" value={scoreSummary.game1_final_earned_score} />
+          <ScoreLine label="Game 2 个人分 / Game 2 Individual Score" value={scoreSummary.game2_individual_score} />
+          <ScoreLine label="Game 2 团队累计分 / Game 2 Team Accumulated Score" value={scoreSummary.game2_team_accumulated_score} />
+          <ScoreLine label="Game 2 最终获得分 / Game 2 Final Earned Score" value={scoreSummary.game2_final_earned_score} />
+          <ScoreLine label="个人最终总分 / Individual Final Score" value={scoreSummary.individual_final_score} strong />
         </div>
 
         <div className="card mt-6 grid gap-4 p-5">

@@ -34,6 +34,15 @@ type PlayerProfile = {
   referral_code: string | null;
 };
 
+type TeamScoreSummary = {
+  team_id: string;
+  team_game1_accumulated_score: number;
+  team_game2_accumulated_score: number;
+  team_final_score: number;
+  member_count: number;
+  ranking_position: number | null;
+};
+
 function groupByTeam(members: SquadMember[]) {
   return [...members].reduce<Record<string, SquadMember[]>>((groups, member) => {
     groups[member.team_id] ??= [];
@@ -70,6 +79,7 @@ function whatsappInviteUrl(inviteLink: string) {
 export default function SquadPage() {
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [members, setMembers] = useState<SquadMember[]>([]);
+  const [teamScores, setTeamScores] = useState<Record<string, TeamScoreSummary>>({});
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [editingTeamId, setEditingTeamId] = useState("");
@@ -128,7 +138,32 @@ export default function SquadPage() {
       const { data, error } = await supabase.rpc("get_my_squad");
       if (error) throw new Error(error.message);
 
-      setMembers((data ?? []) as SquadMember[]);
+      const nextMembers = (data ?? []) as SquadMember[];
+      setMembers(nextMembers);
+
+      const teamIds = [...new Set(nextMembers.map((member) => member.team_id))];
+      if (teamIds.length) {
+        await supabase.rpc("rebuild_final_score_summaries");
+        const { data: summaryRows, error: summaryError } = await supabase
+          .from("squad_team_score_summaries")
+          .select(
+            "team_id, team_game1_accumulated_score, team_game2_accumulated_score, team_final_score, member_count, ranking_position",
+          )
+          .in("team_id", teamIds);
+
+        if (summaryError) throw new Error(summaryError.message);
+
+        setTeamScores(
+          Object.fromEntries(
+            ((summaryRows ?? []) as TeamScoreSummary[]).map((row) => [
+              row.team_id,
+              row,
+            ]),
+          ),
+        );
+      } else {
+        setTeamScores({});
+      }
     } catch (error) {
       setMembers([]);
       setMessage(error instanceof Error ? error.message : "Unable to load team data.");
@@ -231,6 +266,7 @@ export default function SquadPage() {
             });
             const inviteLink = ownInviteLink;
             const teamFull = teammates.length >= 4;
+            const score = teamScores[team.team_id];
 
             return (
               <div key={team.team_id} className="card overflow-hidden">
@@ -285,6 +321,45 @@ export default function SquadPage() {
                     <div className="rounded bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">
                       Owner + {teammates.length}/4 friends
                     </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-2 rounded bg-slate-100 p-3 text-sm font-black text-slate-700 md:grid-cols-3">
+                    <div>
+                      <p className="text-xs text-slate-500">
+                        Game 1 团队累计分
+                      </p>
+                      <p className="text-lg text-slate-950">
+                        {score?.team_game1_accumulated_score ?? 0}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Game 1 Team Accumulated Score
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">
+                        Game 2 团队累计分
+                      </p>
+                      <p className="text-lg text-slate-950">
+                        {score?.team_game2_accumulated_score ?? 0}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Game 2 Team Accumulated Score
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">
+                        团队最终总分
+                      </p>
+                      <p className="text-xl text-[#d71920]">
+                        {score?.team_final_score ?? 0}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Team Final Score
+                      </p>
+                    </div>
+                    <p className="md:col-span-3 text-xs font-bold text-slate-500">
+                      Team Final Score = Game 1 Team Accumulated Score + Game 2 Team Accumulated Score.
+                    </p>
                   </div>
 
                   <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
