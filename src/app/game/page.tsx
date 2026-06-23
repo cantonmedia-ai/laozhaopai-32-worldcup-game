@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { PageShell, SectionHeader } from "@/components/app-shell";
 import { displayName, requireCompletedProfile } from "@/lib/auth-guards";
+import { loadFirstLast16Deadline } from "@/lib/football-data";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { stageInlineName } from "@/lib/stage-labels";
 
@@ -23,6 +24,8 @@ type RankingRow = {
 
 type DashboardData = {
   topRows: RankingRow[];
+  game1DueAt: string | null;
+  game1DeadlineConfirmed: boolean;
   predictionDueAt: string | null;
   openMatchCount: number;
   submittedPredictionCount: number;
@@ -131,6 +134,8 @@ function formatCountdown(value: string | null) {
 async function loadDashboardData(authUserId: string | null): Promise<DashboardData> {
   const emptyData: DashboardData = {
     topRows: [],
+    game1DueAt: null,
+    game1DeadlineConfirmed: false,
     predictionDueAt: null,
     openMatchCount: 0,
     submittedPredictionCount: 0,
@@ -140,6 +145,13 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
   if (!hasSupabaseServerEnv()) return emptyData;
 
   const supabase = await createClient();
+  const game1Deadline = await loadFirstLast16Deadline();
+  const { data: game1Stage } = await supabase
+    .from("prediction_stages")
+    .select("due_at, deadline_confirmed")
+    .eq("stage_key", "last_16")
+    .maybeSingle();
+
   const { data: leaderboardRows } = await supabase.rpc("get_leaderboard", {
     p_game_id: null,
     p_round_id: null,
@@ -169,6 +181,10 @@ async function loadDashboardData(authUserId: string | null): Promise<DashboardDa
 
   return {
     topRows: allRows.slice(0, 3),
+    game1DueAt: game1Deadline?.dueAt ?? game1Stage?.due_at ?? null,
+    game1DeadlineConfirmed: Boolean(
+      game1Deadline?.dueAt || game1Stage?.deadline_confirmed,
+    ),
     predictionDueAt,
     openMatchCount: openMatchIds.length,
     submittedPredictionCount: predictionRows?.length ?? 0,
@@ -180,6 +196,8 @@ export default async function GamePage() {
   const profile = await requireCompletedProfile("/game");
   const {
     topRows,
+    game1DueAt,
+    game1DeadlineConfirmed,
     predictionDueAt,
     openMatchCount,
     submittedPredictionCount,
@@ -285,6 +303,13 @@ export default async function GamePage() {
                         ? `Current active round: ${currentStage}`
                         : "Waiting for Round of 32 fixtures."}
                   </p>
+                  {card.id === "game1" ? (
+                    <p className="mt-2 rounded bg-slate-100 p-3 text-sm font-bold text-slate-600">
+                      {game1DeadlineConfirmed && game1DueAt
+                        ? `Deadline: ${formatDeadline(game1DueAt)}`
+                        : "Deadline pending fixture confirmation. It will update automatically once the first Last 16 match time is confirmed."}
+                    </p>
+                  ) : null}
                   {locked ? (
                     <button
                       type="button"

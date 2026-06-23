@@ -7,14 +7,21 @@ import {
 } from "@/components/road-to-champion-game";
 import { requireCompletedProfile } from "@/lib/auth-guards";
 import { getCurrentRound } from "@/lib/demo-data";
+import { loadFirstLast16Deadline } from "@/lib/football-data";
 import { sortRoadStages } from "@/lib/road-to-champion";
 import { stageInlineName } from "@/lib/stage-labels";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
+import { createServiceClient, hasSupabaseServiceEnv } from "@/lib/supabase/service";
 
 type RankingRow = {
   user_id: string;
   total_points: number;
   rank_position: number;
+};
+
+type PointRow = {
+  source_type: string;
+  points: number | null;
 };
 
 function demoStages(): RoadStage[] {
@@ -140,17 +147,74 @@ export default async function RoadToChampionPage() {
 
   if (hasSupabaseServerEnv() && profile) {
     const supabase = await createClient();
+    const serviceSupabase = hasSupabaseServiceEnv() ? createServiceClient() : null;
+    const dataClient = serviceSupabase ?? supabase;
+
+    const game1Deadline = await loadFirstLast16Deadline();
+    if (game1Deadline && serviceSupabase) {
+      await serviceSupabase
+        .from("prediction_stages")
+        .update({
+          due_at: game1Deadline.dueAt,
+          kickoff_at: game1Deadline.kickoffAt,
+          deadline_confirmed: true,
+          deadline_source: "football_data_api",
+          status:
+            new Date(game1Deadline.dueAt).getTime() <= Date.now()
+              ? "locked"
+              : "open",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("stage_key", "last_16")
+        .neq("status", "scored");
+    }
+
+    const { data: stageRows } = await dataClient
+      .from("prediction_stages")
+      .select(
+        "stage_key, stage_name, required_selection_count, points_per_correct, perfect_bonus_points, due_at, status, deadline_confirmed, deadline_source, kickoff_at",
+      );
+
+    if (stageRows?.length) {
+      stages = sortRoadStages(stageRows as RoadStage[]);
+    }
+
+    if (!game1Deadline) {
+      stages = stages.map((stage) =>
+        stage.stage_key === "last_16"
+          ? { ...stage, deadline_confirmed: Boolean(stage.deadline_confirmed) }
+          : stage,
+      );
+    }
+
+    const { data: teamRows } = await dataClient
+      .from("teams")
+      .select("id, country_name, country_code, flag_url, flag_asset_path")
+      .order("country_name");
+
+    if (teamRows?.length) {
+      teams = teamRows as RoadTeam[];
+    }
+
+    const { data: predictionRows } = await dataClient
+      .from("user_stage_predictions")
+      .select(
+        "stage_key, selected_team_ids, status, points_earned, correct_count, bonus_earned, personal_correct_score, team_accumulated_score, final_earned_score",
+      )
+      .eq("user_id", profile.auth_user_id);
+
+    predictions = (predictionRows ?? []) as RoadPrediction[];
 
     const { data: pointRows } = await supabase
       .from("point_transactions")
       .select("source_type, points")
       .eq("user_id", profile.auth_user_id);
 
-    totalPoints = (pointRows ?? []).reduce(
+    totalPoints = ((pointRows ?? []) as PointRow[]).reduce(
       (sum, row) => sum + Number(row.points ?? 0),
       0,
     );
-    referralPoints = (pointRows ?? [])
+    referralPoints = ((pointRows ?? []) as PointRow[])
       .filter((row) => row.source_type === "referral")
       .reduce((sum, row) => sum + Number(row.points ?? 0), 0);
 

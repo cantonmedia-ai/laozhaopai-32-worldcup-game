@@ -19,6 +19,7 @@ import {
   roadStageOrder,
   type RoadStageKey,
 } from "@/lib/road-to-champion";
+import { createClient } from "@/lib/supabase/client";
 
 export type RoadTeam = {
   id: string;
@@ -36,6 +37,9 @@ export type RoadStage = {
   perfect_bonus_points: number;
   due_at: string;
   status: "draft" | "open" | "locked" | "scored";
+  deadline_confirmed?: boolean | null;
+  deadline_source?: string | null;
+  kickoff_at?: string | null;
 };
 
 export type RoadPrediction = {
@@ -45,6 +49,9 @@ export type RoadPrediction = {
   points_earned: number | null;
   correct_count: number | null;
   bonus_earned: number | null;
+  personal_correct_score?: number | null;
+  team_accumulated_score?: number | null;
+  final_earned_score?: number | null;
 };
 
 export type RoadSummary = {
@@ -70,11 +77,14 @@ function timeLeft(dueAt: string, now: number) {
 
 function visualStatus(stage: RoadStage, now: number) {
   if (stage.status === "scored") return "Scored";
+  if (stage.deadline_confirmed === false && stage.status === "open") {
+    return "Open for prediction";
+  }
   if (stage.status === "locked" || new Date(stage.due_at).getTime() <= now) {
-    return "Locked";
+    return "Prediction closed";
   }
   if (stage.status !== "open") return "Draft";
-  return "Open";
+  return "Open for prediction";
 }
 
 function flagPath(team: RoadTeam) {
@@ -141,10 +151,28 @@ export function RoadToChampionGame({
   const required = activeStage.required_selection_count;
   const remaining = Math.max(0, required - selected.length);
   const submitted = submittedByStage[activeStage.stage_key] ?? false;
-  const status = submitted ? "Submitted" : visualStatus(activeStage, now);
-  const locked = status !== "Open" || submitted;
+  const visualStageStatus = visualStatus(activeStage, now);
+  const status =
+    activeStage.status === "scored"
+      ? "Completed"
+      : submitted && visualStageStatus === "Open for prediction"
+        ? "Submitted - editable before deadline"
+        : visualStageStatus;
+  const locked = visualStageStatus !== "Open for prediction";
   const complete = selected.length === required;
   const stageMessage = messageByStage[activeStage.stage_key];
+  const activePrediction = predictions.find(
+    (item) => item.stage_key === activeStage.stage_key,
+  );
+  const personalCorrectScore =
+    activePrediction?.personal_correct_score ??
+    activePrediction?.points_earned ??
+    0;
+  const teamAccumulatedScore = activePrediction?.team_accumulated_score ?? 0;
+  const finalEarnedScore =
+    activePrediction?.final_earned_score ??
+    activePrediction?.points_earned ??
+    personalCorrectScore;
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredTeams = normalizedSearch
     ? teams.filter((team) => {
@@ -181,26 +209,56 @@ export function RoadToChampionGame({
     });
   }
 
-  function save(statusToSave: "draft" | "submitted") {
-    if (submitted) return;
+  async function save(statusToSave: "draft" | "submitted") {
+    if (locked) {
+      setMessageByStage((current) => ({
+        ...current,
+        [activeStage.stage_key]:
+          "Prediction closed. Answers cannot be submitted or edited after the deadline.",
+      }));
+      return;
+    }
+
     setSavingStage(`${activeStage.stage_key}:${statusToSave}`);
-    window.setTimeout(() => {
+    setMessageByStage((current) => ({
+      ...current,
+      [activeStage.stage_key]: "",
+    }));
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.rpc("save_road_prediction", {
+        p_stage_key: activeStage.stage_key,
+        p_team_ids: selected,
+        p_status: statusToSave,
+      });
+
+      if (error) throw new Error(error.message);
+
       if (statusToSave === "submitted") {
         setSubmittedByStage((current) => ({
           ...current,
           [activeStage.stage_key]: true,
         }));
       }
-      setSavingStage("");
+
       setMessageByStage((current) => ({
         ...current,
         [activeStage.stage_key]:
           statusToSave === "draft"
             ? "Draft saved. You can continue later."
-            : "Prediction submitted. Once submitted, predictions cannot be changed.",
+            : "Prediction submitted. You can still edit before the deadline.",
       }));
       setConfirmStage(null);
-    }, 350);
+    } catch (error) {
+      setMessageByStage((current) => ({
+        ...current,
+        [activeStage.stage_key]:
+          error instanceof Error ? error.message : "Unable to save prediction.",
+      }));
+    } finally {
+      setSavingStage("");
+    }
   }
 
   const selectedStrip = selectedTeams.length ? (
@@ -400,7 +458,7 @@ export function RoadToChampionGame({
                 Pick 16 teams and keep your picks visible.
               </h2>
             </div>
-            <div className="flex flex-wrap gap-2 text-xs font-black">
+          <div className="flex flex-wrap gap-2 text-xs font-black">
               <span className="rounded bg-green-100 px-3 py-1 text-green-800">
                 {status}
               </span>
@@ -413,15 +471,19 @@ export function RoadToChampionGame({
 
         <div className="grid gap-3 p-4 sm:grid-cols-4">
           <div className="rounded bg-white/10 p-4">
-            <p className="text-sm font-bold text-white/65">Due Date</p>
+            <p className="text-sm font-bold text-white/65">Deadline / 截止时间</p>
             <p className="mt-1 text-lg font-black">
-              {formatMalaysiaDate(activeStage.due_at)}
+              {activeStage.deadline_confirmed === false
+                ? "Pending fixture confirmation"
+                : formatMalaysiaDate(activeStage.due_at)}
             </p>
           </div>
           <div className="rounded bg-white/10 p-4">
             <p className="text-sm font-bold text-white/65">Closes in</p>
             <p className="mt-1 text-lg font-black">
-              {timeLeft(activeStage.due_at, now)}
+              {activeStage.deadline_confirmed === false
+                ? "Pending"
+                : timeLeft(activeStage.due_at, now)}
             </p>
           </div>
           <div className="rounded bg-white/10 p-4">
@@ -431,9 +493,54 @@ export function RoadToChampionGame({
             </p>
           </div>
           <div className="rounded bg-white/10 p-4">
-            <p className="text-sm font-bold text-white/65">My Points</p>
-            <p className="mt-1 text-lg font-black">{summary.totalPoints}</p>
+            <p className="text-sm font-bold text-white/65">Final Earned Score</p>
+            <p className="mt-1 text-lg font-black">{finalEarnedScore}</p>
           </div>
+        </div>
+        <div className="border-t border-white/10 p-4">
+          <div className="grid gap-3 text-sm font-bold text-white/80 md:grid-cols-3">
+            <div className="rounded bg-white/10 p-3">
+              <p className="text-white/55">个人猜中分 / Personal Correct Score</p>
+              <p className="mt-1 text-2xl font-black text-white">
+                {personalCorrectScore}
+              </p>
+            </div>
+            <div className="rounded bg-white/10 p-3">
+              <p className="text-white/55">团队累计分 / Team Accumulated Score</p>
+              <p className="mt-1 text-2xl font-black text-white">
+                {teamAccumulatedScore}
+              </p>
+            </div>
+            <div className="rounded bg-white/10 p-3">
+              <p className="text-white/55">最终获得分 / Final Earned Score</p>
+              <p className="mt-1 text-2xl font-black text-[#f4c542]">
+                {finalEarnedScore}
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-sm font-semibold text-white/70">
+            你的最终获得分 = 你的个人猜中分 + 你所在团队的累计猜中分。
+            <span className="block">
+              Your final earned score = your personal correct score + your team's accumulated correct score.
+            </span>
+          </p>
+          <p className="mt-2 text-sm font-semibold text-white/70">
+            {activeStage.deadline_confirmed === false ? (
+              <>
+                截止时间等待赛程确认。Last 16 第一场比赛时间确认后，系统将自动更新截止时间。
+                <span className="block">
+                  Deadline pending fixture confirmation. Once the first Last 16 match time is confirmed, the system will automatically update the deadline.
+                </span>
+              </>
+            ) : (
+              <>
+                Game 1 将在 Last 16 第一场比赛开始前 15 分钟截止。截止后不能提交或修改答案。
+                <span className="block">
+                  Game 1 will close 15 minutes before the first Last 16 match starts. After the deadline, answers cannot be submitted or edited.
+                </span>
+              </>
+            )}
+          </p>
         </div>
       </section>
 
@@ -530,7 +637,7 @@ export function RoadToChampionGame({
             <div className="rounded-lg bg-white p-4 shadow-sm">
               <button
                 type="button"
-              disabled={submitted || Boolean(savingStage)}
+              disabled={locked || Boolean(savingStage)}
                 onClick={() => save("draft")}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded bg-slate-100 px-4 font-black text-slate-800 disabled:opacity-60"
               >
@@ -548,13 +655,15 @@ export function RoadToChampionGame({
               </p>
               <button
                 type="button"
-              disabled={submitted || !complete || Boolean(savingStage)}
+              disabled={locked || !complete || Boolean(savingStage)}
                 onClick={() => setConfirmStage(activeStage)}
                 className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-4 font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
               >
                 <Send size={18} />
                 {complete
-                  ? "Submit Sweet 16 Prediction"
+                  ? submitted
+                    ? "Update Submitted Prediction"
+                    : "Submit Sweet 16 Prediction"
                   : `Select ${remaining} more to submit`}
               </button>
             </div>
@@ -566,7 +675,7 @@ export function RoadToChampionGame({
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-2">
           <button
             type="button"
-            disabled={submitted || Boolean(savingStage)}
+            disabled={locked || Boolean(savingStage)}
             onClick={() => save("draft")}
             className="flex h-12 items-center justify-center gap-2 rounded bg-slate-100 px-3 text-sm font-black text-slate-800 disabled:opacity-60"
           >
@@ -575,11 +684,11 @@ export function RoadToChampionGame({
           </button>
           <button
             type="button"
-            disabled={submitted || !complete || Boolean(savingStage)}
+            disabled={locked || !complete || Boolean(savingStage)}
             onClick={() => setConfirmStage(activeStage)}
             className="flex h-12 items-center justify-center gap-2 rounded bg-[#d71920] px-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
           >
-            {complete ? "Submit" : `${remaining} more`}
+            {complete ? (submitted ? "Update" : "Submit") : `${remaining} more`}
           </button>
         </div>
         <p className="mt-1 text-center text-xs font-semibold text-slate-500">
@@ -599,12 +708,12 @@ export function RoadToChampionGame({
             <p className="mt-3 text-center font-semibold text-slate-600">
               提交后将不能修改答案，请确认你的选择。
               <span className="mt-1 block">
-                Once submitted, you cannot change your predictions. Please
-                confirm your choices.
+                You can edit before the deadline. After the deadline, answers
+                cannot be submitted or edited.
               </span>
             </p>
             <div className="mt-4 grid gap-2 rounded bg-slate-100 p-3 text-sm font-bold text-slate-600">
-              <p>Due date: 28 Jun 2026, 11:59 pm</p>
+              <p>Deadline: {formatMalaysiaDate(confirmStage.due_at)}</p>
               <p className="flex items-center gap-2">
                 <Clock size={15} /> {timeLeft(confirmStage.due_at, now)}
               </p>
