@@ -52,7 +52,7 @@ function groupByTeam(members: SquadMember[]) {
 }
 
 function statusLabel(status: SquadMember["team_status"], friendCount: number) {
-  if (status === "full" || friendCount >= 4) return "Team is full";
+  if (status === "full" || friendCount >= 4) return "Team is full · 新成员会自动加入下一队";
   if (status === "active" || friendCount >= 2) return "已成队";
   return `还差 ${Math.max(0, 2 - friendCount)} 位朋友成队`;
 }
@@ -223,8 +223,12 @@ export default function SquadPage() {
         <SectionHeader
           eyebrow="Team"
           title="我的团队"
-          body="每位玩家只有一个邀请码。朋友用你的码加入，会进入你的队伍。每队总共 5 人：1 位队主 + 最多 4 位朋友。"
+          body="每位玩家只有一个邀请码。朋友用你的码加入，会进入你名下未满的队伍。每队最多 5 人：1 位队长 + 最多 4 位队友；满员后系统会自动创建下一队。"
         />
+
+        <div className="mb-5 rounded-lg bg-[#071525] p-4 text-sm font-bold leading-relaxed text-white">
+          此邀请码可以持续邀请朋友加入。每队最多 5 人；当前队伍满员后，新成员会自动加入下一队。队长可以拥有多个团队，但队长个人最终总分只会计算第 1 队的团队累计分；第 2 队、第 3 队仍会独立参加团队排行榜。
+        </div>
 
         {message ? (
           <div className="mb-5 rounded bg-yellow-50 p-4 text-sm font-bold text-yellow-900">
@@ -319,7 +323,7 @@ export default function SquadPage() {
                       )}
                     </div>
                     <div className="rounded bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">
-                      Owner + {teammates.length}/4 friends
+                      {sorted.length}/5 members · Owner + {teammates.length}/4 friends
                     </div>
                   </div>
 
@@ -467,7 +471,7 @@ export default function SquadPage() {
 
                 {teamFull ? (
                   <div className="border-t border-slate-100 bg-slate-50 px-5 py-3 text-sm font-black text-slate-700">
-                    Team is full
+                    此队伍已满，新成员会自动加入下一队。Team is full; new members will auto-join the next team.
                   </div>
                 ) : null}
               </div>

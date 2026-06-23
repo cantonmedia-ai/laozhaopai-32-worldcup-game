@@ -228,6 +228,31 @@ export default async function RulesPage() {
           })}
         </section>
 
+        <section className="card mt-6 p-5">
+          <div className="flex items-center gap-2">
+            <UsersRound className="text-[#0f8a4b]" />
+            <h2 className="text-xl font-black text-slate-950">
+              团队模式补充规则
+            </h2>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {[
+              "每个团队最多 5 人，包括 1 位队长和最多 4 位队友。",
+              "如果同一个队长的邀请码有超过 5 人使用，系统会自动为该队长创建下一队。",
+              "第 1 队满员后，新成员会自动加入第 2 队；第 2 队满员后，新成员会自动加入第 3 队。",
+              "同一个队长可以拥有多个团队，但每个普通玩家只会加入一个团队。",
+              "每个团队都会独立计算团队分数和团队排名。",
+              "同一个队长可以拥有多个团队，但队长个人最终总分只会计算第 1 队的团队累计分。",
+              "第 2 队、第 3 队等团队仍然会参加团队排行榜，但不会额外加进队长个人最终总分。",
+              "普通成员只属于一个团队，因此普通成员的个人最终总分会计算自己所属团队的团队累计分。",
+            ].map((rule) => (
+              <p key={rule} className="rounded bg-slate-100 p-3 text-sm font-bold text-slate-700">
+                {rule}
+              </p>
+            ))}
+          </div>
+        </section>
+
         <section className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="card p-5">
             <div className="flex items-center gap-2">
