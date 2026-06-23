@@ -190,6 +190,12 @@ export function RoadToChampionAdmin({
                 <p className="mt-1 text-sm font-semibold text-slate-600">
                   Current due date: {formatMalaysiaDate(stage.due_at)}
                 </p>
+                {stage.stage_key === "last_16" ? (
+                  <p className="mt-2 rounded bg-yellow-50 px-3 py-2 text-xs font-black text-yellow-900">
+                    Game 1 Last 16 lock rule: closes 15 minutes before the first
+                    32强生死战 / Round of 32 match starts.
+                  </p>
+                ) : null}
               </div>
               <div className="rounded bg-slate-100 p-4 text-sm font-bold text-slate-700">
                 Required selections: {stage.required_selection_count}

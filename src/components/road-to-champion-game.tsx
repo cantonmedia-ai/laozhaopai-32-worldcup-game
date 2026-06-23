@@ -1141,16 +1141,16 @@ export function RoadToChampionGame({
           <p className="mt-2 text-sm font-semibold text-white/70">
             {activeStage.deadline_confirmed === false ? (
               <>
-                截止时间等待赛程确认。Last 16 第一场比赛时间确认后，系统将自动更新截止时间。
+                截止时间等待赛程确认。32强生死战 / Round of 32 第一场比赛时间确认后，系统将自动更新截止时间。
                 <span className="block">
                   Deadline pending fixture confirmation. Once the first Round of 32 match time is confirmed, the system will automatically update the deadline.
                 </span>
               </>
             ) : (
               <>
-                Game 1 将在 Last 16 第一场比赛开始前 15 分钟截止。截止后不能提交或修改答案。
+                Game 1 Last 16 预测将在 32强生死战 / Round of 32 第一场比赛开始前 15 分钟截止。截止后不能提交或修改答案。
                 <span className="block">
-                  Game 1 will close 15 minutes before the first Round of 32 match starts. After the deadline, answers cannot be submitted or edited.
+                  Game 1 Last 16 prediction closes 15 minutes before the first Round of 32 match starts. After the deadline, answers cannot be submitted or edited.
                 </span>
               </>
             )}

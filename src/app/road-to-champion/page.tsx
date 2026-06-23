@@ -246,7 +246,7 @@ export default async function RoadToChampionPage() {
           due_at: game1Deadline.dueAt,
           kickoff_at: game1Deadline.kickoffAt,
           deadline_confirmed: true,
-          deadline_source: "football_data_api",
+          deadline_source: "first_round_of_32_kickoff_minus_15m",
           status:
             new Date(game1Deadline.dueAt).getTime() <= Date.now()
               ? "locked"
