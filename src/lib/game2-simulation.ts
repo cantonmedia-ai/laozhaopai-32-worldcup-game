@@ -463,8 +463,8 @@ export async function getGame2Simulation(supabase: AnyClient) {
         winner_points: winnerPoints,
         score_accuracy_points: scoreAccuracy,
         individual_match_score: Number(row.individual_match_score ?? 0),
-        team_accumulated_score: Number(row.team_accumulated_score ?? 0),
-        final_earned_score: Number(row.final_earned_score ?? 0),
+        team_match_accumulated_score: Number(row.team_accumulated_score ?? 0),
+        match_final_earned_score: Number(row.final_earned_score ?? 0),
         sort_order: order,
         match_number: match.match_number,
       };
@@ -478,8 +478,13 @@ export async function getGame2Simulation(supabase: AnyClient) {
       player_name: game2Players[order - 1] ?? `模拟玩家 ${order}`,
       team_name: playerTeamName(order),
       game2_individual_total_score: rows.reduce((sum, row) => sum + row.individual_match_score, 0),
-      game2_team_accumulated_score: rows.reduce((sum, row) => sum + row.team_accumulated_score, 0),
-      game2_final_earned_score: rows.reduce((sum, row) => sum + row.final_earned_score, 0),
+      game2_team_accumulated_total_score: rows.reduce(
+        (sum, row) => sum + row.team_match_accumulated_score,
+        0,
+      ),
+      game2_final_earned_total_score:
+        rows.reduce((sum, row) => sum + row.individual_match_score, 0) +
+        rows.reduce((sum, row) => sum + row.team_match_accumulated_score, 0),
       sort_order: order,
     };
   });

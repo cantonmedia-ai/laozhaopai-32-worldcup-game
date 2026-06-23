@@ -15,14 +15,16 @@ type MatchResult = {
   winner_points: number;
   score_accuracy_points: number;
   individual_match_score: number;
+  team_match_accumulated_score: number;
+  match_final_earned_score: number;
 };
 
 type PlayerSummary = {
   player_name: string;
   team_name: string;
   game2_individual_total_score: number;
-  game2_team_accumulated_score: number;
-  game2_final_earned_score: number;
+  game2_team_accumulated_total_score: number;
+  game2_final_earned_total_score: number;
 };
 
 type TeamSummary = {
@@ -193,7 +195,7 @@ export function Game2SimulationAdmin() {
           <h3 className="text-xl font-black text-slate-950">逐场计算结果</h3>
           <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
             <div className="overflow-x-auto">
-              <table className="min-w-[1500px] text-left text-sm">
+              <table className="min-w-[1720px] text-left text-sm">
                 <thead className="bg-[#071525] text-white">
                   <tr>
                     {[
@@ -208,6 +210,8 @@ export function Game2SimulationAdmin() {
                       "赢家分",
                       "比分准确分",
                       "本场个人分",
+                      "本场团队累计分",
+                      "本场最终获得分",
                     ].map((header) => (
                       <th key={header} className="px-3 py-3 font-black">
                         {header}
@@ -234,6 +238,12 @@ export function Game2SimulationAdmin() {
                       <td className="px-3 py-3 font-black text-[#d71920]">
                         {display(row.individual_match_score)}
                       </td>
+                      <td className="px-3 py-3 font-black text-[#0f8a4b]">
+                        {display(row.team_match_accumulated_score)}
+                      </td>
+                      <td className="px-3 py-3 font-black text-[#d71920]">
+                        {display(row.match_final_earned_score)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -250,7 +260,7 @@ export function Game2SimulationAdmin() {
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-slate-100 text-slate-600">
                 <tr>
-                  {["玩家名称", "所属团队", "游戏二个人总分", "游戏二团队累计分", "游戏二最终获得分"].map(
+                  {["玩家名称", "所属团队", "游戏二个人总分", "游戏二团队累计总分", "游戏二最终获得总分"].map(
                     (header) => (
                       <th key={header} className="px-4 py-3 font-black">
                         {header}
@@ -265,9 +275,9 @@ export function Game2SimulationAdmin() {
                     <td className="px-4 py-3 font-black">{row.player_name}</td>
                     <td className="px-4 py-3">{row.team_name}</td>
                     <td className="px-4 py-3">{row.game2_individual_total_score}</td>
-                    <td className="px-4 py-3">{row.game2_team_accumulated_score}</td>
+                    <td className="px-4 py-3">{row.game2_team_accumulated_total_score}</td>
                     <td className="px-4 py-3 font-black text-[#d71920]">
-                      {row.game2_final_earned_score}
+                      {row.game2_final_earned_total_score}
                     </td>
                   </tr>
                 ))}
