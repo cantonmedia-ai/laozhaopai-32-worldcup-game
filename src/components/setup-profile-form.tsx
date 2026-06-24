@@ -52,7 +52,12 @@ export function SetupProfileForm() {
       return;
     }
 
-    if (cleanMobile && !isValidWhatsApp(cleanMobile)) {
+    if (!cleanMobile) {
+      setMessage("Please enter your WhatsApp or mobile number.");
+      return;
+    }
+
+    if (!isValidWhatsApp(cleanMobile)) {
       setMessage("Enter a valid mobile number, for example 60123456789, +60123456789, or 0123456789.");
       return;
     }
@@ -89,7 +94,7 @@ export function SetupProfileForm() {
         "complete_player_profile",
         {
           p_nickname: cleanName,
-          p_whatsapp_number: cleanMobile || null,
+          p_whatsapp_number: cleanMobile,
           p_preferred_language: preferredLanguage,
         },
       );
@@ -175,12 +180,13 @@ export function SetupProfileForm() {
       </label>
 
       <label className="grid gap-2 font-bold">
-        Mobile Number / 手机号码 <span className="text-xs text-slate-500">(optional)</span>
+        WhatsApp / Mobile Number
         <input
           value={mobileNumber}
           onChange={(event) => setMobileNumber(event.target.value)}
           className="h-12 rounded border border-slate-200 px-3 font-semibold"
           placeholder="60123456789"
+          required
         />
         <span className="text-xs font-bold text-slate-500">
           Mobile number is only used for prize notification if you win.

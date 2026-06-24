@@ -10,14 +10,6 @@ import { ReferralInviteBanner } from "@/components/referral-invite-banner";
 import { TeamFlag } from "@/components/team-flag";
 import { teams } from "@/lib/demo-data";
 import {
-  knockoutWinnerCta,
-  knockoutWinnerDescription,
-  knockoutWinnerNameCn,
-  knockoutWinnerNameEn,
-  knockoutWinnerRankingTitle,
-  knockoutWinnerSubtitle,
-} from "@/lib/knockout-winner";
-import {
   knockoutStageOrder,
   stageDescription,
   stageDisplayName,
@@ -87,25 +79,27 @@ export async function FifaLast32Page() {
               FIFA World Cup 2026
             </p>
             <h1 className="max-w-full whitespace-normal break-words text-[32px] font-black leading-[1.04] md:max-w-3xl md:text-7xl md:leading-tight">
-              {knockoutWinnerNameCn}
+              <T k="home.heroTitleCn" />
               <br />
-              <span className="text-2xl md:text-5xl">{knockoutWinnerNameEn}</span>
+              <span className="text-2xl md:text-5xl">
+                <T k="home.heroTitleEn" />
+              </span>
             </h1>
             <p className="mt-3 max-w-full whitespace-normal break-words text-sm font-semibold leading-relaxed text-white/85 md:mt-5 md:max-w-2xl md:text-xl">
-              {knockoutWinnerSubtitle} {knockoutWinnerDescription}
+              <T k="home.heroDescription" />
             </p>
             <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row md:mt-8">
               <Link
                 href="/login?next=/road-to-champion"
                 className="inline-flex h-13 w-full items-center justify-center gap-2 rounded bg-[#d71920] px-5 text-center font-black text-white shadow-lg shadow-red-950/30 hover:bg-red-700 sm:w-auto md:px-6"
               >
-                {knockoutWinnerCta} <ArrowRight size={18} />
+                <T k="home.heroCta" /> <ArrowRight size={18} />
               </Link>
               <Link
                 href="/rules"
                 className="inline-flex h-13 w-full items-center justify-center rounded border border-white/30 px-5 text-center font-black text-white hover:bg-white/10 sm:w-auto md:px-6"
               >
-                Rules & Prizes
+                <T k="common.rulesPrizes" />
               </Link>
             </div>
             <div className="mt-5 hidden max-w-3xl grid-cols-2 gap-2 md:mt-8 md:grid md:grid-cols-4 md:gap-3">
@@ -160,12 +154,6 @@ export async function FifaLast32Page() {
                 <T k="home.joinSubtitle" />
               </p>
               <AuthButtons next="/game" />
-              <Link
-                href="/admin-login"
-                className="mt-3 flex h-11 w-full items-center justify-center rounded border border-slate-200 bg-white text-sm font-black text-slate-700 hover:bg-slate-50"
-              >
-                Admin
-              </Link>
               <p className="mt-4 break-words rounded bg-slate-100 p-3 text-center text-xs font-bold text-slate-600">
                 <T k="home.whatsappNote" />
               </p>
@@ -187,24 +175,39 @@ export async function FifaLast32Page() {
         </div>
         <LeaderboardTable
           players={leaderboardRows.slice(0, 4)}
-          title={knockoutWinnerRankingTitle}
-          emptyText="No players signed up yet."
+          title={<T k="home.rankingTitle" />}
+          emptyText={<T k="home.noPlayers" />}
         />
       </section>
       <LiveScoreboard />
       <section className="w-full bg-white px-4 py-6 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
           {[
-            [knockoutWinnerNameCn, stageDescription("last_32"), Trophy],
-            ["好友战队", "分享专属链接，把朋友拉进你的战区。", Share2],
-            ["Prize Setting", "Knockout Winner Challenge Ranking 决定个人赢家战奖品。", Gift],
-          ].map(([title, body, Icon]) => {
-            const IconComponent = Icon as typeof Medal;
+            {
+              key: "winner",
+              title: <T k="home.winnerChallengeName" />,
+              body: stageDescription("last_32"),
+              icon: Trophy,
+            },
+            {
+              key: "friend-team",
+              title: <T k="home.friendTeam" />,
+              body: <T k="home.friendTeamBody" />,
+              icon: Share2,
+            },
+            {
+              key: "prize",
+              title: <T k="home.prizeSetting" />,
+              body: <T k="home.prizeSettingBody" />,
+              icon: Gift,
+            },
+          ].map(({ key, title, body, icon }) => {
+            const IconComponent = icon as typeof Medal;
             return (
-              <div key={String(title)} className="rounded-lg bg-slate-100 p-5">
+              <div key={key} className="rounded-lg bg-slate-100 p-5">
                 <IconComponent className="text-[#d71920]" size={28} />
-                <h3 className="mt-4 text-xl font-black">{title as string}</h3>
-                <p className="mt-2 text-slate-600">{body as string}</p>
+                <h3 className="mt-4 text-xl font-black">{title}</h3>
+                <p className="mt-2 text-slate-600">{body}</p>
               </div>
             );
           })}

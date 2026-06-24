@@ -48,15 +48,15 @@ export async function AdminLayout({
   await requireAdminPasswordAccess(active);
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-950 md:grid md:grid-cols-[260px_1fr]">
-      <aside className="flex flex-col bg-[#071525] p-4 text-white">
+    <div className="min-h-screen overflow-x-hidden bg-slate-100 text-slate-950 md:grid md:grid-cols-[260px_minmax(0,1fr)]">
+      <aside className="flex min-w-0 flex-col bg-[#071525] p-4 text-white">
         <Link href="/fifa-last-32" className="mb-6 flex items-center gap-2 font-black">
           <span className="grid size-9 place-items-center rounded bg-[#d71920]">
             ⚽
           </span>
           Brainwave AI Admin Console
         </Link>
-        <nav className="grid gap-1">
+        <nav className="grid min-w-0 gap-1">
           {adminNav.map((item) => {
             const Icon = item.icon;
             return (
@@ -93,7 +93,7 @@ export async function AdminLayout({
           </Link>
         </div>
       </aside>
-      <main className="p-4 md:p-8">{children}</main>
+      <main className="min-w-0 overflow-x-hidden p-4 md:p-8">{children}</main>
     </div>
   );
 }

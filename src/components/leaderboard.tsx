@@ -1,6 +1,7 @@
 import { Medal, Trophy } from "lucide-react";
 import { accuracy } from "@/lib/scoring";
 import type { Profile } from "@/types/game";
+import type { ReactNode } from "react";
 
 export type LeaderboardRow = {
   id: string;
@@ -22,8 +23,8 @@ export function LeaderboardTable({
   emptyText = "暂无排行榜数据。",
 }: {
   players: Array<Profile | LeaderboardRow>;
-  title?: string;
-  emptyText?: string;
+  title?: ReactNode;
+  emptyText?: ReactNode;
 }) {
   return (
     <div className="card overflow-hidden">
