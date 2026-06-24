@@ -902,6 +902,14 @@ export function RoadToChampionGame({
 
   const showSubmissionSummary = cleanSubmittedView;
   const canEditSubmittedPrediction = showSubmissionSummary && !last16Locked;
+  const last16DeadlineLabel =
+    last16Stage.deadline_confirmed === false
+      ? "Deadline pending fixture confirmation"
+      : formatMalaysiaDate(last16Stage.due_at);
+  const last16CountdownLabel =
+    last16Stage.deadline_confirmed === false
+      ? "Pending"
+      : timeLeft(last16Stage.due_at, now);
   function startEditPrediction() {
     setActiveStageKey("last_16");
     setSearchTerm("");
@@ -982,92 +990,66 @@ export function RoadToChampionGame({
     </aside>
   );
 
-  const submissionSummary = showSubmissionSummary ? (
-    <section
-      id="my-game1-prediction"
-      className="overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm"
-    >
-      <div className="bg-green-50 p-5">
-        <div className="flex items-start gap-3">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-green-600 text-white">
-            <Check size={24} />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-green-700">
-              Submitted
-            </p>
-            <h2 className="mt-1 text-2xl font-black text-slate-950">
-              Prediction Submitted Successfully!
-            </h2>
-            <p className="mt-2 text-sm font-bold leading-6 text-slate-700">
-              Your Game 1 prediction has been submitted. Good luck! May your champion pick go all the way.
-              <span className="block">You can view your submitted prediction below.</span>
-              <span className="block text-green-700">
-                {canEditSubmittedPrediction
-                  ? "You can still edit your prediction before the deadline."
-                  : "Prediction locked after deadline."}
-              </span>
-            </p>
-          </div>
+  const compactJourneyTimeline = (
+    <section className="rounded-lg bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
+            Game 1 Journey
+          </p>
+          <h3 className="mt-1 text-lg font-black text-slate-950">
+            View Game Journey / 查看游戏进度
+          </h3>
         </div>
+        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-black text-slate-600">
+          Compact
+        </span>
       </div>
+      <div className="mt-3 grid gap-2">
+        {roadStageOrder.map((stageKey) => {
+          const stageSubmitted = submittedByStage[stageKey] ?? false;
+          const isSweet16Submitted = stageKey === "last_16" && last16Submitted;
+          const statusText =
+            stageSubmitted || isSweet16Submitted ? "Submitted" : "Waiting Results";
 
-      <div className="grid gap-5 p-4 sm:p-5">
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="text-xl font-black text-slate-950">
-              Your Last 16 Picks
-            </h3>
-            <span className="rounded bg-[#071525] px-2 py-1 text-xs font-black text-white">
-              {last16SelectedTeams.length} / 16
-            </span>
-          </div>
-
-          {groupDataAvailable && last16SummaryGroups.length ? (
-            <div className="grid gap-3">
-              {last16SummaryGroups.map(([groupName, groupTeams]) => (
-                <div key={`last16-summary-${groupName}`} className="rounded bg-white p-3">
-                  <p className="mb-2 text-sm font-black text-[#0f8a4b]">
-                    {groupName}
-                  </p>
-                  <div className="grid gap-2">
-                    {groupTeams.map((team) => (
-                      <div
-                        key={`last16-summary-${team.id}`}
-                        className="flex items-center gap-2"
-                      >
-                        <span className="grid h-8 w-11 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
-                          {flagPath(team) ? (
-                            <img
-                              src={flagPath(team)}
-                              alt=""
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            team.country_code
-                          )}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-black text-slate-950">
-                          {team.country_name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+          return (
+            <div
+              key={`compact-journey-${stageKey}`}
+              className="flex items-center justify-between gap-3 rounded bg-slate-50 px-3 py-2"
+            >
+              <span className="whitespace-pre-line text-sm font-black text-slate-950">
+                {roadStageCopy[stageKey].shortName}
+              </span>
+              <span
+                className={clsx(
+                  "rounded px-2 py-1 text-xs font-black",
+                  statusText === "Submitted"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-yellow-100 text-yellow-800",
+                )}
+              >
+                {statusText === "Submitted" ? "✓ Submitted" : "Waiting Results"}
+              </span>
             </div>
-          ) : (
-            <ol className="grid gap-2">
-              {last16SelectedTeams.slice(0, 16).map((team, index) => (
-                <li
-                  key={`last16-numbered-${team.id}`}
-                  className="flex items-center gap-3 rounded bg-white px-3 py-2"
+          );
+        })}
+      </div>
+    </section>
+  );
+
+  const picksAccordionContent =
+    groupDataAvailable && last16SummaryGroups.length ? (
+      <div className="grid gap-3">
+        {last16SummaryGroups.map(([groupName, groupTeams]) => (
+          <div key={`last16-summary-${groupName}`} className="rounded bg-slate-50 p-3">
+            <p className="mb-2 text-sm font-black text-[#0f8a4b]">{groupName}</p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {groupTeams.map((team) => (
+                <div
+                  key={`last16-summary-${team.id}`}
+                  className="flex items-center gap-2 rounded bg-white px-2 py-2"
                 >
-                  <span className="w-5 shrink-0 text-right text-sm font-black text-slate-400">
-                    {index + 1}.
-                  </span>
-                  <span className="grid h-8 w-11 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
+                  <span className="grid h-7 w-10 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
                     {flagPath(team) ? (
                       <img
                         src={flagPath(team)}
@@ -1082,49 +1064,134 @@ export function RoadToChampionGame({
                   <span className="min-w-0 flex-1 truncate text-sm font-black text-slate-950">
                     {team.country_name}
                   </span>
-                </li>
+                </div>
               ))}
-            </ol>
-          )}
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <ol className="grid gap-2">
+        {last16SelectedTeams.slice(0, 16).map((team, index) => (
+          <li
+            key={`last16-numbered-${team.id}`}
+            className="flex items-center gap-3 rounded bg-slate-50 px-3 py-2"
+          >
+            <span className="w-5 shrink-0 text-right text-sm font-black text-slate-400">
+              {index + 1}.
+            </span>
+            <span className="grid h-7 w-10 shrink-0 place-items-center overflow-hidden rounded bg-slate-100 text-[10px] font-black text-slate-500">
+              {flagPath(team) ? (
+                <img
+                  src={flagPath(team)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                team.country_code
+              )}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-black text-slate-950">
+              {team.country_name}
+            </span>
+          </li>
+        ))}
+      </ol>
+    );
+
+  const submissionSummary = showSubmissionSummary ? (
+    <section id="my-game1-prediction" className="grid gap-3">
+      <div className="overflow-hidden rounded-lg border border-green-200 bg-white shadow-sm">
+        <div className="bg-green-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-green-600 text-white">
+              <Check size={22} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-green-700">
+                Sweet 16 Completed
+              </p>
+              <h2 className="mt-1 text-xl font-black text-slate-950">
+                Prediction Submitted Successfully!
+              </h2>
+              <p className="mt-2 text-sm font-bold leading-6 text-slate-700">
+                Your Game 1 prediction has been submitted.
+                <span className="block text-green-700">
+                  {canEditSubmittedPrediction
+                    ? "You can still edit before the deadline."
+                    : "Prediction locked after deadline."}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-black sm:grid-cols-4">
+            <div className="rounded bg-white px-3 py-2 text-slate-700">
+              <span className="block text-xs text-slate-400">Stage</span>
+              Sweet 16
+            </div>
+            <div className="rounded bg-white px-3 py-2 text-slate-700">
+              <span className="block text-xs text-slate-400">Selected</span>
+              {last16SelectedTeams.length} / 16
+            </div>
+            <div className="rounded bg-white px-3 py-2 text-slate-700 sm:col-span-2">
+              <span className="block text-xs text-slate-400">Deadline</span>
+              <span className="block truncate">{last16DeadlineLabel}</span>
+              <span className="block text-xs text-green-700">{last16CountdownLabel}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-lg bg-[#071525] p-4 text-center text-white">
-          <p className="text-lg font-black">
-            Good luck! Your road to champion has started.
-          </p>
-          <p className="mt-1 text-sm font-semibold text-white/65">
-            Check the leaderboard after match results are updated.
-          </p>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-2 p-4 sm:grid-cols-4">
           {canEditSubmittedPrediction ? (
             <button
               type="button"
               onClick={startEditPrediction}
-              className="h-12 rounded bg-[#d71920] px-4 text-sm font-black text-white"
+              className="h-11 rounded bg-[#d71920] px-4 text-sm font-black text-white"
             >
               Edit Prediction
             </button>
           ) : (
-            <span className="flex min-h-12 items-center justify-center rounded bg-slate-200 px-4 text-center text-sm font-black text-slate-500">
-              Prediction locked after deadline.
+            <span className="flex min-h-11 items-center justify-center rounded bg-slate-200 px-4 text-center text-sm font-black text-slate-500">
+              Prediction Locked
             </span>
           )}
           <a
             href="/team"
-            className="flex h-12 items-center justify-center rounded bg-[#0f8a4b] px-4 text-center text-sm font-black text-white"
+            className="flex h-11 items-center justify-center rounded bg-[#0f8a4b] px-4 text-center text-sm font-black text-white"
           >
             Invite Friends / Join Team
           </a>
           <a
             href="/leaderboard"
-            className="flex h-12 items-center justify-center rounded bg-[#f4c542] px-4 text-center text-sm font-black text-[#071525]"
+            className="flex h-11 items-center justify-center rounded bg-[#f4c542] px-4 text-center text-sm font-black text-[#071525]"
           >
             Go to Leaderboard
           </a>
+          <a
+            href="#submitted-last16-picks"
+            className="flex h-11 items-center justify-center rounded bg-slate-100 px-4 text-center text-sm font-black text-slate-800"
+          >
+            View My Picks
+          </a>
         </div>
       </div>
+
+      <details
+        id="submitted-last16-picks"
+        className="rounded-lg bg-white shadow-sm"
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-slate-950">
+          <span className="font-black">View My 16 Picks / 查看我的16队</span>
+          <span className="rounded bg-[#071525] px-2 py-1 text-xs font-black text-white">
+            {last16SelectedTeams.length} / 16
+          </span>
+        </summary>
+        <div className="border-t border-slate-100 p-4">{picksAccordionContent}</div>
+      </details>
+
+      {compactJourneyTimeline}
     </section>
   ) : null;
 
@@ -1219,6 +1286,25 @@ export function RoadToChampionGame({
     </section>
   );
 
+  const journeyAccordion = (
+    <details className="rounded-lg bg-white shadow-sm">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8a4b]">
+            Game 1 Journey
+          </p>
+          <h2 className="mt-1 text-lg font-black text-slate-950">
+            View Game Journey / 查看游戏进度
+          </h2>
+        </div>
+        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-black text-slate-600">
+          Open
+        </span>
+      </summary>
+      <div className="border-t border-slate-100 p-3">{stageHub}</div>
+    </details>
+  );
+
   return (
     <div className="grid gap-5">
       <style jsx global>{`
@@ -1235,13 +1321,57 @@ export function RoadToChampionGame({
       `}</style>
 
       {cleanSubmittedView ? (
-        <>
-          {stageHub}
-          {submissionSummary}
-        </>
+        <>{submissionSummary}</>
       ) : (
         <>
       <section className="overflow-hidden rounded-lg bg-[#071525] text-white shadow-sm">
+        <div className="bg-[url('/assets/backgrounds/bg_hero_stadium.png')] bg-cover bg-center p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f4c542]">
+                Game 1 · Ultimate Predictor 最强预测家
+              </p>
+              <h2 className="mt-1 whitespace-pre-line text-xl font-black">
+                {activeStageName}
+              </h2>
+              <p className="mt-1 text-sm font-bold text-white/75">
+                Sweet 16 · Selected {selected.length}/{required} ·{" "}
+                {activeStage.deadline_confirmed === false
+                  ? "Deadline pending"
+                  : timeLeft(activeStage.due_at, now)}
+              </p>
+            </div>
+            <span
+              className={clsx(
+                "rounded px-3 py-1 text-xs font-black",
+                status.includes("Submitted")
+                  ? "bg-green-100 text-green-800"
+                  : "bg-[#f4c542] text-[#071525]",
+              )}
+            >
+              {status}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid gap-2 border-t border-white/10 p-3 text-xs font-bold text-white/80 sm:grid-cols-2">
+          <div className="rounded bg-white/10 px-3 py-2">
+            Deadline:{" "}
+            <span className="font-black text-white">
+              {activeStage.deadline_confirmed === false
+                ? "Pending fixture confirmation"
+                : formatMalaysiaDate(activeStage.due_at)}
+            </span>{" "}
+            · +{activeStage.points_per_correct} each · Score {finalEarnedScore}
+          </div>
+          <div className="rounded bg-white/10 px-3 py-2">
+            Personal {personalCorrectScore} · Team {teamAccumulatedScore} · Final{" "}
+            <span className="font-black text-[#f4c542]">{finalEarnedScore}</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="hidden overflow-hidden rounded-lg bg-[#071525] text-white shadow-sm">
         <div className="bg-[url('/assets/backgrounds/bg_hero_stadium.png')] bg-cover bg-center p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -1341,7 +1471,7 @@ export function RoadToChampionGame({
         </div>
       </section>
 
-      {stageHub}
+      {journeyAccordion}
 
       {!waitingResults ? (
       <div className="sticky top-14 z-20 lg:hidden">
@@ -1459,13 +1589,13 @@ export function RoadToChampionGame({
       </section>
 
       {!waitingResults ? (
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-slate-200 bg-white p-3 shadow-2xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-slate-200 bg-white px-3 py-2 shadow-2xl lg:hidden">
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-2">
           <button
             type="button"
             disabled={interactionLocked || Boolean(savingStage)}
             onClick={() => save("draft")}
-            className="flex h-12 items-center justify-center gap-2 rounded bg-slate-100 px-3 text-sm font-black text-slate-800 disabled:opacity-60"
+            className="flex h-10 items-center justify-center gap-2 rounded bg-slate-100 px-3 text-sm font-black text-slate-800 disabled:opacity-60"
           >
             <Save size={16} />
             {selected.length === 0 ? "Save Draft" : `Draft (${selected.length})`}
@@ -1474,12 +1604,12 @@ export function RoadToChampionGame({
             type="button"
             disabled={interactionLocked || !complete || Boolean(savingStage)}
             onClick={() => setConfirmStage(activeStage)}
-            className="flex h-12 items-center justify-center gap-2 rounded bg-[#d71920] px-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
+            className="flex h-10 items-center justify-center gap-2 rounded bg-[#d71920] px-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500"
           >
             {complete ? (submitted ? "Update Prediction" : "Submit") : `${remaining} more`}
           </button>
         </div>
-        <p className="mt-1 text-center text-xs font-semibold text-slate-500">
+        <p className="mt-1 text-center text-[11px] font-semibold text-slate-500">
           Save your picks and continue later.
         </p>
       </div>
