@@ -66,6 +66,14 @@ function safeNextPath(value: string | null, fallback: string) {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get("host") ?? "";
+
+  if (host === "laozhaopai-32-worldcup-game.vercel.app") {
+    const liveUrl = request.nextUrl.clone();
+    liveUrl.protocol = "https";
+    liveUrl.host = "games.brainwaveai.my";
+    return NextResponse.redirect(liveUrl, 308);
+  }
 
   if (
     !isProtectedPath(pathname) &&
@@ -190,6 +198,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
+    "/fifa-last-32",
     "/game/:path*",
     "/road-to-champion/:path*",
     "/team-knockout/:path*",
