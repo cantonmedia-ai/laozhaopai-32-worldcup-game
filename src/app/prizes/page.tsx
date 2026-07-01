@@ -1,60 +1,34 @@
 import Link from "next/link";
 import { Gift, Trophy } from "lucide-react";
 import { ChampionShell } from "@/components/champion-shell";
-import { CHAMPION_PRIZES, JERA_GALLERY_IMAGES, TOTAL_PRIZE_VALUE } from "@/lib/champion-prizes";
+import { CHAMPION_PRIZES, TOTAL_PRIZE_VALUE } from "@/lib/champion-prizes";
 
 export default function PrizesPage() {
   return (
     <ChampionShell active="/prizes">
-      <section className="mx-auto max-w-6xl px-4 py-8">
-        <div className="grid gap-6 rounded-3xl border border-white/10 bg-white/10 p-5 shadow-2xl shadow-black/20 md:grid-cols-[minmax(0,1fr)_420px] md:p-8">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#f4c542]/50 bg-[#f4c542]/10 px-4 py-2 text-sm font-black text-[#f4c542]">
-              <Trophy size={16} />
-              世界杯冠军预测游戏奖品规则
-            </div>
-            <h1 className="mt-5 text-4xl font-black leading-tight md:text-6xl">
-              猜中冠军，越早参加，越有机会赢大奖！
-            </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
-              玩家只需选择一支国家队，预测 2026 FIFA 世界杯冠军，并填写姓名与联系方式，即可参与活动。
-              官方冠军公布后，系统将根据玩家预测结果与参与时间，自动排序并分配奖品。
-            </p>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-[#f4c542] p-5 text-[#071525]">
-                <div className="text-sm font-black opacity-70">总奖品数量</div>
-                <div className="mt-2 text-5xl font-black">153份</div>
-              </div>
-              <div className="rounded-2xl bg-[#128c4a] p-5 text-white">
-                <div className="text-sm font-black opacity-70">总奖品价值</div>
-                <div className="mt-2 text-5xl font-black">RM{TOTAL_PRIZE_VALUE.toLocaleString()}</div>
-              </div>
-            </div>
+      <section className="mx-auto max-w-6xl px-4 py-6 md:py-8">
+        <div className="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-2xl shadow-black/20 md:p-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#f4c542]/50 bg-[#f4c542]/10 px-4 py-2 text-sm font-black text-[#f4c542]">
+            <Trophy size={16} />
+            世界杯冠军预测游戏奖品规则
           </div>
+          <h1 className="mt-5 text-4xl font-black leading-tight md:text-6xl">
+            猜中冠军，越早参加，越有机会赢大奖！
+          </h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300 md:text-lg md:leading-8">
+            玩家只需选择一支国家队，预测 2026 FIFA 世界杯冠军，并填写姓名与联系方式，即可参与活动。
+            官方冠军公布后，系统将根据玩家预测结果与参与时间，自动排序并分配奖品。
+          </p>
 
-          <div className="grid gap-3">
-            <div className="overflow-hidden rounded-2xl bg-white p-3">
-              <img
-                src="/assets/prizes/canton-abalone-poon-choi.png"
-                alt="老招牌广西鲍鱼盆菜 6人份"
-                className="h-56 w-full object-contain md:h-72"
-              />
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-[#f4c542] p-4 text-[#071525] md:p-5">
+              <div className="text-sm font-black opacity-70">总奖品数量</div>
+              <div className="mt-1 text-4xl font-black md:text-5xl">153份</div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="overflow-hidden rounded-2xl bg-white p-2">
-                <img
-                  src="/assets/prizes/tcway-chicken-voucher.png"
-                  alt="TCWAY 赞助招牌马草鸡堂食礼券"
-                  className="h-36 w-full object-contain md:h-44"
-                />
-              </div>
-              <div className="overflow-hidden rounded-2xl bg-white">
-                <img
-                  src="/assets/prizes/yanyumei-birdnest.png"
-                  alt="燕遇美赞助现炖燕窝"
-                  className="h-36 w-full object-cover md:h-44"
-                />
+            <div className="rounded-2xl bg-[#128c4a] p-4 text-white md:p-5">
+              <div className="text-sm font-black opacity-70">总奖品价值</div>
+              <div className="mt-1 text-4xl font-black md:text-5xl">
+                RM{TOTAL_PRIZE_VALUE.toLocaleString()}
               </div>
             </div>
           </div>
@@ -74,65 +48,51 @@ export default function PrizesPage() {
                 key={item.tier}
                 className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-900/10"
               >
-                {item.image ? (
-                  <div
-                    className={
-                      item.tier === "二等奖"
-                        ? "grid h-64 place-items-center bg-black p-3"
-                        : "grid h-56 place-items-center bg-slate-50 p-3"
-                    }
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.prize}
-                      className={`h-full w-full rounded-xl ${
-                        item.imageFit === "contain" ? "object-contain" : "object-cover"
-                      }`}
-                    />
-                  </div>
-                ) : (
-                  <div className="grid h-56 place-items-center bg-[#071525] p-6 text-center text-white">
-                    <div>
-                      <div className="text-sm font-black uppercase tracking-[0.22em] text-[#f4c542]">
-                        Brainwave Games Prize
-                      </div>
-                      <div className="mt-3 text-3xl font-black">{item.tier}</div>
-                    </div>
-                  </div>
-                )}
-
-                {item.tier === "二等奖" ? (
-                  <div className="grid grid-cols-2 gap-3 bg-black px-3 pb-3">
-                    {JERA_GALLERY_IMAGES.map((image, index) => (
-                      <div key={image} className="overflow-hidden rounded-xl">
-                        <img
-                          src={image}
-                          alt={`Jera Studio 肖像作品 ${index + 1}`}
-                          className="h-36 w-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-black text-[#d71920]">{item.tier}</div>
-                      <h3 className="mt-1 text-xl font-black leading-tight">{item.prize}</h3>
-                    </div>
-                    <div className="rounded-full bg-[#f4c542] px-3 py-1 text-sm font-black text-[#071525]">
+                <div className="p-4 pb-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-[#f4c542] px-3 py-1 text-xs font-black text-[#071525]">
+                      {item.tier}
+                    </span>
+                    <span className="rounded-full bg-[#071525] px-3 py-1 text-xs font-black text-[#f4c542]">
                       RM{item.value}
-                    </div>
+                    </span>
                   </div>
+                </div>
+
+                <div className="p-4">
+                  {item.image ? (
+                    <div className="grid h-40 place-items-center overflow-hidden rounded-2xl bg-slate-50 md:h-48">
+                      <img
+                        src={item.image}
+                        alt={item.prize}
+                        className={`h-full w-full ${
+                          item.imageFit === "contain" ? "object-contain p-2" : "object-cover"
+                        }`}
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid h-40 place-items-center rounded-2xl bg-[#071525] p-5 text-center text-white md:h-48">
+                      <div>
+                        <div className="text-xs font-black uppercase tracking-[0.22em] text-[#f4c542]">
+                          Brainwave Games Prize
+                        </div>
+                        <div className="mt-2 text-2xl font-black">{item.tier}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <h3 className="mt-4 min-h-[3.25rem] overflow-hidden text-xl font-black leading-[1.3] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                    {item.prize}
+                  </h3>
+
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-xl bg-slate-50 p-3">
-                      <div className="font-bold text-slate-500">数量</div>
-                      <div className="text-lg font-black">{item.quantity}份</div>
+                      <div className="text-xs font-bold text-slate-500">数量</div>
+                      <div className="mt-1 text-lg font-black">{item.quantity}份</div>
                     </div>
                     <div className="rounded-xl bg-slate-50 p-3">
-                      <div className="font-bold text-slate-500">排名</div>
-                      <div className="text-lg font-black">
+                      <div className="text-xs font-bold text-slate-500">排名</div>
+                      <div className="mt-1 text-lg font-black">
                         第{item.rankStart}–{item.rankEnd}名
                       </div>
                     </div>

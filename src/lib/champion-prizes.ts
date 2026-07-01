@@ -27,7 +27,7 @@ export const CHAMPION_PRIZES: ChampionPrize[] = [
     value: 298,
     rankStart: 3,
     rankEnd: 5,
-    image: "/assets/prizes/jera-studio-package.png",
+    image: "/assets/prizes/jera-portrait-orchid.png",
     imageFit: "cover",
   },
   {
