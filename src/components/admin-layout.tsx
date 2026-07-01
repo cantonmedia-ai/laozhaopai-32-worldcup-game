@@ -1,41 +1,13 @@
 import Link from "next/link";
-import {
-  ClipboardList,
-  FileClock,
-  Gift,
-  LayoutDashboard,
-  ListChecks,
-  LogOut,
-  Mail,
-  Medal,
-  Network,
-  Radio,
-  Route,
-  ShieldAlert,
-  ShieldCheck,
-  SquareCheckBig,
-  Users,
-} from "lucide-react";
+import { Crown, Gift, LayoutDashboard, LogOut, Users } from "lucide-react";
 import clsx from "clsx";
 import { requireAdminPasswordAccess } from "@/lib/admin-password";
 
 const adminNav = [
-  { href: "/admin/games", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/teams", label: "Teams", icon: ShieldCheck },
-  { href: "/admin/road-to-champion", label: "Road to Champion", icon: Route },
-  { href: "/admin/rounds", label: "Rounds", icon: ListChecks },
-  { href: "/admin/matches", label: "Matches", icon: ClipboardList },
-  { href: "/admin/results", label: "Results", icon: Medal },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/players", label: "Players", icon: Users },
-  { href: "/admin/predictions", label: "Winner Challenge", icon: ClipboardList },
-  { href: "/admin/leaderboards", label: "Leaderboards", icon: Medal },
-  { href: "/admin/referrals", label: "Referrals", icon: Network },
-  { href: "/admin/rewards", label: "Rewards", icon: Gift },
-  { href: "/admin/email-settings", label: "Email Settings", icon: Mail },
-  { href: "/admin/live-monitor", label: "Live Monitor", icon: Radio },
-  { href: "/admin/pre-live-checklist", label: "Pre-Live Checklist", icon: ShieldAlert },
-  { href: "/admin/self-test", label: "Self-Test", icon: SquareCheckBig },
-  { href: "/admin/audit", label: "Audit", icon: FileClock },
+  { href: "/admin/results", label: "Champion Result", icon: Crown },
+  { href: "/admin/rewards", label: "Winners", icon: Gift },
 ];
 
 export async function AdminLayout({
@@ -51,10 +23,8 @@ export async function AdminLayout({
     <div className="min-h-screen overflow-x-hidden bg-slate-100 text-slate-950 md:grid md:grid-cols-[260px_minmax(0,1fr)]">
       <aside className="flex min-w-0 flex-col bg-[#071525] p-4 text-white">
         <Link href="/fifa-last-32" className="mb-6 flex items-center gap-2 font-black">
-          <span className="grid size-9 place-items-center rounded bg-[#d71920]">
-            ⚽
-          </span>
-          Brainwave AI Admin Console
+          <span className="grid size-9 place-items-center rounded bg-[#d71920]">⚽</span>
+          Champion Guess Admin
         </Link>
         <nav className="grid min-w-0 gap-1">
           {adminNav.map((item) => {
@@ -86,7 +56,7 @@ export async function AdminLayout({
             </button>
           </form>
           <Link
-            href="/game"
+            href="/fifa-last-32"
             className="mt-2 flex w-full items-center justify-center rounded bg-white/10 px-3 py-2 text-xs font-bold text-white/75 hover:bg-white/15 hover:text-white"
           >
             Back to Game

@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://games.brainwaveai.my"),
-  title: "FIFA World Cup 2026 Knockout Challenge",
-  description: "Knockout prediction game on games.brainwaveai.my",
+  title: "Champion Guess 2026 | Brainwave Games",
+  description: "Pick the FIFA World Cup 2026 champion. Earliest correct guessers win prizes.",
 };
 
 export default function RootLayout({

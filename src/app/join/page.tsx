@@ -1,24 +1,14 @@
-import { redirect } from "next/navigation";
-import { logUserAction } from "@/lib/monitoring";
+import { ChampionShell } from "@/components/champion-shell";
+import { ChampionJoinForm } from "@/components/champion-join-form";
 
-export default async function JoinPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ref?: string }>;
-}) {
-  const params = await searchParams;
-  const referralCode = String(params.ref ?? "").trim();
-  const suffix = referralCode ? `?ref=${encodeURIComponent(referralCode)}` : "";
+export const dynamic = "force-dynamic";
 
-  if (referralCode) {
-    await logUserAction({
-      actionType: "referral_link_opened",
-      actionStatus: "info",
-      pagePath: "/join",
-      referralCode,
-      message: "Referral link opened.",
-    });
-  }
-
-  redirect(`/fifa-last-32${suffix}`);
+export default function JoinPage() {
+  return (
+    <ChampionShell active="/join">
+      <section className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+        <ChampionJoinForm />
+      </section>
+    </ChampionShell>
+  );
 }
