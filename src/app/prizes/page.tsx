@@ -42,11 +42,11 @@ export default function PrizesPage() {
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="overflow-hidden rounded-2xl bg-black">
+              <div className="overflow-hidden rounded-2xl bg-white p-2">
                 <img
-                  src="/assets/prizes/jera-portrait-orchid.png"
-                  alt="Jera Studio 明星肖像体验"
-                  className="h-36 w-full object-cover md:h-44"
+                  src="/assets/prizes/tcway-chicken-voucher.png"
+                  alt="TCWAY 赞助招牌马草鸡堂食礼券"
+                  className="h-36 w-full object-contain md:h-44"
                 />
               </div>
               <div className="overflow-hidden rounded-2xl bg-white">
@@ -75,11 +75,17 @@ export default function PrizesPage() {
                 className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-900/10"
               >
                 {item.image ? (
-                  <div className="grid h-56 place-items-center bg-slate-50 p-3">
+                  <div
+                    className={
+                      item.tier === "二等奖"
+                        ? "grid h-64 place-items-center bg-black p-3"
+                        : "grid h-56 place-items-center bg-slate-50 p-3"
+                    }
+                  >
                     <img
                       src={item.image}
                       alt={item.prize}
-                      className={`h-full w-full ${
+                      className={`h-full w-full rounded-xl ${
                         item.imageFit === "contain" ? "object-contain" : "object-cover"
                       }`}
                     />
@@ -94,6 +100,20 @@ export default function PrizesPage() {
                     </div>
                   </div>
                 )}
+
+                {item.tier === "二等奖" ? (
+                  <div className="grid grid-cols-2 gap-3 bg-black px-3 pb-3">
+                    {JERA_GALLERY_IMAGES.map((image, index) => (
+                      <div key={image} className="overflow-hidden rounded-xl">
+                        <img
+                          src={image}
+                          alt={`Jera Studio 肖像作品 ${index + 1}`}
+                          className="h-36 w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
 
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -144,35 +164,21 @@ export default function PrizesPage() {
             </div>
           </div>
 
-          <div className="grid gap-4">
-            <div className="rounded-2xl bg-[#071525] p-5 text-white">
-              <h2 className="text-2xl font-black text-[#f4c542]">参加越早，机会越高</h2>
-              <p className="mt-4 text-2xl font-black leading-9">
-                猜中冠军，越早参加，越有机会赢大奖！
-              </p>
-              <p className="mt-4 leading-7 text-slate-300">
-                猜中冠军者优先得奖，并按参与时间排名。如果猜中人数少过153名，剩余奖品将由所有参与者中，
-                按参与时间最早者依次补上。总共153份奖品，送完为止！
-              </p>
-              <Link
-                href="/join"
-                className="mt-6 block rounded-xl bg-[#d71920] px-5 py-4 text-center text-lg font-black text-white"
-              >
-                立即参加
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {JERA_GALLERY_IMAGES.map((image, index) => (
-                <div key={image} className="overflow-hidden rounded-2xl bg-black">
-                  <img
-                    src={image}
-                    alt={`Jera Studio 肖像作品 ${index + 1}`}
-                    className="h-52 w-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="rounded-2xl bg-[#071525] p-5 text-white">
+            <h2 className="text-2xl font-black text-[#f4c542]">参加越早，机会越高</h2>
+            <p className="mt-4 text-2xl font-black leading-9">
+              猜中冠军，越早参加，越有机会赢大奖！
+            </p>
+            <p className="mt-4 leading-7 text-slate-300">
+              猜中冠军者优先得奖，并按参与时间排名。如果猜中人数少过153名，剩余奖品将由所有参与者中，
+              按参与时间最早者依次补上。总共153份奖品，送完为止！
+            </p>
+            <Link
+              href="/join"
+              className="mt-6 block rounded-xl bg-[#d71920] px-5 py-4 text-center text-lg font-black text-white"
+            >
+              立即参加
+            </Link>
           </div>
         </div>
       </section>
