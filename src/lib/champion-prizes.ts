@@ -5,6 +5,8 @@ export type ChampionPrize = {
   value: number;
   rankStart: number;
   rankEnd: number;
+  image?: string;
+  imageFit?: "cover" | "contain";
 };
 
 export const CHAMPION_PRIZES: ChampionPrize[] = [
@@ -15,6 +17,8 @@ export const CHAMPION_PRIZES: ChampionPrize[] = [
     value: 368,
     rankStart: 1,
     rankEnd: 2,
+    image: "/assets/prizes/canton-abalone-poon-choi.png",
+    imageFit: "contain",
   },
   {
     tier: "二等奖",
@@ -23,6 +27,8 @@ export const CHAMPION_PRIZES: ChampionPrize[] = [
     value: 298,
     rankStart: 3,
     rankEnd: 5,
+    image: "/assets/prizes/jera-studio-package.png",
+    imageFit: "cover",
   },
   {
     tier: "三等奖",
@@ -31,6 +37,8 @@ export const CHAMPION_PRIZES: ChampionPrize[] = [
     value: 135,
     rankStart: 6,
     rankEnd: 55,
+    image: "/assets/prizes/tcway-chicken-voucher.png",
+    imageFit: "contain",
   },
   {
     tier: "四等奖",
@@ -39,6 +47,8 @@ export const CHAMPION_PRIZES: ChampionPrize[] = [
     value: 38,
     rankStart: 56,
     rankEnd: 105,
+    image: "/assets/prizes/yanyumei-birdnest.png",
+    imageFit: "cover",
   },
   {
     tier: "五等奖",
@@ -56,6 +66,11 @@ export const CHAMPION_PRIZES: ChampionPrize[] = [
     rankStart: 136,
     rankEnd: 153,
   },
+];
+
+export const JERA_GALLERY_IMAGES = [
+  "/assets/prizes/jera-portrait-orchid.png",
+  "/assets/prizes/jera-portrait-butterfly.png",
 ];
 
 export const TOTAL_PRIZE_VALUE = CHAMPION_PRIZES.reduce(
