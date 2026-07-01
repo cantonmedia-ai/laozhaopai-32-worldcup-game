@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toCsv } from "@/lib/csv";
+import { prizeForRank } from "@/lib/champion-prizes";
 
 type WinnerExportRow = {
   id: string;
@@ -37,6 +38,9 @@ export async function GET(request: NextRequest) {
   const csv = toCsv(
     [
       "rank",
+      "prize_tier",
+      "prize_name",
+      "prize_value",
       "is_winner",
       "status",
       "name",
@@ -47,18 +51,24 @@ export async function GET(request: NextRequest) {
       "prize_collected_at",
       "admin_note",
     ],
-    rows.map((row) => [
-      row.rank,
-      row.is_winner,
-      row.status,
-      row.players?.name,
-      row.players?.whatsapp,
-      row.players?.email,
-      row.selected_country,
-      row.players?.created_at,
-      row.prize_collected_at,
-      row.admin_note,
-    ]),
+    rows.map((row) => {
+      const prize = row.is_winner ? prizeForRank(row.rank) : null;
+      return [
+        row.rank,
+        prize?.tier,
+        prize?.prize,
+        prize?.value,
+        row.is_winner,
+        row.status,
+        row.players?.name,
+        row.players?.whatsapp,
+        row.players?.email,
+        row.selected_country,
+        row.players?.created_at,
+        row.prize_collected_at,
+        row.admin_note,
+      ];
+    }),
   );
 
   return new NextResponse(csv, {

@@ -3,6 +3,7 @@ import { ChampionShell } from "@/components/champion-shell";
 import { ensureChampionSettings } from "@/lib/champion-admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { CHAMPION_COUNTRIES, formatDateTime } from "@/lib/champion-guess";
+import { prizeForRank } from "@/lib/champion-prizes";
 
 export const dynamic = "force-dynamic";
 
@@ -103,18 +104,27 @@ export default async function ResultsPage({
                 <div className="grid grid-cols-[64px_1fr_110px] bg-slate-100 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
                   <span>Rank</span>
                   <span>Name</span>
-                  <span>Status</span>
+                  <span>Prize</span>
                 </div>
                 <div className="divide-y divide-slate-100">
-                  {rows.map((row) => (
-                    <div key={row.id} className="grid grid-cols-[64px_1fr_110px] gap-2 px-4 py-3 text-sm">
-                      <strong>#{row.rank}</strong>
-                      <span className="truncate">{row.players?.name ?? "-"}</span>
-                      <span className={row.is_winner ? "font-black text-[#128c4a]" : "text-slate-500"}>
-                        {row.is_winner ? "Winner" : "Correct"}
-                      </span>
-                    </div>
-                  ))}
+                  {rows.map((row) => {
+                    const prize = prizeForRank(row.rank);
+                    const guessedChampion = row.selected_country === settings.official_champion_country;
+                    return (
+                      <div key={row.id} className="grid grid-cols-[64px_1fr_110px] gap-2 px-4 py-3 text-sm">
+                        <strong>#{row.rank}</strong>
+                        <span className="min-w-0">
+                          <span className="block truncate font-bold">{row.players?.name ?? "-"}</span>
+                          <span className="block truncate text-xs text-slate-500">
+                            {guessedChampion ? "猜中冠军" : "替代获胜者"}
+                          </span>
+                        </span>
+                        <span className={row.is_winner ? "font-black text-[#128c4a]" : "text-slate-500"}>
+                          {row.is_winner ? prize?.tier ?? "Winner" : "Correct"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </>

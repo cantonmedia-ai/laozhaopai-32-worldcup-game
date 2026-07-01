@@ -79,6 +79,12 @@ export default async function FifaLast32Page() {
               >
                 View Participants
               </Link>
+              <Link
+                href="/prizes"
+                className="rounded-xl border border-[#f4c542]/60 px-6 py-4 text-center text-lg font-black text-[#f4c542]"
+              >
+                奖品规则
+              </Link>
             </div>
           </div>
 
@@ -101,7 +107,9 @@ export default async function FifaLast32Page() {
           <div className="rounded-2xl bg-white p-5 shadow-xl shadow-slate-900/10">
             <Gift className="text-[#d71920]" />
             <h2 className="mt-3 text-2xl font-black">153 prizes</h2>
-            <p className="mt-2 text-slate-600">Correct champion pickers win by earliest submission time.</p>
+            <p className="mt-2 text-slate-600">
+              Guess the champion first. If correct guessers are fewer than 153, earliest participants fill the remaining prizes.
+            </p>
           </div>
           <div className="rounded-2xl bg-white p-5 shadow-xl shadow-slate-900/10">
             <Users className="text-[#128c4a]" />
@@ -180,7 +188,8 @@ export default async function FifaLast32Page() {
               "One WhatsApp number can join once only.",
               "After submission, prediction cannot be changed.",
               "Admin enters official champion after the final.",
-              `The first ${data.settings.prize_limit} correct guessers by submission time win.`,
+              `Correct champion guessers win first by submission time.`,
+              `If fewer than ${data.settings.prize_limit} players guessed correctly, remaining prizes go to earliest other participants.`,
             ].map((rule, index) => (
               <div key={rule} className="rounded-xl bg-slate-50 p-4 font-bold text-slate-700">
                 {index + 1}. {rule}

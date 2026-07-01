@@ -4,6 +4,7 @@ import clsx from "clsx";
 const navItems = [
   { href: "/fifa-champion-guess", label: "首页" },
   { href: "/join", label: "参加游戏" },
+  { href: "/prizes", label: "奖品" },
   { href: "/players", label: "参与名单" },
   { href: "/results", label: "开奖结果" },
   { href: "/admin-login", label: "Admin" },
@@ -55,13 +56,13 @@ export function ChampionShell({
         <div>© 2026 Brainwave Games</div>
         <div>Powered by Brainwave AI</div>
       </footer>
-      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-slate-200 bg-white text-[#071525] shadow-2xl md:hidden">
-        {navItems.slice(0, 4).map((item) => (
+      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-slate-200 bg-white text-[#071525] shadow-2xl md:hidden">
+        {navItems.slice(0, 5).map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={clsx(
-              "py-3 text-center text-xs font-black",
+              "py-3 text-center text-[11px] font-black",
               active === item.href ? "text-[#d71920]" : "text-slate-600",
             )}
           >

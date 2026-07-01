@@ -65,22 +65,51 @@ export async function recalculateChampionWinners() {
 
   if (deleteError) throw deleteError;
 
-  const { data: players, error: playersError } = await supabase
+  const prizeLimit = settings.prize_limit || PRIZE_LIMIT;
+  const { data: correctPlayers, error: correctPlayersError } = await supabase
     .from("players")
     .select("id, selected_country, created_at")
     .eq("selected_country", settings.official_champion_country)
     .eq("is_disqualified", false)
     .order("created_at", { ascending: true });
 
-  if (playersError) throw playersError;
+  if (correctPlayersError) throw correctPlayersError;
 
-  const rows = (players ?? []).map((player, index) => ({
+  const selectedCorrectPlayerIds = new Set((correctPlayers ?? []).map((player) => player.id));
+  const winnerCandidates = [...(correctPlayers ?? [])].slice(0, prizeLimit);
+
+  if (winnerCandidates.length < prizeLimit) {
+    const { data: replacementPlayers, error: replacementPlayersError } = await supabase
+      .from("players")
+      .select("id, selected_country, created_at")
+      .eq("is_disqualified", false)
+      .neq("selected_country", settings.official_champion_country)
+      .order("created_at", { ascending: true })
+      .limit(prizeLimit - winnerCandidates.length);
+
+    if (replacementPlayersError) throw replacementPlayersError;
+    winnerCandidates.push(...(replacementPlayers ?? []));
+  }
+
+  const rows = winnerCandidates.map((player, index) => ({
     player_id: player.id,
     selected_country: player.selected_country,
     rank: index + 1,
-    is_winner: index + 1 <= (settings.prize_limit || PRIZE_LIMIT),
+    is_winner: index + 1 <= prizeLimit,
     status: "pending_contact",
   }));
+
+  if ((correctPlayers ?? []).length > prizeLimit) {
+    rows.push(
+      ...(correctPlayers ?? []).slice(prizeLimit).map((player, index) => ({
+        player_id: player.id,
+        selected_country: player.selected_country,
+        rank: prizeLimit + index + 1,
+        is_winner: false,
+        status: "pending_contact",
+      })),
+    );
+  }
 
   if (rows.length) {
     const { error: insertError } = await supabase.from("winners").insert(rows);
@@ -89,7 +118,7 @@ export async function recalculateChampionWinners() {
 
   return {
     officialChampion: settings.official_champion_country,
-    correctGuessers: rows.length,
+    correctGuessers: selectedCorrectPlayerIds.size,
     winners: rows.filter((row) => row.is_winner).length,
   };
 }

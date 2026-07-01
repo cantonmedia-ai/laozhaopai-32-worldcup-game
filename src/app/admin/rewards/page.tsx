@@ -2,6 +2,7 @@ import { AdminLayout } from "@/components/admin-layout";
 import { WinnerStatusButton } from "@/components/champion-admin-actions";
 import { createServiceClient } from "@/lib/supabase/service";
 import { formatDateTime } from "@/lib/champion-guess";
+import { prizeForRank } from "@/lib/champion-prizes";
 
 export const dynamic = "force-dynamic";
 
@@ -50,40 +51,45 @@ export default async function AdminRewardsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl bg-white shadow">
-        <div className="grid min-w-[980px] grid-cols-[70px_1fr_130px_140px_170px_220px] bg-slate-50 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+        <div className="grid min-w-[1060px] grid-cols-[70px_1fr_150px_130px_140px_170px_220px] bg-slate-50 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
           <span>Rank</span>
           <span>Player</span>
+          <span>Prize</span>
           <span>WhatsApp</span>
           <span>Status</span>
           <span>Submitted</span>
           <span>Action</span>
         </div>
         <div className="overflow-x-auto">
-          <div className="min-w-[980px] divide-y divide-slate-100">
-            {winners.map((winner) => (
-              <div
-                key={winner.id}
-                className={`grid grid-cols-[70px_1fr_130px_140px_170px_220px] gap-3 px-4 py-3 text-sm ${
-                  winner.is_winner ? "" : "bg-slate-50 text-slate-500"
-                }`}
-              >
-                <strong>#{winner.rank}</strong>
-                <div>
-                  <strong>{winner.players?.name ?? "-"}</strong>
-                  <div className="text-xs text-slate-500">{winner.players?.email ?? "-"}</div>
+          <div className="min-w-[1060px] divide-y divide-slate-100">
+            {winners.map((winner) => {
+              const prize = prizeForRank(winner.rank);
+              return (
+                <div
+                  key={winner.id}
+                  className={`grid grid-cols-[70px_1fr_150px_130px_140px_170px_220px] gap-3 px-4 py-3 text-sm ${
+                    winner.is_winner ? "" : "bg-slate-50 text-slate-500"
+                  }`}
+                >
+                  <strong>#{winner.rank}</strong>
+                  <div>
+                    <strong>{winner.players?.name ?? "-"}</strong>
+                    <div className="text-xs text-slate-500">{winner.players?.email ?? "-"}</div>
+                  </div>
+                  <span className="font-bold">{winner.is_winner ? prize?.tier ?? "-" : "-"}</span>
+                  <span>{winner.players?.whatsapp ?? "-"}</span>
+                  <span className={winner.status === "prize_collected" ? "font-black text-[#128c4a]" : ""}>
+                    {winner.is_winner ? winner.status.replaceAll("_", " ") : "Correct only"}
+                  </span>
+                  <span className="text-slate-500">{formatDateTime(winner.players?.created_at)}</span>
+                  {winner.is_winner ? (
+                    <WinnerStatusButton winnerId={winner.id} status={winner.status} />
+                  ) : (
+                    <span className="text-xs font-bold text-slate-400">Outside prize limit</span>
+                  )}
                 </div>
-                <span>{winner.players?.whatsapp ?? "-"}</span>
-                <span className={winner.status === "prize_collected" ? "font-black text-[#128c4a]" : ""}>
-                  {winner.is_winner ? winner.status.replaceAll("_", " ") : "Correct only"}
-                </span>
-                <span className="text-slate-500">{formatDateTime(winner.players?.created_at)}</span>
-                {winner.is_winner ? (
-                  <WinnerStatusButton winnerId={winner.id} status={winner.status} />
-                ) : (
-                  <span className="text-xs font-bold text-slate-400">Outside prize limit</span>
-                )}
-              </div>
-            ))}
+              );
+            })}
             {!winners.length ? (
               <div className="p-6 text-center text-slate-500">
                 No winners yet. Set the official champion first.
