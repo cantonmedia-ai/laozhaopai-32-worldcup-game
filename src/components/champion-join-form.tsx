@@ -5,7 +5,13 @@ import { Check, Search } from "lucide-react";
 import clsx from "clsx";
 import { CHAMPION_COUNTRIES, type ChampionCountry } from "@/lib/champion-guess";
 
-export function ChampionJoinForm() {
+export function ChampionJoinForm({
+  totalPlayers,
+  maxPlayers,
+}: {
+  totalPlayers: number;
+  maxPlayers: number;
+}) {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
@@ -14,6 +20,7 @@ export function ChampionJoinForm() {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const entryFull = totalPlayers >= maxPlayers;
 
   const filteredCountries = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -28,6 +35,7 @@ export function ChampionJoinForm() {
 
   function validate() {
     if (!name.trim()) return "Please enter your name.";
+    if (entryFull) return "This campaign is full. 500 players have already joined.";
     if (!whatsapp.trim()) return "Please enter your WhatsApp number.";
     if (!country) return "Please select your champion country.";
     return "";
@@ -81,6 +89,9 @@ export function ChampionJoinForm() {
           <p className="mt-2 text-sm text-white/75">
             Choose one country. One WhatsApp number can only join once.
           </p>
+          <div className="mt-3 rounded-lg bg-white/10 px-3 py-2 text-sm font-black text-[#f4c542]">
+            Entries: {totalPlayers.toLocaleString()} / {maxPlayers.toLocaleString()}
+          </div>
         </div>
 
         <div className="mt-5 grid gap-4">
@@ -129,7 +140,7 @@ export function ChampionJoinForm() {
 
           <button
             type="button"
-            disabled={loading}
+            disabled={loading || entryFull}
             onClick={() => {
               const validation = validate();
               if (validation) {
@@ -140,7 +151,7 @@ export function ChampionJoinForm() {
             }}
             className="rounded-xl bg-[#d71920] px-5 py-4 text-lg font-black text-white shadow-lg shadow-red-700/20 disabled:opacity-60"
           >
-            {loading ? "Submitting..." : "Confirm My Champion"}
+            {entryFull ? "Entry Full" : loading ? "Submitting..." : "Confirm My Champion"}
           </button>
         </div>
       </section>

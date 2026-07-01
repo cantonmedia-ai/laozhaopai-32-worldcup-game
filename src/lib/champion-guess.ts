@@ -1,4 +1,5 @@
 export const PRIZE_LIMIT = 153;
+export const MAX_PLAYER_ENTRIES = 500;
 
 export type ChampionCountry = {
   group: string;

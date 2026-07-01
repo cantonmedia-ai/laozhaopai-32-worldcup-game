@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { MAX_PLAYER_ENTRIES } from "@/lib/champion-guess";
 
 export async function GET() {
   const supabase = createServiceClient();
@@ -37,6 +38,8 @@ export async function GET() {
 
   return NextResponse.json({
     totalPlayers: count ?? 0,
+    maxPlayers: MAX_PLAYER_ENTRIES,
+    entryFull: (count ?? 0) >= MAX_PLAYER_ENTRIES,
     countryStats,
     recentPlayers: recentRows ?? [],
   });

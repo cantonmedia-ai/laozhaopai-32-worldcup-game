@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Trophy, Users, Gift, Clock } from "lucide-react";
 import { ChampionShell, StatCard } from "@/components/champion-shell";
 import { createServiceClient } from "@/lib/supabase/service";
-import { CHAMPION_COUNTRIES, formatDateTime } from "@/lib/champion-guess";
+import { CHAMPION_COUNTRIES, MAX_PLAYER_ENTRIES, formatDateTime } from "@/lib/champion-guess";
 import { ensureChampionSettings } from "@/lib/champion-admin";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +48,8 @@ async function loadHomeData() {
 
 export default async function FifaLast32Page() {
   const data = await loadHomeData();
+  const entryFull = data.totalPlayers >= MAX_PLAYER_ENTRIES;
+  const entryOpen = data.settings.submission_open && !entryFull;
 
   return (
     <ChampionShell active="/fifa-champion-guess">
@@ -68,10 +70,10 @@ export default async function FifaLast32Page() {
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/join"
+                href={entryOpen ? "/join" : "/players"}
                 className="rounded-xl bg-[#d71920] px-6 py-4 text-center text-lg font-black text-white shadow-xl shadow-red-700/25"
               >
-                Join Now
+                {entryOpen ? "Join Now" : "Entry Full"}
               </Link>
               <Link
                 href="/players"
@@ -90,11 +92,15 @@ export default async function FifaLast32Page() {
 
           <div className="rounded-2xl border border-white/10 bg-white/10 p-5 shadow-2xl shadow-black/30 backdrop-blur">
             <div className="grid gap-3">
-              <StatCard label="Total Players" value={data.totalPlayers.toLocaleString()} tone="gold" />
+              <StatCard
+                label="Total Players"
+                value={`${data.totalPlayers.toLocaleString()} / ${MAX_PLAYER_ENTRIES}`}
+                tone="gold"
+              />
               <StatCard label="Prize Limit" value={data.settings.prize_limit} tone="green" />
               <StatCard
                 label="Submission Status"
-                value={data.settings.submission_open ? "Open" : "Closed"}
+                value={entryFull ? "Full" : data.settings.submission_open ? "Open" : "Closed"}
                 tone="dark"
               />
             </div>

@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getCountryByCode, getCountryByName, isValidWhatsapp, normalizeWhatsapp } from "@/lib/champion-guess";
+import {
+  MAX_PLAYER_ENTRIES,
+  getCountryByCode,
+  getCountryByName,
+  isValidWhatsapp,
+  normalizeWhatsapp,
+} from "@/lib/champion-guess";
 import { ensureChampionSettings } from "@/lib/champion-admin";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -51,6 +57,19 @@ export async function POST(request: NextRequest) {
 
     const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
     const supabase = createServiceClient();
+    const { count: playerCount, error: countError } = await supabase
+      .from("players")
+      .select("id", { count: "exact", head: true });
+
+    if (countError) throw countError;
+
+    if ((playerCount ?? 0) >= MAX_PLAYER_ENTRIES) {
+      return NextResponse.json(
+        { ok: false, error: "This campaign is full. 500 players have already joined." },
+        { status: 403 },
+      );
+    }
+
     const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
     const userAgent = request.headers.get("user-agent");
     const deviceId = request.headers.get("x-device-id");
