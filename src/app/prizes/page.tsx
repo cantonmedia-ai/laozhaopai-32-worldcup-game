@@ -169,13 +169,11 @@ function PrizeCard({ item }: { item: ChampionPrize }) {
 
       <div className="p-4">
         {item.image ? (
-          <div className="grid h-40 place-items-center overflow-hidden rounded-2xl bg-slate-50 md:h-48">
+          <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-slate-50">
             <img
               src={item.image}
               alt={item.prize}
-              className={`h-full w-full ${
-                item.imageFit === "contain" ? "object-contain p-2" : "object-cover"
-              }`}
+              className="h-full w-full object-cover object-center"
             />
           </div>
         ) : (
