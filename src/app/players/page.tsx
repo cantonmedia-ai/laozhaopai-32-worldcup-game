@@ -13,7 +13,7 @@ export default async function PlayersPage({
   const params = await searchParams;
   const q = params.q?.trim() ?? "";
   const country = params.country?.trim() ?? "";
-  const sort = params.sort === "newest" ? "newest" : "oldest";
+  const sort = params.sort === "oldest" ? "oldest" : "newest";
   const supabase = createServiceClient();
 
   let query = supabase
@@ -92,8 +92,8 @@ export default async function PlayersPage({
               defaultValue={sort}
               className="rounded-xl border border-slate-200 px-4 py-3"
             >
-              <option value="oldest">Oldest</option>
               <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
             </select>
             <button className="rounded-xl bg-[#071525] px-5 py-3 font-black text-white">Filter</button>
           </form>
@@ -123,7 +123,7 @@ export default async function PlayersPage({
                 <span>Champion Pick</span>
                 <span>Join Date</span>
               </div>
-              <div className="divide-y divide-slate-100">
+              <div className="max-h-[520px] divide-y divide-slate-100 overflow-y-auto overscroll-contain">
                 {(players ?? []).map((player) => {
                   const countryInfo = CHAMPION_COUNTRIES.find((entry) => entry.name === player.selected_country);
                   return (
