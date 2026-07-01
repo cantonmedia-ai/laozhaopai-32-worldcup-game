@@ -89,7 +89,7 @@ export default function PrizesPage() {
           </div>
 
           <div className="rounded-2xl bg-[#071525] p-5 text-white">
-            <h2 className="text-2xl font-black text-[#f4c542]">简约宣传文案</h2>
+            <h2 className="text-2xl font-black text-[#f4c542]">参加越早，机会越高</h2>
             <p className="mt-4 text-2xl font-black leading-9">
               猜中冠军，越早参加，越有机会赢大奖！
             </p>
