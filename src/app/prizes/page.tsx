@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { Gift, Trophy } from "lucide-react";
+import type { ReactNode } from "react";
+import { Gift, Medal, Trophy } from "lucide-react";
 import { ChampionShell } from "@/components/champion-shell";
-import { CHAMPION_PRIZES, TOTAL_PRIZE_VALUE } from "@/lib/champion-prizes";
+import { CHAMPION_PRIZES, TOTAL_PRIZE_VALUE, type ChampionPrize } from "@/lib/champion-prizes";
 
 export default function PrizesPage() {
+  const jeraPrize = CHAMPION_PRIZES.find((item) => item.prize.includes("Jera Studio"));
+  const otherPrizes = CHAMPION_PRIZES.filter((item) => !item.prize.includes("Jera Studio"));
+
   return (
     <ChampionShell active="/prizes">
       <section className="mx-auto max-w-6xl px-4 py-6 md:py-8">
@@ -42,64 +46,14 @@ export default function PrizesPage() {
             <h2 className="text-3xl font-black">奖品列表</h2>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {CHAMPION_PRIZES.map((item) => (
-              <article
-                key={item.tier}
-                className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-900/10"
-              >
-                <div className="p-4 pb-0">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full bg-[#f4c542] px-3 py-1 text-xs font-black text-[#071525]">
-                      {item.tier}
-                    </span>
-                    <span className="rounded-full bg-[#071525] px-3 py-1 text-xs font-black text-[#f4c542]">
-                      RM{item.value}
-                    </span>
-                  </div>
-                </div>
+          <div className="grid gap-4">
+            {jeraPrize ? <JeraFeaturePrize item={jeraPrize} /> : null}
 
-                <div className="p-4">
-                  {item.image ? (
-                    <div className="grid h-40 place-items-center overflow-hidden rounded-2xl bg-slate-50 md:h-48">
-                      <img
-                        src={item.image}
-                        alt={item.prize}
-                        className={`h-full w-full ${
-                          item.imageFit === "contain" ? "object-contain p-2" : "object-cover"
-                        }`}
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid h-40 place-items-center rounded-2xl bg-[#071525] p-5 text-center text-white md:h-48">
-                      <div>
-                        <div className="text-xs font-black uppercase tracking-[0.22em] text-[#f4c542]">
-                          Brainwave Games Prize
-                        </div>
-                        <div className="mt-2 text-2xl font-black">{item.tier}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  <h3 className="mt-4 min-h-[3.25rem] overflow-hidden text-xl font-black leading-[1.3] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-                    {item.prize}
-                  </h3>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <div className="text-xs font-bold text-slate-500">数量</div>
-                      <div className="mt-1 text-lg font-black">{item.quantity}份</div>
-                    </div>
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <div className="text-xs font-bold text-slate-500">排名</div>
-                      <div className="mt-1 text-lg font-black">
-                        第{item.rankStart}–{item.rankEnd}名
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {otherPrizes.map((item) => (
+                <PrizeCard key={item.tier} item={item} />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -143,5 +97,125 @@ export default function PrizesPage() {
         </div>
       </section>
     </ChampionShell>
+  );
+}
+
+function JeraFeaturePrize({ item }: { item: ChampionPrize }) {
+  return (
+    <article className="overflow-hidden rounded-2xl bg-white p-3 shadow-xl shadow-slate-900/10 md:p-5">
+      <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-black md:aspect-[16/7]">
+        <img
+          src="/assets/prizes/jera-studio-package.png"
+          alt="Jera Studio portrait studio"
+          className="h-full w-full object-cover object-top"
+        />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="overflow-hidden rounded-2xl bg-black">
+          <img
+            src="/assets/prizes/jera-portrait-orchid.png"
+            alt="Jera Studio portrait with orchid"
+            className="h-36 w-full object-cover md:h-56"
+          />
+        </div>
+        <div className="overflow-hidden rounded-2xl bg-black">
+          <img
+            src="/assets/prizes/jera-portrait-butterfly.png"
+            alt="Jera Studio portrait with butterfly"
+            className="h-36 w-full object-cover md:h-56"
+          />
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-2xl bg-white p-1 shadow-sm">
+        <div className="grid grid-cols-[82px_minmax(0,1fr)_82px] items-center gap-2 md:grid-cols-[160px_minmax(0,1fr)_140px] md:gap-3">
+          <div className="rounded-2xl bg-[#f4c542] p-3 text-center text-[#071525] md:p-5">
+            <div className="text-base font-black md:text-lg">二等奖</div>
+            <div className="text-xs font-black uppercase tracking-wide">2nd Prize</div>
+          </div>
+          <h3 className="min-w-0 text-[19px] font-black leading-[1.15] md:text-4xl md:leading-tight">
+            Jera Studio
+            <br />
+            赞助明星肖像体验
+          </h3>
+          <div className="rounded-2xl bg-[#f4c542] p-3 text-center text-xl font-black text-[#071525] md:p-5 md:text-4xl">
+            RM298
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <InfoBox icon={<Gift size={28} />} label="数量" value="3份" />
+        <InfoBox icon={<Medal size={28} />} label="排名" value="第3–5名" />
+      </div>
+    </article>
+  );
+}
+
+function PrizeCard({ item }: { item: ChampionPrize }) {
+  return (
+    <article className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-900/10">
+      <div className="p-4 pb-0">
+        <div className="flex items-center justify-between gap-3">
+          <span className="rounded-full bg-[#f4c542] px-3 py-1 text-xs font-black text-[#071525]">
+            {item.tier}
+          </span>
+          <span className="rounded-full bg-[#071525] px-3 py-1 text-xs font-black text-[#f4c542]">
+            RM{item.value}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-4">
+        {item.image ? (
+          <div className="grid h-40 place-items-center overflow-hidden rounded-2xl bg-slate-50 md:h-48">
+            <img
+              src={item.image}
+              alt={item.prize}
+              className={`h-full w-full ${
+                item.imageFit === "contain" ? "object-contain p-2" : "object-cover"
+              }`}
+            />
+          </div>
+        ) : (
+          <div className="grid h-40 place-items-center rounded-2xl bg-[#071525] p-5 text-center text-white md:h-48">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.22em] text-[#f4c542]">
+                Brainwave Games Prize
+              </div>
+              <div className="mt-2 text-2xl font-black">{item.tier}</div>
+            </div>
+          </div>
+        )}
+
+        <h3 className="mt-4 min-h-[3.25rem] overflow-hidden text-xl font-black leading-[1.3] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+          {item.prize}
+        </h3>
+
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <InfoBox label="数量" value={`${item.quantity}份`} />
+          <InfoBox label="排名" value={`第${item.rankStart}–${item.rankEnd}名`} />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function InfoBox({
+  icon,
+  label,
+  value,
+}: {
+  icon?: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-3">
+      {icon ? <div className="mb-2 text-[#b58b24]">{icon}</div> : null}
+      <div className="text-xs font-bold text-slate-500">{label}</div>
+      <div className="mt-1 text-lg font-black md:text-xl">{value}</div>
+    </div>
   );
 }
