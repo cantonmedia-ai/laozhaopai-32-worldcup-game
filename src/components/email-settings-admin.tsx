@@ -84,7 +84,7 @@ const sampleVariables: Record<string, string> = {
   required_count: "16",
   ranking: "18",
   points: "85",
-  cta_url: "https://games.brainwaveai.my/fifa-last-32",
+  cta_url: "https://games.brainwaveai.my/fifa-champion-guess",
 };
 
 function EmailPreview({

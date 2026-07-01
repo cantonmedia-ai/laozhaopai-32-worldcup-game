@@ -40,7 +40,7 @@ export function TopNav({
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071525]/90 text-white backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:h-16">
         <Link
-          href={publicMode ? "/fifa-last-32" : "/game"}
+          href={publicMode ? "/fifa-champion-guess" : "/game"}
           className="flex min-w-0 flex-1 items-center gap-3 font-black"
         >
           <span className="grid size-9 shrink-0 place-items-center rounded bg-[#d71920] text-sm text-white">

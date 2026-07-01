@@ -2,7 +2,7 @@ import type { EmailTemplate, EmailVariables } from "@/lib/email/types";
 import { normalizeLanguage, type Language } from "@/i18n";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://games.brainwaveai.my";
-const defaultGameUrl = "https://games.brainwaveai.my/fifa-last-32";
+const defaultGameUrl = "https://games.brainwaveai.my/fifa-champion-guess";
 
 function escapeHtml(value: string) {
   return value

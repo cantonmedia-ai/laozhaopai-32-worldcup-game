@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       required_count: 16,
       ranking: "18",
       points: "85",
-      cta_url: template.cta_url || "https://games.brainwaveai.my/fifa-last-32",
+      cta_url: template.cta_url || "https://games.brainwaveai.my/fifa-champion-guess",
     },
   });
 

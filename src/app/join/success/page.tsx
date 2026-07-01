@@ -23,7 +23,7 @@ export default async function JoinSuccessPage({
   ]);
   const country = CHAMPION_COUNTRIES.find((item) => item.name === player?.selected_country);
   const shareText = encodeURIComponent(
-    "I joined Brainwave Games FIFA 2026 Champion Guess. Pick your champion too: https://games.brainwaveai.my/fifa-last-32",
+    "I joined Brainwave Games FIFA 2026 Champion Guess. Pick your champion too: https://games.brainwaveai.my/fifa-champion-guess",
   );
 
   return (

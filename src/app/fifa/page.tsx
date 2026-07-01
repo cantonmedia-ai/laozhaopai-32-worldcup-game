@@ -7,5 +7,5 @@ export default async function FifaReferralAliasPage({
 }) {
   const params = await searchParams;
   const ref = params.ref ? `?ref=${encodeURIComponent(params.ref)}` : "";
-  redirect(`/fifa-last-32${ref}`);
+  redirect(`/fifa-champion-guess${ref}`);
 }

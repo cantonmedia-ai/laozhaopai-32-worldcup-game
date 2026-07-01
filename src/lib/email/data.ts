@@ -30,7 +30,7 @@ export const fallbackTemplates: EmailTemplate[] = [
     preview_text: "您的账户已准备好，马上开始预测冲榜。",
     body: "您好 {{display_name}}，您的账户已经成功启用。\n\n当前赛事状态：\n- 世界杯小组赛进行中\n- Game 1 已开放\n- 团队功能已开放\n- 排行榜已开放\n\nHi {{display_name}}, your account is ready.\nStart making predictions, form your team, and climb the leaderboard.",
     cta_text: "开始游戏 / Start Playing",
-    cta_url: "https://games.brainwaveai.my/fifa-last-32",
+    cta_url: "https://games.brainwaveai.my/fifa-champion-guess",
     enabled: true,
   },
   {

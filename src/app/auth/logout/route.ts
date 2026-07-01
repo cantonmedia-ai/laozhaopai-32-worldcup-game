@@ -7,5 +7,5 @@ export async function POST(request: Request) {
     await supabase.auth.signOut();
   }
 
-  return NextResponse.redirect(new URL("/fifa-last-32", request.url), 303);
+  return NextResponse.redirect(new URL("/fifa-champion-guess", request.url), 303);
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import clsx from "clsx";
 
 const navItems = [
-  { href: "/fifa-last-32", label: "首页" },
+  { href: "/fifa-champion-guess", label: "首页" },
   { href: "/join", label: "参加游戏" },
   { href: "/players", label: "参与名单" },
   { href: "/results", label: "开奖结果" },
@@ -20,7 +20,7 @@ export function ChampionShell({
     <div className="min-h-screen bg-[#071525] text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#071525]/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/fifa-last-32" className="flex min-w-0 items-center gap-2">
+          <Link href="/fifa-champion-guess" className="flex min-w-0 items-center gap-2">
             <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#d71920] text-lg">
               ⚽
             </span>

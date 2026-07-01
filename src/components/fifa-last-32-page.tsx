@@ -63,7 +63,7 @@ export async function FifaLast32Page() {
   const leaderboardRows = await loadPublicLeaderboard();
 
   return (
-    <PageShell active="/fifa-last-32" publicMode>
+    <PageShell active="/fifa-champion-guess" publicMode>
       <section className="stadium-hero relative w-full overflow-hidden text-white">
         <Image
           src="/assets/elements/png/confetti_strip.png"

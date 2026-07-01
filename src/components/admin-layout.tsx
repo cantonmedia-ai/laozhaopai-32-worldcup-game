@@ -22,7 +22,7 @@ export async function AdminLayout({
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-100 text-slate-950 md:grid md:grid-cols-[260px_minmax(0,1fr)]">
       <aside className="flex min-w-0 flex-col bg-[#071525] p-4 text-white">
-        <Link href="/fifa-last-32" className="mb-6 flex items-center gap-2 font-black">
+        <Link href="/fifa-champion-guess" className="mb-6 flex items-center gap-2 font-black">
           <span className="grid size-9 place-items-center rounded bg-[#d71920]">⚽</span>
           Champion Guess Admin
         </Link>
@@ -56,7 +56,7 @@ export async function AdminLayout({
             </button>
           </form>
           <Link
-            href="/fifa-last-32"
+            href="/fifa-champion-guess"
             className="mt-2 flex w-full items-center justify-center rounded bg-white/10 px-3 py-2 text-xs font-bold text-white/75 hover:bg-white/15 hover:text-white"
           >
             Back to Game
