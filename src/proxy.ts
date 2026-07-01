@@ -5,20 +5,11 @@ const adminAccessCookie = "brainwave_admin_access";
 const adminAccessValue = "brainwave_admin_ok";
 
 const protectedRoutes = [
-  "/game",
-  "/road-to-champion",
-  "/team-knockout",
-  "/predict",
-  "/leaderboard",
-  "/referral",
-  "/squad",
-  "/team",
   "/profile",
   "/profile/setup",
   "/profile-setup",
   "/setup-profile",
   "/verify-email",
-  "/results",
 ];
 
 function isProtectedPath(pathname: string) {
@@ -129,7 +120,7 @@ export async function proxy(request: NextRequest) {
     const nextPath =
       pathname === "/profile-setup" || pathname === "/setup-profile"
         || pathname === "/profile/setup"
-        ? safeNextPath(request.nextUrl.searchParams.get("next"), "/game")
+        ? safeNextPath(request.nextUrl.searchParams.get("next"), "/fifa-champion-guess")
         : pathname;
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
@@ -148,7 +139,7 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === "/login" && profileIsComplete(profile) && !needsEmailVerification(profile)) {
     const gameUrl = request.nextUrl.clone();
-    gameUrl.pathname = "/game";
+    gameUrl.pathname = "/fifa-champion-guess";
     gameUrl.search = "";
     return NextResponse.redirect(gameUrl);
   }
@@ -178,7 +169,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === "/verify-email" && !needsEmailVerification(profile)) {
-    const nextPath = safeNextPath(request.nextUrl.searchParams.get("next"), "/game");
+    const nextPath = safeNextPath(request.nextUrl.searchParams.get("next"), "/fifa-champion-guess");
     const nextUrl = request.nextUrl.clone();
     nextUrl.pathname = nextPath;
     nextUrl.search = "";
@@ -190,20 +181,11 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/game/:path*",
-    "/road-to-champion/:path*",
-    "/team-knockout/:path*",
-    "/predict/:path*",
-    "/leaderboard/:path*",
-    "/referral/:path*",
-    "/squad/:path*",
-    "/team/:path*",
     "/profile/:path*",
     "/profile/setup",
     "/profile-setup",
     "/setup-profile",
     "/verify-email",
-    "/results/:path*",
     "/admin",
     "/admin/:path*",
     "/admin-login",
